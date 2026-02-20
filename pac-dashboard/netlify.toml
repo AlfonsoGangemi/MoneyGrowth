@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "/justetf-proxy/*"
+  to = "https://www.justetf.com/:splat"
+  status = 200
+  force = true
