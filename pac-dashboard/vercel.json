@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/justetf-proxy/:match*",
-      "destination": "https://www.justetf.com/:match*"
+      "source": "/justetf-proxy/(.*)",
+      "destination": "/api/justetf-proxy?proxyPath=$1"
     }
   ]
 }
