@@ -123,11 +123,31 @@ create table config (
 Abilitare RLS su tutte le tabelle; ogni utente vede solo i propri dati:
 
 ```sql
--- Ripetere per etf, acquisti, scenari, config
 alter table etf enable row level security;
 
 create policy "utente vede i propri etf"
   on etf for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+alter table acquisti enable row level security;
+
+create policy "utente vede i propri acquisti"
+  on acquisti for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+alter table scenari enable row level security;
+
+create policy "utente vede i propri scenari"
+  on scenari for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+alter table config enable row level security;
+
+create policy "utente vede i propri config"
+  on config for all
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 ```
