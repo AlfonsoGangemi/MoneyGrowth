@@ -29,7 +29,8 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
   async function aggiornaPrezzoAPI() {
     if (!etf.isin) return
     setSyncStato('loading')
-    const url = `/justetf-proxy/api/etfs/${encodeURIComponent(etf.isin)}/quote?locale=it&currency=EUR&isin=${encodeURIComponent(etf.isin)}`
+    const params = new URLSearchParams({ proxyPath: `api/etfs/${etf.isin}/quote`, locale: 'it', currency: 'EUR', isin: etf.isin })
+    const url = `/api/justetf-proxy?${params}`
     console.log('[proxy] → GET', url)
     try {
       const res = await fetch(url)
