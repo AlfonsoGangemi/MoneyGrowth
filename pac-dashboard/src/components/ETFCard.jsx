@@ -21,14 +21,6 @@ function Badge({ val }) {
   )
 }
 
-function parseEurPrice(str) {
-  // Formato europeo: "1.234,56" o "95,40" → rimuove il separatore migliaia e converte la virgola decimale
-  const clean = str.trim().replace(/\s/g, '')
-  if (/\d,\d/.test(clean)) {
-    return parseFloat(clean.replace(/\./g, '').replace(',', '.'))
-  }
-  return parseFloat(clean.replace(/[^\d.]/g, ''))
-}
 
 export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto }) {
   const [espanso, setEspanso] = useState(false)
@@ -37,19 +29,25 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
   async function aggiornaPrezzoAPI() {
     if (!etf.isin) return
     setSyncStato('loading')
+    const params = new URLSearchParams({ proxyPath: `api/etfs/${etf.isin}/quote`, locale: 'it', currency: 'EUR', isin: etf.isin })
+    const url = `/api/justetf-proxy?${params}`
+    console.log('[proxy] → GET', url)
     try {
-      const res = await fetch(
-        `/justetf-proxy/api/etfs/${encodeURIComponent(etf.isin)}/quote?locale=it&currency=EUR&isin=${encodeURIComponent(etf.isin)}`
-      )
-      if (!res.ok) throw new Error()
-      const data = await res.json()
+      const res = await fetch(url)
+      console.log('[proxy] ← status:', res.status, '| ok:', res.ok)
+      console.log('[proxy]    headers:', Object.fromEntries(res.headers.entries()))
+      const text = await res.text()
+      console.log('[proxy]    body (raw):', text.slice(0, 500))
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = JSON.parse(text)
+      console.log('[proxy]    data:', data)
       const prezzo = data?.latestQuote?.raw
-      if (!prezzo) throw new Error()
-      //const prezzo = parseEurPrice(localizzato)
-      if (isNaN(prezzo) || prezzo <= 0) throw new Error()
+      if (!prezzo) throw new Error('latestQuote.raw assente')
+      if (isNaN(prezzo) || prezzo <= 0) throw new Error(`prezzo non valido: ${prezzo}`)
       onAggiornaPrezzo(etf.id, prezzo)
       setSyncStato('idle')
-    } catch {
+    } catch (err) {
+      console.error('[proxy] ERRORE:', err.message)
       setSyncStato('error')
       setTimeout(() => setSyncStato('idle'), 3000)
     }
