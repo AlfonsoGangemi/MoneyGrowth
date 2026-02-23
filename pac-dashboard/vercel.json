@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/justetf-proxy/:match*",
+      "destination": "https://www.justetf.com/:match*"
+    }
+  ]
+}
