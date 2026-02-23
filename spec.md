@@ -2,7 +2,7 @@
 
 ## Obiettivo
 
-Applicazione web per la gestione e visualizzazione dei rendimenti di un Piano di Accumulo Capitale (PAC) su più ETF, con proiezione futura per scenari personalizzabili.
+Applicazione web per la gestione e visualizzazione dei rendimenti di un Piano di Accumulo Capitale (PAC) su più ETF, con proiezione futura per scenari personalizzabili. Supporta autenticazione multi-utente tramite Supabase, con dati persistiti su database cloud per utente.
 
 ---
 
@@ -12,8 +12,9 @@ Applicazione web per la gestione e visualizzazione dei rendimenti di un Piano di
 - **Styling**: Tailwind CSS
 - **Grafici**: Recharts
 - **Date**: date-fns
-- **Persistenza**: localStorage + Export/Import JSON
-- **Deploy**: Netlify (drag & drop della cartella `dist/`)
+- **Autenticazione & DB**: Supabase (Auth + PostgreSQL)
+- **Persistenza**: Supabase (cloud, per-utente) + Export/Import JSON
+- **Deploy**: Vercel
 
 ---
 
@@ -22,18 +23,22 @@ Applicazione web per la gestione e visualizzazione dei rendimenti di un Piano di
 ```
 pac-dashboard/
 ├── public/
-├── src/
-│   ├── components/
-│   │   ├── Dashboard.jsx          # Vista principale, layout generale
-│   │   ├── ETFCard.jsx            # Card riepilogativa per ogni ETF
-│   │   ├── AcquistoForm.jsx       # Form inserimento acquisto multi-ETF
-│   │   ├── GraficoPortafoglio.jsx # Grafico storico reale + proiezione scenari
-│   │   └── Indicatori.jsx         # ROI, CAGR, TWRR, ecc.
-│   ├── hooks/
-│   │   └── usePortafoglio.js      # Stato globale + CRUD localStorage
-│   ├── utils/
-│   │   └── calcoli.js             # Tutti i calcoli finanziari
-│   └── App.jsx
+└── src/
+    ├── components/
+    │   ├── Dashboard.jsx          # Vista principale, layout generale
+    │   ├── ETFCard.jsx            # Card riepilogativa per ogni ETF
+    │   ├── AcquistoForm.jsx       # Form inserimento acquisto multi-ETF
+    │   ├── GraficoPortafoglio.jsx # Grafico storico reale + proiezione scenari
+    │   ├── Indicatori.jsx         # ROI, CAGR, TWRR, ecc.
+    │   └── AuthForm.jsx           # Login / Registrazione
+    ├── hooks/
+    │   ├── usePortafoglio.js      # Stato globale + CRUD Supabase
+    │   └── useAuth.js             # Sessione utente Supabase
+    ├── utils/
+    │   ├── calcoli.js             # Tutti i calcoli finanziari
+    │   └── supabase.js            # Client Supabase singleton
+    ├── App.jsx                    # Root: routing auth ↔ dashboard
+    └── main.jsx
 ├── index.html
 ├── vite.config.js
 └── package.json
@@ -41,7 +46,104 @@ pac-dashboard/
 
 ---
 
-## Modello Dati
+## Autenticazione
+
+### Flusso
+- All'avvio l'app controlla la sessione Supabase (`supabase.auth.getSession`)
+- Se non autenticato → mostra `AuthForm` (login + registrazione con email/password)
+- Se autenticato → mostra `Dashboard`
+- Pulsante **Logout** in header, chiama `supabase.auth.signOut`
+- La sessione è persistita automaticamente da Supabase (JWT in localStorage)
+
+### Componente `AuthForm.jsx`
+- Tab **Accedi** / **Registrati**
+- Campi: email, password
+- Messaggi di errore inline (es. "Email o password errati", "Email già registrata")
+- Nessun flusso di recupero password nella V1 (può essere aggiunto in seguito)
+
+### Hook `useAuth.js`
+```js
+// Espone:
+{ user, session, loading, signIn, signUp, signOut }
+```
+- Sottoscrive `supabase.auth.onAuthStateChange` per aggiornamenti in tempo reale
+- `loading: true` durante il primo controllo di sessione (mostra spinner)
+
+---
+
+## Database Supabase
+
+### Schema SQL
+
+```sql
+-- ETF
+create table etf (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid references auth.users(id) on delete cascade not null,
+  nome            text not null,
+  isin            text not null,
+  emittente       text default '',
+  importo_fisso   numeric not null default 0,
+  prezzo_corrente numeric not null default 0,
+  archiviato      boolean not null default false,
+  created_at      timestamptz default now()
+);
+
+-- Acquisti
+create table acquisti (
+  id                uuid primary key default gen_random_uuid(),
+  etf_id            uuid references etf(id) on delete cascade not null,
+  user_id           uuid references auth.users(id) on delete cascade not null,
+  data              date not null,
+  importo_investito numeric not null,
+  prezzo_unitario   numeric not null,
+  quote_frazionate  numeric not null,
+  created_at        timestamptz default now()
+);
+
+-- Scenari di proiezione
+create table scenari (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid references auth.users(id) on delete cascade not null,
+  nome             text not null,
+  rendimento_annuo numeric not null,
+  colore           text not null
+);
+
+-- Configurazione utente
+create table config (
+  user_id           uuid references auth.users(id) on delete cascade primary key,
+  orizzonte_anni    integer not null default 10,
+  mostra_proiezione boolean not null default true
+);
+```
+
+### Row Level Security (RLS)
+
+Abilitare RLS su tutte le tabelle; ogni utente vede solo i propri dati:
+
+```sql
+-- Ripetere per etf, acquisti, scenari, config
+alter table etf enable row level security;
+
+create policy "utente vede i propri etf"
+  on etf for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+```
+
+### Variabili d'ambiente
+
+```env
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon-key>
+```
+
+---
+
+## Modello Dati (frontend)
+
+Il modello rimane invariato rispetto alla struttura originale; il mapping da snake_case (DB) a camelCase (JS) avviene nel layer `usePortafoglio.js`.
 
 ### ETF
 ```json
@@ -77,6 +179,22 @@ pac-dashboard/
   "colore": "#22c55e"
 }
 ```
+
+---
+
+## Persistenza con Supabase
+
+### Hook `usePortafoglio.js` — comportamento
+
+- Al mount (con utente autenticato): carica da Supabase tutti gli ETF dell'utente con i relativi acquisti e scenari
+- Ogni mutazione (aggiungiETF, aggiornaETF, aggiungiAcquisto, ecc.) scrive **prima** su Supabase, poi aggiorna lo stato locale
+- In caso di errore Supabase → mostra un toast di errore; lo stato locale non viene aggiornato
+- La config utente (orizzonte anni, mostra proiezione) è sincronizzata sulla tabella `config` con upsert
+- Export JSON rimane disponibile come backup manuale
+
+### Scenari di default
+
+Alla prima registrazione, i tre scenari di default (Pessimistico, Moderato, Ottimistico) vengono inseriti in Supabase automaticamente (`signUp` → inserimento scenari di default).
 
 ---
 
@@ -134,16 +252,18 @@ pac-dashboard/
 Gli indicatori considerano solo gli ETF **non archiviati**.
 
 ### Persistenza & Backup
-- **localStorage** come storage primario (auto-save ad ogni modifica)
+- **Supabase** come storage primario (sync automatico ad ogni mutazione)
 - **Export JSON**: scarica tutti i dati in un file `.json`
-- **Import JSON**: ripristina i dati da file
+- **Import JSON**: ripristina i dati da file (sovrascrive i dati su Supabase)
 
 ---
 
-## Deploy su Netlify
+## Deploy su Vercel
 
 ```bash
 npm run build
-# Vai su netlify.com → "Add new site" → "Deploy manually"
-# Trascina la cartella dist/ nella pagina
+# Collegare il repository a Vercel
+# Aggiungere le variabili d'ambiente nel pannello Vercel:
+#   VITE_SUPABASE_URL
+#   VITE_SUPABASE_ANON_KEY
 ```
