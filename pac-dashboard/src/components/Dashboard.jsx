@@ -136,8 +136,8 @@ function ScenarioChip({ scenario, onAggiorna, onRimuovi }) {
 
 // ── Dashboard principale ───────────────────────────────────────────
 
-export default function Dashboard() {
-  const port = usePortafoglio()
+export default function Dashboard({ user, onSignOut }) {
+  const port = usePortafoglio(user)
 
   const [modalNuovoETF, setModalNuovoETF] = useState(false)
   const [etfDaModificare, setEtfDaModificare] = useState(null)
@@ -156,6 +156,14 @@ export default function Dashboard() {
   const [nomeScen, setNomeScen] = useState('')
   const [rendScen, setRendScen] = useState('')
   const [coloreScen, setColoreScen] = useState('#6366f1')
+
+  if (port.loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   const etfAttivi = port.etf.filter(e => !e.archiviato)
   const etfArchiviati = port.etf.filter(e => e.archiviato)
@@ -196,7 +204,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-white tracking-tight">PAC Dashboard</h1>
-            <p className="text-xs text-slate-500">Piano di Accumulo Capitale</p>
+            <p className="text-xs text-slate-500">{user.email}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             <button
@@ -209,10 +217,22 @@ export default function Dashboard() {
               Import JSON
               <input type="file" accept=".json" onChange={handleImport} className="hidden" />
             </label>
+            <button
+              onClick={onSignOut}
+              className="text-xs bg-slate-700 hover:bg-red-900 text-slate-400 hover:text-red-300 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
-        {errImport && (
-          <div className="max-w-7xl mx-auto px-4 pb-2 text-xs text-red-400">{errImport}</div>
+        {(errImport || port.errore) && (
+          <div className="max-w-7xl mx-auto px-4 pb-2 flex items-center justify-between">
+            <p className="text-xs text-red-400">{errImport || port.errore}</p>
+            <button
+              onClick={() => { setErrImport(''); port.setErrore('') }}
+              className="text-slate-500 hover:text-white text-xs ml-4"
+            >✕</button>
+          </div>
         )}
       </header>
 
