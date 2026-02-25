@@ -59,32 +59,11 @@ export default function GraficoPortafoglio({ etfList, scenari, orizzonteAnni, mo
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([data, valore]) => ({ data, storico: valore }))
 
-    // Valore attuale aggregato
-    const valoreOggi = etfDaUsare.reduce((s, e) => s + valoreAttuale(e.acquisti, e.prezzoCorrente), 0)
-
-    // ── Proiezioni ───────────────────────────────────────────────────
-    const versamentoMensile = etfDaUsare.reduce((s, e) => s + e.importoFisso, 0)
-
-    const proiezioni = mostraProiezione
-      ? scenari.map(sc => ({
-          ...sc,
-          punti: calcolaProiezione(valoreOggi, versamentoMensile, sc.rendimentoAnnuo, orizzonteAnni, oggiStr),
-        }))
-      : []
-
     // ── Merge in unico array ─────────────────────────────────────────
     const tutte = new Map()
 
     for (const p of punteStorici) {
       tutte.set(p.data, { data: p.data, storico: p.storico })
-    }
-
-    for (const sc of proiezioni) {
-      for (const p of sc.punti) {
-        const existing = tutte.get(p.data) ?? { data: p.data }
-        existing[sc.nome] = p.valore
-        tutte.set(p.data, existing)
-      }
     }
 
     const datiGrafico = [...tutte.values()].sort((a, b) => a.data.localeCompare(b.data))
@@ -155,21 +134,6 @@ export default function GraficoPortafoglio({ etfList, scenari, orizzonteAnni, mo
               connectNulls
             />
           )}
-
-          {/* Serie proiezioni */}
-          {mostraProiezione && scenari.map(sc => (
-            <Line
-              key={sc.id}
-              type="monotone"
-              dataKey={sc.nome}
-              name={sc.nome}
-              stroke={sc.colore}
-              strokeWidth={1.5}
-              strokeDasharray="5 3"
-              dot={false}
-              connectNulls
-            />
-          ))}
         </LineChart>
       </ResponsiveContainer>
     </div>

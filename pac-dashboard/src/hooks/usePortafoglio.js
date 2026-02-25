@@ -72,7 +72,8 @@ export function usePortafoglio(user) {
           supabase
             .from('scenari')
             .select('*')
-            .eq('user_id', user.id),
+            .eq('user_id', user.id)
+            .order('rendimento_annuo'),
           supabase
             .from('config')
             .select('*')
