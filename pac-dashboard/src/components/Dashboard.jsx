@@ -4,6 +4,7 @@ import ETFCard from './ETFCard'
 import AcquistoForm from './AcquistoForm'
 import GraficoPortafoglio from './GraficoPortafoglio'
 import Indicatori from './Indicatori'
+import TabellaProiezione from './TabellaProiezione'
 
 // ── Componenti base ────────────────────────────────────────────────
 
@@ -244,31 +245,7 @@ export default function Dashboard({ user, onSignOut }) {
         {/* Grafico (solo ETF attivi) */}
         {etfAttivi.length > 0 && (
           <div className="space-y-3">
-            <div className="flex items-center gap-4 flex-wrap">
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
-                <span
-                  onClick={() => port.setMostraProiezione(!port.mostraProiezione)}
-                  className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer ${port.mostraProiezione ? 'bg-blue-600' : 'bg-slate-600'}`}
-                >
-                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${port.mostraProiezione ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                </span>
-                Mostra proiezione
-              </label>
-              {port.mostraProiezione && (
-                <div className="flex items-center gap-2 text-sm text-slate-300">
-                  <span>Orizzonte:</span>
-                  <select
-                    value={port.orizzonteAnni}
-                    onChange={e => port.setOrizzonteAnni(e.target.value)}
-                    className="bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
-                  >
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
-                      <option key={n} value={n}>{n} ann{n === 1 ? 'o' : 'i'}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
+            
             <GraficoPortafoglio
               etfList={etfAttivi}
               scenari={port.scenari}
@@ -363,6 +340,38 @@ export default function Dashboard({ user, onSignOut }) {
           )}
         </div>
 
+        {/* Selettore Proiezione */}
+        {etfAttivi.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-4 flex-wrap">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
+                <span
+                  onClick={() => port.setMostraProiezione(!port.mostraProiezione)}
+                  className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer ${port.mostraProiezione ? 'bg-blue-600' : 'bg-slate-600'}`}
+                >
+                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${port.mostraProiezione ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </span>
+                Mostra proiezione
+              </label>
+              {port.mostraProiezione && (
+                <div className="flex items-center gap-2 text-sm text-slate-300">
+                  <span>Orizzonte:</span>
+                  <input
+                    type="number"
+                    step="1"
+                    min="1"
+                    max="20"
+                    value={port.orizzonteAnni}
+                    onChange={e => port.setOrizzonteAnni(e.target.value)}
+                    className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:border-blue-400"
+                  />
+                  <span>anni</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Scenari */}
         {port.mostraProiezione && (
           <div>
@@ -386,6 +395,15 @@ export default function Dashboard({ user, onSignOut }) {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Tabella proiezione per anno */}
+        {port.mostraProiezione && etfAttivi.length > 0 && port.scenari.length > 0 && (
+          <TabellaProiezione
+            etfList={etfAttivi}
+            scenari={port.scenari}
+            orizzonteAnni={port.orizzonteAnni}
+          />
         )}
 
       </main>
