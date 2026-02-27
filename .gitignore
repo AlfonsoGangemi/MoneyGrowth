@@ -16,6 +16,7 @@ dist-ssr
 # Claude Code
 .agents/
 skills-lock.json
+.claude/skills
 
 # Editor directories and files
 .vscode/*
