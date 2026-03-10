@@ -98,6 +98,58 @@ export function calcolaATWRR(acquisti, prezzoCorrente) {
   return (Math.pow(twrr, 12 / mesi) - 1) * 100
 }
 
+/**
+ * XIRR — Tasso Interno di Rendimento per flussi di cassa a date irregolari.
+ *
+ * Per un PAC ogni acquisto è un'uscita (flusso negativo) e il valore corrente
+ * del portafoglio è un'entrata finale (flusso positivo). Restituisce l'IRR
+ * annualizzato in % (es. 7.5 per 7.5%), oppure null se non converge o i dati
+ * sono insufficienti.
+ *
+ * Algoritmo: Newton-Raphson sul NPV con convenzione gg/365.
+ *
+ * @param {Array}  acquisti    - array di acquisti { data: 'yyyy-MM-dd', importoInvestito }
+ * @param {number} prezzoCorrente - valore attuale del portafoglio (€)
+ */
+export function calcolaIRR(acquisti, prezzoCorrente) {
+  const valoreFinale = valoreAttuale(acquisti, prezzoCorrente)
+  
+  if (acquisti.length === 0 || valoreFinale <= 0) return null
+
+  const sorted = [...acquisti].sort((a, b) => a.data.localeCompare(b.data))
+  const dataRif = parseISO(sorted[0].data)
+  const oggi = new Date()
+
+  // Flussi: uscite negative agli acquisti, entrata positiva oggi
+  const flussi = [
+    ...sorted.map(acq => ({
+      giorni: differenceInCalendarDays(parseISO(acq.data), dataRif),
+      importo: -acq.importoInvestito,
+    })),
+    {
+      giorni: differenceInCalendarDays(oggi, dataRif),
+      importo: valoreFinale,
+    },
+  ]
+
+  // NPV(r) = Σ [ importo_i / (1+r)^(giorni_i/365) ]
+  const npv  = r => flussi.reduce((acc, f) => acc + f.importo / Math.pow(1 + r, f.giorni / 365), 0)
+  // dNPV/dr
+  const dnpv = r => flussi.reduce((acc, f) => acc - (f.giorni / 365) * f.importo / Math.pow(1 + r, f.giorni / 365 + 1), 0)
+
+  let r = 0.1 // stima iniziale: 10%
+  for (let i = 0; i < 200; i++) {
+    const df = dnpv(r)
+    if (Math.abs(df) < 1e-14) break
+    const rNew = r - npv(r) / df
+    if (rNew <= -1) return null
+    if (Math.abs(rNew - r) < 1e-8) return rNew * 100
+    r = rNew
+  }
+
+  return null // non converge
+}
+
 // ── Serie storiche ─────────────────────────────────────────────────────────
 
 /**

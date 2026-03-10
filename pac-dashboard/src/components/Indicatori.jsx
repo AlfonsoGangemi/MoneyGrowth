@@ -1,4 +1,4 @@
-import { indicatoriPortafoglio, calcolaTWRR, calcolaATWRR } from '../utils/calcoli'
+import { indicatoriPortafoglio, calcolaIRR, calcolaTWRR, calcolaATWRR } from '../utils/calcoli'
 
 function fmt(n, dec = 2) {
   return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec })
@@ -25,7 +25,14 @@ function Kpi({ label, valore, sub, positivo, neutro }) {
 export default function Indicatori({ etfList }) {
   if (etfList.length === 0) return null
 
-  const { totInvestito, totValore, roi, netto, durataM, cagr } = indicatoriPortafoglio(etfList)
+  const { totInvestito, totValore, roi, netto, durataM } = indicatoriPortafoglio(etfList)
+
+  // XIRR: aggreghiamo tutti gli acquisti e usiamo un prezzo equivalente
+  // tale che valoreAttuale(tuttiAcquisti, prezzoEq) == totValore
+  const tuttiAcquisti = etfList.flatMap(e => e.acquisti)
+  const totQuote = tuttiAcquisti.reduce((s, a) => s + a.quoteFrazionate, 0)
+  const prezzoEq = totQuote > 0 ? totValore / totQuote : 0
+  const irr = calcolaIRR(tuttiAcquisti, prezzoEq)
 
   // TWRR aggregato: combiniamo tutti gli acquisti di tutti gli ETF con prezzoCorrente medio ponderato
   // Usiamo la media dei TWRR ponderata per investimento
@@ -75,10 +82,10 @@ export default function Indicatori({ etfList }) {
           neutro
         />
         <Kpi
-          label="CAGR"
-          valore={`${fmt(cagr)}%`}
+          label="XIRR"
+          valore={irr != null ? `${irr >= 0 ? '+' : ''}${fmt(irr)}%` : 'n/d'}
           sub="Crescita annua composta"
-          positivo={cagr >= 0}
+          positivo={irr != null ? irr >= 0 : null}
         />
         <Kpi
           label="TWRR / ATWRR"
