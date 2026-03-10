@@ -6,13 +6,12 @@
 - L'**emittente** viene visualizzato come sottotitolo nella card
 - L'**ISIN** è un link cliccabile alla pagina JustETF dell'ETF (`https://www.justetf.com/it/etf-profile.html?isin={ISIN}#panoramica`), si apre in una nuova tab
 - Accanto al prezzo corrente è presente un pulsante **aggiorna** (icona refresh) che recupera il prezzo tramite l'API pubblica di JustETF:
-  - Endpoint: `GET https://www.justetf.com/api/etfs/cards?locale=it&currency=EUR&isin={ISIN}`
-  - Risposta XML; il prezzo è estratto con XPath `/ETFCardsResponse/etfs/etfs/latestQuote/localized`
-  - Il valore è in formato europeo (virgola decimale) e viene convertito in `number` prima del salvataggio
+  - Endpoint: `https://www.justetf.com/api/etfs/:ISIN/quote?currency=EUR&locale=it`
+  - Risposta JSON; il prezzo è prezzo = `data?.latestQuote?.raw`
   - Nessuna API key richiesta
   - Gestisce gli stati visivi: caricamento (icona rotante) ed errore (icona rossa + label "Errore" per 3 s)
 - Un ETF può essere **archiviato**: scompare dalla dashboard (indicatori, grafico, lista acquisti) senza essere eliminato; può essere riattivato tramite il pannello "ETF archiviati"
-- Ogni ETF ha un pulsante **modifica** (✏️) che apre una modale con tutti i campi eccetto ISIN, e un pulsante **archivia** (🗄) per nasconderlo
+- Ogni ETF ha un pulsante **modifica** (✏️) che apre una modale con tutti i campi modificabili eccetto ISIN, e un pulsante **archivia** (🗄) per nasconderlo
 
 ## Inserimento Acquisti
 - Il form è **multi-ETF**: un singolo acquisto PAC ha un'unica data e può includere più strumenti contemporaneamente
@@ -26,9 +25,7 @@
 - **Asse X**: tempo (storico + futuro fino a 10 anni)
 - **Asse Y**: valore del portafoglio in €
 - **Serie storica**: valore reale del portafoglio nel tempo
-- **Serie proiezione**: una linea per ogni scenario configurato
 - Grafici separati per singolo ETF e portafoglio aggregato
-- Possibilità di escludere la proiezione
 - Mostra solo gli ETF **non archiviati**
 
 ## Scenari Futuri
