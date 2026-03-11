@@ -28,3 +28,7 @@ skills-lock.json
 *.njsproj
 *.sln
 *.sw?
+
+# Custom
+tools/*.csv
+tools/*.json
