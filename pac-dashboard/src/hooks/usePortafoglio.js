@@ -38,6 +38,7 @@ function mapAcquisto(row) {
     importoInvestito: Number(row.importo_investito),
     prezzoUnitario: Number(row.prezzo_unitario),
     quoteFrazionate: Number(row.quote_frazionate),
+    fee: Number(row.fee),
   }
 }
 
@@ -191,6 +192,7 @@ export function usePortafoglio(user) {
         importo_investito: imp,
         prezzo_unitario:   prezzo,
         quote_frazionate:  prezzo > 0 ? imp / prezzo : 0,
+        fee:               Number(item.fee),
       }
     })
 
@@ -334,6 +336,7 @@ export function usePortafoglio(user) {
               importo_investito: a.importoInvestito,
               prezzo_unitario:   a.prezzoUnitario,
               quote_frazionate:  a.quoteFrazionate,
+              fee:               Number(a.fee),
             }))
           )
           if (acquistiRows.length > 0) {

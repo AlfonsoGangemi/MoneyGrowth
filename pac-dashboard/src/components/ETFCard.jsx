@@ -197,6 +197,9 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
               <div key={acq.id} className="flex items-center justify-between text-xs bg-slate-900/50 rounded-lg px-3 py-2">
                 <span className="text-slate-400">{acq.data}</span>
                 <span className="text-white">€{fmt(acq.importoInvestito, 0)}</span>
+                {acq.fee > 0 && (
+                  <span className="text-amber-400">+€{fmt(acq.fee, 2)} fee</span>
+                )}
                 <span className="text-slate-400">@ €{fmt(acq.prezzoUnitario)}</span>
                 <span className="text-blue-300">{fmt(acq.quoteFrazionate, 4)} q.</span>
                 <button

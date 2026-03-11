@@ -15,6 +15,7 @@ export default function AcquistoForm({ etfList, onAggiungi, onChiudi }) {
         etfId: etf.id,
         selezionato: false,
         importo: String(ultimo ? ultimo.importoInvestito : (etf.importoFisso || '')),
+        fee: String(ultimo?.fee ?? 0),
         prezzo: etf.prezzoCorrente > 0 ? String(etf.prezzoCorrente) : '',
       }
     })
@@ -44,6 +45,7 @@ export default function AcquistoForm({ etfList, onAggiungi, onChiudi }) {
         etfId: r.etfId,
         data,
         importoInvestito: parseFloat(r.importo),
+        fee: parseFloat(r.fee) || 0,
         prezzoUnitario: parseFloat(r.prezzo.replace(',', '.')),
       }))
       .filter(item =>
@@ -109,7 +111,7 @@ export default function AcquistoForm({ etfList, onAggiungi, onChiudi }) {
 
                   {/* Dettagli importo/prezzo/quote (visibili solo se selezionato) */}
                   {riga.selezionato && (
-                    <div className="px-4 pb-3 grid grid-cols-3 gap-2 items-end">
+                    <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
                       <div>
                         <label className="block text-xs text-slate-400 mb-1">Importo (€)</label>
                         <input
@@ -118,6 +120,18 @@ export default function AcquistoForm({ etfList, onAggiungi, onChiudi }) {
                           min="0.01"
                           value={riga.importo}
                           onChange={e => setRigaVal(riga.etfId, 'importo', e.target.value)}
+                          onClick={e => e.stopPropagation()}
+                          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none focus:border-blue-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Fee (€)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={riga.fee}
+                          onChange={e => setRigaVal(riga.etfId, 'fee', e.target.value)}
                           onClick={e => e.stopPropagation()}
                           className="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none focus:border-blue-400"
                         />

@@ -15,7 +15,8 @@ create table etf (
   importo_fisso   numeric not null default 0,
   prezzo_corrente numeric not null default 0,
   archiviato      boolean not null default false,
-  created_at      timestamptz default now()
+  created_at      timestamptz default now(),
+  constraint etf_user_isin_unique unique (user_id, isin)
 );
 
 -- Acquisti
@@ -27,6 +28,7 @@ create table acquisti (
   importo_investito numeric not null,
   prezzo_unitario   numeric not null,
   quote_frazionate  numeric not null,
+  fee               numeric not null default 0,
   created_at        timestamptz default now()
 );
 
@@ -44,6 +46,28 @@ create table config (
   user_id           uuid references auth.users(id) on delete cascade primary key,
   orizzonte_anni    integer not null default 10,
   mostra_proiezione boolean not null default true
+);
+
+-- Storico prezzi mensili ETF (condiviso tra utenti, chiave per ISIN)
+create table etf_prezzi_storici (
+  id        uuid primary key default gen_random_uuid(),
+  isin      text not null,
+  anno      integer not null,
+  mese      integer not null check (mese between 1 and 12),
+  prezzo    numeric(12,4) not null,
+  creato_il timestamptz default now(),
+  unique (isin, anno, mese)
+);
+
+-- Valore del portafoglio per anno, persistito per utente
+create table portafoglio_storico_annuale (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid references auth.users not null,
+  anno           integer not null,
+  valore         numeric(14,2) not null,
+  totale_versato numeric(14,2) not null,
+  aggiornato_il  timestamptz default now(),
+  unique (user_id, anno)
 );
 ```
 
@@ -77,6 +101,29 @@ alter table config enable row level security;
 
 create policy "utente vede i propri config"
   on config for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+-- etf_prezzi_storici: lettura e scrittura per tutti gli utenti autenticati
+alter table etf_prezzi_storici enable row level security;
+
+create policy "authenticated read etf_prezzi_storici"
+  on etf_prezzi_storici for select
+  using (auth.role() = 'authenticated');
+
+create policy "authenticated insert etf_prezzi_storici"
+  on etf_prezzi_storici for insert
+  with check (auth.role() = 'authenticated');
+
+create policy "authenticated update etf_prezzi_storici"
+  on etf_prezzi_storici for update
+  using (auth.role() = 'authenticated');
+
+-- portafoglio_storico_annuale: ogni utente vede e modifica solo i propri record
+alter table portafoglio_storico_annuale enable row level security;
+
+create policy "utente vede il proprio storico annuale"
+  on portafoglio_storico_annuale for all
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 ```
@@ -115,7 +162,8 @@ Il modello rimane invariato rispetto alla struttura originale; il mapping da sna
   "data": "2024-01-15",
   "importoInvestito": 200,
   "prezzoUnitario": 88.20,
-  "quoteFrazionate": 2.2676
+  "quoteFrazionate": 2.2676,
+  "fee": 0
 }
 ```
 

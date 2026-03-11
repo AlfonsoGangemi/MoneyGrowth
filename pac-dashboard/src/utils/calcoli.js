@@ -3,7 +3,7 @@ import { differenceInMonths, differenceInCalendarDays, parseISO, addMonths, form
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 export function totaleInvestito(acquisti) {
-  return acquisti.reduce((s, a) => s + a.importoInvestito, 0)
+  return acquisti.reduce((s, a) => s + a.importoInvestito + a.fee, 0)
 }
 
 export function totaleQuote(acquisti) {
@@ -124,7 +124,7 @@ export function calcolaIRR(acquisti, prezzoCorrente) {
   const flussi = [
     ...sorted.map(acq => ({
       giorni: differenceInCalendarDays(parseISO(acq.data), dataRif),
-      importo: -acq.importoInvestito,
+      importo: -(acq.importoInvestito + acq.fee),
     })),
     {
       giorni: differenceInCalendarDays(oggi, dataRif),
@@ -218,10 +218,12 @@ export function calcolaProiezione(valoreIniziale, versamentoMensile, rendimentoA
 export function indicatoriPortafoglio(etfList) {
   let totInvestito = 0
   let totValore = 0
+  let totFee = 0
 
   for (const etf of etfList) {
     totInvestito += totaleInvestito(etf.acquisti)
     totValore += valoreAttuale(etf.acquisti, etf.prezzoCorrente)
+    totFee += etf.acquisti.reduce((s, a) => s + a.fee, 0)
   }
 
   const roi = totInvestito > 0 ? ((totValore - totInvestito) / totInvestito) * 100 : 0
@@ -238,5 +240,5 @@ export function indicatoriPortafoglio(etfList) {
     cagr = (Math.pow(totValore / totInvestito, 1 / anni) - 1) * 100
   }
 
-  return { totInvestito, totValore, roi, netto, durataM, cagr }
+  return { totInvestito, totValore, roi, netto, durataM, cagr, totFee }
 }
