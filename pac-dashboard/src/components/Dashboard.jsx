@@ -135,6 +135,81 @@ function ScenarioChip({ scenario, onAggiorna, onRimuovi }) {
   )
 }
 
+// ── Gestore Broker Modal ───────────────────────────────────────────
+
+function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiudi }) {
+  const [nomeBroker, setNomeBroker] = useState('')
+  const [coloreBroker, setColoreBroker] = useState('#6366f1')
+  const [errore, setErrore] = useState('')
+
+  async function handleAggiungi(e) {
+    e.preventDefault()
+    if (!nomeBroker.trim()) return
+    await onAggiungi(nomeBroker.trim(), coloreBroker)
+    setNomeBroker('')
+    setColoreBroker('#6366f1')
+  }
+
+  async function handleElimina(id) {
+    setErrore('')
+    await onElimina(id)
+  }
+
+  return (
+    <Modal titolo="Gestione broker" onChiudi={onChiudi} wide>
+      <div className="space-y-4">
+        {errore && <p className="text-xs text-red-400">{errore}</p>}
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {broker.map(b => (
+            <div key={b.id} className="flex items-center gap-2 py-1">
+              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: b.colore }} />
+              <span className={`flex-1 text-sm text-white ${b.archiviato ? 'opacity-50' : ''}`}>
+                {b.nome}
+                {b.archiviato && <span className="ml-1 text-xs text-amber-400">(archiviato)</span>}
+              </span>
+              <button
+                onClick={() => onAggiorna(b.id, { archiviato: !b.archiviato })}
+                className="text-xs text-slate-400 hover:text-white transition-colors"
+              >
+                {b.archiviato ? 'Ripristina' : 'Archivia'}
+              </button>
+              <button
+                onClick={() => handleElimina(b.id)}
+                className="text-xs text-red-500 hover:text-red-300 transition-colors"
+              >
+                Elimina
+              </button>
+            </div>
+          ))}
+        </div>
+        <form onSubmit={handleAggiungi} className="border-t border-slate-700 pt-4 space-y-3">
+          <p className="text-xs text-slate-400 font-medium">Nuovo broker</p>
+          <div className="flex gap-2">
+            <input
+              value={nomeBroker}
+              onChange={e => setNomeBroker(e.target.value)}
+              placeholder="Degiro, Trade Republic…"
+              className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+            />
+            <input
+              type="color"
+              value={coloreBroker}
+              onChange={e => setColoreBroker(e.target.value)}
+              className="h-9 w-12 rounded-lg border border-slate-600 bg-slate-700 cursor-pointer"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2 text-sm font-medium transition-colors"
+          >
+            Aggiungi broker
+          </button>
+        </form>
+      </div>
+    </Modal>
+  )
+}
+
 // ── Dashboard principale ───────────────────────────────────────────
 
 export default function Dashboard({ user, onSignOut }) {
@@ -146,6 +221,7 @@ export default function Dashboard({ user, onSignOut }) {
   const [modalScenario, setModalScenario] = useState(false)
   const [mostraArchiviati, setMostraArchiviati] = useState(false)
   const [errImport, setErrImport] = useState('')
+  const [modalGestoreBroker, setModalGestoreBroker] = useState(false)
 
   // Form nuovo ETF
   const [nomeETF, setNomeETF] = useState('')
@@ -166,8 +242,16 @@ export default function Dashboard({ user, onSignOut }) {
     )
   }
 
-  const etfAttivi = port.etf.filter(e => !e.archiviato)
-  const etfArchiviati = port.etf.filter(e => e.archiviato)
+  const brokerAttivi = port.broker.filter(b => !b.archiviato)
+
+  const etfFiltrate = port.brokerFiltro.length === 0
+    ? port.etf
+    : port.etf.map(e => ({
+        ...e,
+        acquisti: e.acquisti.filter(a => port.brokerFiltro.includes(a.brokerId)),
+      }))
+  const etfAttivi = etfFiltrate.filter(e => !e.archiviato)
+  const etfArchiviati = etfFiltrate.filter(e => e.archiviato)
 
   function handleAggiungiETF(e) {
     e.preventDefault()
@@ -238,6 +322,46 @@ export default function Dashboard({ user, onSignOut }) {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-8">
+
+        {/* Filtro broker */}
+        {port.broker.length > 1 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-slate-400">Broker:</span>
+            <button
+              onClick={() => port.setBrokerFiltro([])}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                port.brokerFiltro.length === 0
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'border-slate-600 text-slate-400 hover:text-white'
+              }`}
+            >Tutti</button>
+            {port.broker.map(b => (
+              <button
+                key={b.id}
+                onClick={() => {
+                  const sel = port.brokerFiltro.includes(b.id)
+                    ? port.brokerFiltro.filter(id => id !== b.id)
+                    : [...port.brokerFiltro, b.id]
+                  port.setBrokerFiltro(sel)
+                }}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors flex items-center gap-1.5 ${
+                  port.brokerFiltro.includes(b.id)
+                    ? 'border-transparent text-white'
+                    : 'border-slate-600 text-slate-400 hover:text-white'
+                } ${b.archiviato ? 'opacity-50' : ''}`}
+                style={port.brokerFiltro.includes(b.id) ? { backgroundColor: b.colore } : {}}
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: b.colore }} />
+                {b.nome}
+                {b.archiviato && <span className="opacity-70">(arch.)</span>}
+              </button>
+            ))}
+            <button
+              onClick={() => setModalGestoreBroker(true)}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            >Gestisci…</button>
+          </div>
+        )}
 
         {/* Indicatori (solo ETF attivi) */}
         {etfAttivi.length > 0 && <Indicatori etfList={etfAttivi} />}
@@ -437,8 +561,20 @@ export default function Dashboard({ user, onSignOut }) {
       {modalAcquisto && etfAttivi.length > 0 && (
         <AcquistoForm
           etfList={etfAttivi}
+          brokerList={brokerAttivi}
           onAggiungi={port.aggiungiAcquistiMultipli}
           onChiudi={() => setModalAcquisto(false)}
+        />
+      )}
+
+      {/* Modal: gestione broker */}
+      {modalGestoreBroker && (
+        <GestoreBrokerModal
+          broker={port.broker}
+          onAggiungi={port.aggiungiBroker}
+          onAggiorna={port.aggiornaBroker}
+          onElimina={port.eliminaBroker}
+          onChiudi={() => setModalGestoreBroker(false)}
         />
       )}
 

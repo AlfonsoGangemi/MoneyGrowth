@@ -5,6 +5,22 @@
 ### Schema SQL
 
 ```sql
+-- Broker
+create table broker (
+  id         uuid default gen_random_uuid() primary key,
+  user_id    uuid references auth.users not null,
+  nome       text not null,
+  colore     text not null default '#6366f1',
+  archiviato boolean not null default false,
+  created_at timestamptz default now(),
+  unique (user_id, nome)
+);
+
+alter table broker enable row level security;
+create policy "user own" on broker
+  for all using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
 -- ETF
 create table etf (
   id              uuid primary key default gen_random_uuid(),
@@ -29,6 +45,7 @@ create table acquisti (
   prezzo_unitario   numeric not null,
   quote_frazionate  numeric not null,
   fee               numeric not null default 0,
+  broker_id         uuid references broker(id) on delete restrict not null,
   created_at        timestamptz default now()
 );
 
@@ -45,7 +62,8 @@ create table scenari (
 create table config (
   user_id           uuid references auth.users(id) on delete cascade primary key,
   orizzonte_anni    integer not null default 10,
-  mostra_proiezione boolean not null default true
+  mostra_proiezione boolean not null default true,
+  broker_filtro     uuid[] not null default '{}'
 );
 
 -- Storico prezzi mensili ETF (condiviso tra utenti, chiave per ISIN)
@@ -59,15 +77,16 @@ create table etf_prezzi_storici (
   unique (isin, anno, mese)
 );
 
--- Valore del portafoglio per anno, persistito per utente
+-- Valore del portafoglio per anno, persistito per utente e broker
 create table portafoglio_storico_annuale (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid references auth.users not null,
   anno           integer not null,
+  broker_id      uuid references broker(id) on delete restrict not null,
   valore         numeric(14,2) not null,
   totale_versato numeric(14,2) not null,
   aggiornato_il  timestamptz default now(),
-  unique (user_id, anno)
+  unique (user_id, anno, broker_id)
 );
 ```
 
@@ -128,6 +147,32 @@ create policy "utente vede il proprio storico annuale"
   with check (user_id = auth.uid());
 ```
 
+### Migrazione dati esistenti (PAC-11)
+
+Eseguire in ordine su Supabase SQL editor:
+
+```sql
+-- 1. Creare broker "Default" per ogni utente che ha acquisti
+insert into broker (user_id, nome, colore)
+select distinct user_id, 'Default', '#6366f1'
+from acquisti
+on conflict (user_id, nome) do nothing;
+
+-- 2. Aggiornare acquisti esistenti con il broker_id del "Default" dell'utente
+update acquisti a
+set broker_id = b.id
+from broker b
+where b.user_id = a.user_id and b.nome = 'Default'
+  and a.broker_id is null;
+
+-- 3. Aggiornare portafoglio_storico_annuale con broker_id "Default"
+update portafoglio_storico_annuale p
+set broker_id = b.id
+from broker b
+where b.user_id = p.user_id and b.nome = 'Default'
+  and p.broker_id is null;
+```
+
 ### Variabili d'ambiente
 
 ```env
@@ -163,9 +208,29 @@ Il modello rimane invariato rispetto alla struttura originale; il mapping da sna
   "importoInvestito": 200,
   "prezzoUnitario": 88.20,
   "quoteFrazionate": 2.2676,
-  "fee": 0
+  "fee": 0,
+  "brokerId": "uuid"
 }
 ```
+
+### Broker
+```json
+{
+  "id": "uuid",
+  "nome": "Default",
+  "colore": "#6366f1",
+  "archiviato": false
+}
+```
+
+Stato globale aggiuntivo in `usePortafoglio`:
+```json
+{
+  "broker": [],
+  "brokerFiltro": []
+}
+```
+`brokerFiltro` è un array di UUID; array vuoto = tutti i broker aggregati.
 
 ### Scenario Proiezione
 ```json

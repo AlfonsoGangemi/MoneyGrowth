@@ -11,6 +11,8 @@ const SCENARI_DEFAULT = [
 const defaultState = {
   etf: [],
   scenari: [],
+  broker: [],
+  brokerFiltro: [],
   orizzonteAnni: 10,
   mostraProiezione: true,
 }
@@ -39,6 +41,16 @@ function mapAcquisto(row) {
     prezzoUnitario: Number(row.prezzo_unitario),
     quoteFrazionate: Number(row.quote_frazionate),
     fee: Number(row.fee),
+    brokerId: row.broker_id,
+  }
+}
+
+function mapBroker(row) {
+  return {
+    id: row.id,
+    nome: row.nome,
+    colore: row.colore,
+    archiviato: row.archiviato,
   }
 }
 
@@ -64,7 +76,7 @@ export function usePortafoglio(user) {
     async function carica() {
       setLoading(true)
       try {
-        const [etfRes, scenariRes, configRes] = await Promise.all([
+        const [etfRes, scenariRes, configRes, brokerRes] = await Promise.all([
           supabase
             .from('etf')
             .select('*, acquisti(*)')
@@ -80,11 +92,17 @@ export function usePortafoglio(user) {
             .select('*')
             .eq('user_id', user.id)
             .maybeSingle(),
+          supabase
+            .from('broker')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at'),
         ])
 
         if (etfRes.error) throw etfRes.error
         if (scenariRes.error) throw scenariRes.error
         if (configRes.error) throw configRes.error
+        if (brokerRes.error) throw brokerRes.error
 
         let scenari = (scenariRes.data || []).map(mapScenario)
 
@@ -98,10 +116,24 @@ export function usePortafoglio(user) {
           if (!insErr && nuovi) scenari = nuovi.map(mapScenario)
         }
 
+        let broker = (brokerRes.data || []).map(mapBroker)
+
+        // Crea broker "Default" se l'utente non ne ha ancora
+        if (broker.length === 0) {
+          const { data: def } = await supabase
+            .from('broker')
+            .insert({ user_id: user.id, nome: 'Default', colore: '#6366f1' })
+            .select()
+            .single()
+          if (def) broker = [mapBroker(def)]
+        }
+
         const config = configRes.data
         setStato({
           etf: (etfRes.data || []).map(mapETF),
           scenari,
+          broker,
+          brokerFiltro: config?.broker_filtro ?? [],
           orizzonteAnni: config?.orizzonte_anni ?? 10,
           mostraProiezione: config?.mostra_proiezione ?? true,
         })
@@ -193,6 +225,7 @@ export function usePortafoglio(user) {
         prezzo_unitario:   prezzo,
         quote_frazionate:  prezzo > 0 ? imp / prezzo : 0,
         fee:               Number(item.fee),
+        broker_id:         item.brokerId,
       }
     })
 
@@ -284,6 +317,52 @@ export function usePortafoglio(user) {
     setStato(s => ({ ...s, mostraProiezione: val }))
   }, [user])
 
+  // ── Broker ────────────────────────────────────────────────────────
+  const aggiungiBroker = useCallback(async (nome, colore) => {
+    const { data, error } = await supabase
+      .from('broker')
+      .insert({ user_id: user.id, nome, colore })
+      .select()
+      .single()
+
+    if (error) { setErrore('Errore nell\'aggiunta del broker.'); return }
+
+    setStato(s => ({ ...s, broker: [...s.broker, mapBroker(data)] }))
+  }, [user])
+
+  const aggiornaBroker = useCallback(async (id, campi) => {
+    const dbCampi = {}
+    if ('nome' in campi)       dbCampi.nome       = campi.nome
+    if ('colore' in campi)     dbCampi.colore     = campi.colore
+    if ('archiviato' in campi) dbCampi.archiviato = campi.archiviato
+
+    const { error } = await supabase.from('broker').update(dbCampi).eq('id', id)
+
+    if (error) { setErrore('Errore nell\'aggiornamento del broker.'); return }
+
+    setStato(s => ({
+      ...s,
+      broker: s.broker.map(b => b.id === id ? { ...b, ...campi } : b),
+    }))
+  }, [user])
+
+  const eliminaBroker = useCallback(async (id) => {
+    const { error } = await supabase.from('broker').delete().eq('id', id)
+
+    if (error) { setErrore('Impossibile eliminare il broker: ha acquisti associati.'); return }
+
+    setStato(s => ({
+      ...s,
+      broker: s.broker.filter(b => b.id !== id),
+      brokerFiltro: s.brokerFiltro.filter(bid => bid !== id),
+    }))
+  }, [user])
+
+  const setBrokerFiltro = useCallback(async (ids) => {
+    await supabase.from('config').upsert({ user_id: user.id, broker_filtro: ids })
+    setStato(s => ({ ...s, brokerFiltro: ids }))
+  }, [user])
+
   // ── Export ────────────────────────────────────────────────────────
   const exportJSON = useCallback(() => {
     const blob = new Blob([JSON.stringify(stato, null, 2)], { type: 'application/json' })
@@ -337,6 +416,7 @@ export function usePortafoglio(user) {
               prezzo_unitario:   a.prezzoUnitario,
               quote_frazionate:  a.quoteFrazionate,
               fee:               Number(a.fee),
+              broker_id:         a.brokerId,
             }))
           )
           if (acquistiRows.length > 0) {
@@ -390,6 +470,10 @@ export function usePortafoglio(user) {
     aggiornaScenario,
     setOrizzonteAnni,
     setMostraProiezione,
+    aggiungiBroker,
+    aggiornaBroker,
+    eliminaBroker,
+    setBrokerFiltro,
     exportJSON,
     importJSON,
   }

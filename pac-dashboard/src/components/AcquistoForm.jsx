@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 
-export default function AcquistoForm({ etfList, onAggiungi, onChiudi }) {
+export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi }) {
   const oggi = format(new Date(), 'yyyy-MM-dd')
   const [data, setData] = useState(oggi)
+  const [brokerId, setBrokerId] = useState(brokerList[0]?.id ?? '')
 
   // Per ogni ETF attivo: stato riga { selezionato, importo, prezzo }
   const [righe, setRighe] = useState(() =>
@@ -44,6 +45,7 @@ export default function AcquistoForm({ etfList, onAggiungi, onChiudi }) {
       .map(r => ({
         etfId: r.etfId,
         data,
+        brokerId,
         importoInvestito: parseFloat(r.importo),
         fee: parseFloat(r.fee) || 0,
         prezzoUnitario: parseFloat(r.prezzo.replace(',', '.')),
@@ -68,6 +70,22 @@ export default function AcquistoForm({ etfList, onAggiungi, onChiudi }) {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 min-h-0">
+          {/* Broker */}
+          {brokerList.length > 1 && (
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Broker</label>
+              <select
+                value={brokerId}
+                onChange={e => setBrokerId(e.target.value)}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+              >
+                {brokerList.map(b => (
+                  <option key={b.id} value={b.id}>{b.nome}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Data unica */}
           <div>
             <label className="block text-xs text-slate-400 mb-1">Data acquisto</label>
