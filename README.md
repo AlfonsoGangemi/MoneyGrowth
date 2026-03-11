@@ -9,7 +9,8 @@ Traccia gli acquisti, calcola gli indicatori di rendimento e proietta la crescit
 ## Funzionalità principali
 
 - **Gestione ETF** — aggiungi fino a 5 ETF, aggiorna il prezzo corrente via API JustETF, archivia quelli non più attivi
-- **Inserimento acquisti** — form multi-ETF con una sola data per tutti gli strumenti; quote frazionate calcolate automaticamente
+- **Multi-broker** — associa ogni acquisto a un broker (Degiro, Trade Republic, FINECO…); filtra indicatori e grafico per broker; gestione completa con archiviazione e colore personalizzabile
+- **Inserimento acquisti** — form multi-ETF con una sola data e broker per tutti gli strumenti; quote frazionate calcolate automaticamente
 - **Grafico storico** — andamento reale del portafoglio nel tempo, per singolo ETF e aggregato
 - **Scenari futuri** — proiezione fino a 10 anni con capitalizzazione composta mensile; scenari personalizzabili per nome, rendimento e colore
 - **Indicatori** — ROI, rendimento netto, durata mesi, CAGR, TWRR, ATWRR

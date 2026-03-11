@@ -323,43 +323,47 @@ export default function Dashboard({ user, onSignOut }) {
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-8">
 
-        {/* Filtro broker */}
-        {port.broker.length > 1 && (
+        {/* Filtro broker + gestione */}
+        {port.broker.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-slate-400">Broker:</span>
-            <button
-              onClick={() => port.setBrokerFiltro([])}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                port.brokerFiltro.length === 0
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'border-slate-600 text-slate-400 hover:text-white'
-              }`}
-            >Tutti</button>
-            {port.broker.map(b => (
-              <button
-                key={b.id}
-                onClick={() => {
-                  const sel = port.brokerFiltro.includes(b.id)
-                    ? port.brokerFiltro.filter(id => id !== b.id)
-                    : [...port.brokerFiltro, b.id]
-                  port.setBrokerFiltro(sel)
-                }}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors flex items-center gap-1.5 ${
-                  port.brokerFiltro.includes(b.id)
-                    ? 'border-transparent text-white'
-                    : 'border-slate-600 text-slate-400 hover:text-white'
-                } ${b.archiviato ? 'opacity-50' : ''}`}
-                style={port.brokerFiltro.includes(b.id) ? { backgroundColor: b.colore } : {}}
-              >
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: b.colore }} />
-                {b.nome}
-                {b.archiviato && <span className="opacity-70">(arch.)</span>}
-              </button>
-            ))}
+            {port.broker.length > 1 && (
+              <>
+                <span className="text-xs text-slate-400">Broker:</span>
+                <button
+                  onClick={() => port.setBrokerFiltro([])}
+                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                    port.brokerFiltro.length === 0
+                      ? 'bg-blue-600 border-blue-500 text-white'
+                      : 'border-slate-600 text-slate-400 hover:text-white'
+                  }`}
+                >Tutti</button>
+                {port.broker.map(b => (
+                  <button
+                    key={b.id}
+                    onClick={() => {
+                      const sel = port.brokerFiltro.includes(b.id)
+                        ? port.brokerFiltro.filter(id => id !== b.id)
+                        : [...port.brokerFiltro, b.id]
+                      port.setBrokerFiltro(sel)
+                    }}
+                    className={`text-xs px-3 py-1 rounded-full border transition-colors flex items-center gap-1.5 ${
+                      port.brokerFiltro.includes(b.id)
+                        ? 'border-transparent text-white'
+                        : 'border-slate-600 text-slate-400 hover:text-white'
+                    } ${b.archiviato ? 'opacity-50' : ''}`}
+                    style={port.brokerFiltro.includes(b.id) ? { backgroundColor: b.colore } : {}}
+                  >
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: b.colore }} />
+                    {b.nome}
+                    {b.archiviato && <span className="opacity-70">(arch.)</span>}
+                  </button>
+                ))}
+              </>
+            )}
             <button
               onClick={() => setModalGestoreBroker(true)}
               className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-            >Gestisci…</button>
+            >Gestisci broker…</button>
           </div>
         )}
 

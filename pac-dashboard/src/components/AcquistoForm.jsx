@@ -71,7 +71,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 min-h-0">
           {/* Broker */}
-          {brokerList.length > 1 && (
+          {brokerList.length >= 1 && (
             <div>
               <label className="block text-xs text-slate-400 mb-1">Broker</label>
               <select

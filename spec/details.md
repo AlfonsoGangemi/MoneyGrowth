@@ -29,11 +29,31 @@
 
 ### Hook `usePortafoglio.js` — comportamento
 
-- Al mount (con utente autenticato): carica da Supabase tutti gli ETF dell'utente con i relativi acquisti e scenari
+- Al mount (con utente autenticato): carica da Supabase tutti gli ETF dell'utente con i relativi acquisti, scenari e broker
+- Se al caricamento non esiste nessun broker, ne viene creato automaticamente uno chiamato **"Default"** (colore `#6366f1`)
 - Ogni mutazione (aggiungiETF, aggiornaETF, aggiungiAcquisto, ecc.) scrive **prima** su Supabase, poi aggiorna lo stato locale
 - In caso di errore Supabase → mostra un toast di errore; lo stato locale non viene aggiornato
-- La config utente (orizzonte anni, mostra proiezione) è sincronizzata sulla tabella `config` con upsert
+- La config utente (orizzonte anni, mostra proiezione, `broker_filtro`) è sincronizzata sulla tabella `config` con upsert
 - Export JSON rimane disponibile come backup manuale
+
+### Gestione broker in `usePortafoglio.js`
+
+Funzioni esposte:
+
+| Funzione | Descrizione |
+|---|---|
+| `aggiungiBroker(nome, colore)` | INSERT in `broker`; aggiorna stato locale |
+| `aggiornaBroker(id, campi)` | UPDATE parziale (es. `{ archiviato: true }`); aggiorna stato locale |
+| `eliminaBroker(id)` | DELETE; fallisce silenziosamente se il broker ha acquisti (`ON DELETE RESTRICT`) |
+| `setBrokerFiltro(uuids[])` | Aggiorna `brokerFiltro` nello stato e persiste su `config.broker_filtro` |
+
+Stato globale aggiunto:
+```js
+{
+  broker: [],       // array di tutti i broker dell'utente (attivi + archiviati)
+  brokerFiltro: []  // UUID selezionati; array vuoto = tutti i broker aggregati
+}
+```
 
 ### Scenari di default
 

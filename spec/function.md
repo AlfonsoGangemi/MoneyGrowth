@@ -13,10 +13,23 @@
 - Un ETF può essere **archiviato**: scompare dalla dashboard (indicatori, grafico, lista acquisti) senza essere eliminato; può essere riattivato tramite il pannello "ETF archiviati"
 - Ogni ETF ha un pulsante **modifica** (✏️) che apre una modale con tutti i campi modificabili eccetto ISIN, e un pulsante **archivia** (🗄) per nasconderlo
 
+## Gestione Broker
+- Ogni acquisto è associato a un **broker** (es. Degiro, Trade Republic, FINECO)
+- Al primo accesso viene creato automaticamente un broker **"Default"** se nessun broker esiste
+- La modale **"Gestisci broker…"** (sempre visibile in dashboard) permette di:
+  - Aggiungere un nuovo broker con nome e colore personalizzabile
+  - **Archiviare** un broker (nascosto dai filtri attivi, non eliminabile se ha acquisti associati)
+  - **Eliminare** un broker (solo se non ha acquisti collegati — vincolo `ON DELETE RESTRICT`)
+- Con più broker attivi compare una barra di **filtro chip**: "Tutti" oppure selezione multipla per broker
+  - Il filtro agisce su indicatori, grafico e card ETF (gli acquisti degli altri broker sono esclusi dal calcolo)
+  - Il filtro selezionato è persistito in Supabase (`config.broker_filtro`)
+
 ## Inserimento Acquisti
 - Il form è **multi-ETF**: un singolo acquisto PAC ha un'unica data e può includere più strumenti contemporaneamente
+- Il **broker** è selezionabile dalla lista dei broker attivi (sempre visibile anche con un solo broker)
 - Per ogni ETF attivo compare una riga con checkbox; spuntando l'ETF si espandono:
   - **Importo** (€) — pre-compilato dall'ultimo acquisto; modificabile
+  - **Fee** (€) — pre-compilata dall'ultimo acquisto; modificabile
   - **Prezzo unitario** (€) — pre-compilato dal prezzo corrente; modificabile
   - **Quote frazionate** — calcolate automaticamente (`importo / prezzo`); non editabili
 - Default data: oggi
