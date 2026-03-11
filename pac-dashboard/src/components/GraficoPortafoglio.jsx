@@ -12,7 +12,7 @@ import {
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { serieStorica, calcolaProiezione, totaleInvestito, valoreAttuale } from '../utils/calcoli'
+import { serieStorica, serieStoricaAggregata, calcolaProiezione, totaleInvestito, valoreAttuale } from '../utils/calcoli'
 
 function fmtEur(n) {
   return '€' + n.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -45,28 +45,15 @@ export default function GraficoPortafoglio({ etfList, scenari, orizzonteAnni, mo
 
     if (etfDaUsare.length === 0) return { datiGrafico: [], oggiStr }
 
-    // ── Serie storica aggregata ──────────────────────────────────────
-    const mapStorico = new Map()
-
-    for (const etf of etfDaUsare) {
-      const serie = serieStorica(etf.acquisti, etf.prezzoCorrente)
-      for (const punto of serie) {
-        mapStorico.set(punto.data, (mapStorico.get(punto.data) ?? 0) + punto.valore)
-      }
+    let serie
+    if (vista === 'aggregato') {
+      serie = serieStoricaAggregata(etfDaUsare)
+    } else {
+      const etf = etfDaUsare[0]
+      serie = serieStorica(etf.acquisti, etf.prezzoCorrente)
     }
 
-    const punteStorici = [...mapStorico.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([data, valore]) => ({ data, storico: valore }))
-
-    // ── Merge in unico array ─────────────────────────────────────────
-    const tutte = new Map()
-
-    for (const p of punteStorici) {
-      tutte.set(p.data, { data: p.data, storico: p.storico })
-    }
-
-    const datiGrafico = [...tutte.values()].sort((a, b) => a.data.localeCompare(b.data))
+    const datiGrafico = serie.map(p => ({ data: p.data, storico: p.valore }))
 
     return { datiGrafico, oggiStr }
   }, [etfList, scenari, orizzonteAnni, mostraProiezione, vista])

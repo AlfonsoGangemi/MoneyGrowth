@@ -183,6 +183,64 @@ export function serieStorica(acquisti, prezzoCorrente) {
   return punti
 }
 
+/**
+ * Serie storica aggregata per più ETF con timeline unificata.
+ * Risolve il problema dei cali artificiali quando gli ETF hanno date di acquisto diverse.
+ * Per ogni data della timeline unificata, ogni ETF contribuisce con carry-forward
+ * del proprio ultimo prezzo noto.
+ */
+export function serieStoricaAggregata(etfList) {
+  if (!etfList || etfList.length === 0) return []
+
+  // Fase 1: raccogliere tutte le date di acquisto (deduplicate)
+  const dateSet = new Set()
+  for (const etf of etfList) {
+    for (const acq of (etf.acquisti || [])) {
+      if (acq.data) dateSet.add(acq.data)
+    }
+  }
+
+  const timeline = Array.from(dateSet).sort()
+  if (timeline.length === 0) return []
+
+  // Fase 2: per ogni data, sommare il contributo di tutti gli ETF (carry-forward)
+  const punti = []
+  for (const data of timeline) {
+    let valoreGiorno = 0
+    for (const etf of etfList) {
+      let quoteAcc = 0
+      let ultimoPrezzo = null
+      for (const acq of (etf.acquisti || [])) {
+        if (acq.data <= data) {
+          quoteAcc += acq.quoteFrazionate
+          ultimoPrezzo = acq.prezzoUnitario
+        }
+      }
+      if (quoteAcc > 0 && ultimoPrezzo !== null) {
+        valoreGiorno += quoteAcc * ultimoPrezzo
+      }
+    }
+    if (valoreGiorno > 0) {
+      punti.push({ data, valore: Math.round(valoreGiorno * 100) / 100 })
+    }
+  }
+
+  // Fase 3: punto "oggi" con prezzoCorrente
+  const oggi = format(new Date(), 'yyyy-MM-dd')
+  if (!dateSet.has(oggi)) {
+    let valoreOggi = 0
+    for (const etf of etfList) {
+      const quoteAcc = (etf.acquisti || []).reduce((s, a) => s + a.quoteFrazionate, 0)
+      valoreOggi += quoteAcc * (etf.prezzoCorrente || 0)
+    }
+    if (valoreOggi > 0) {
+      punti.push({ data: oggi, valore: Math.round(valoreOggi * 100) / 100 })
+    }
+  }
+
+  return punti
+}
+
 // ── Proiezione ─────────────────────────────────────────────────────────────
 
 /**
