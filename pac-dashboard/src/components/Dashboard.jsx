@@ -438,7 +438,8 @@ export default function Dashboard({ user, onSignOut }) {
           <div className="space-y-3">
             
             <GraficoPortafoglio
-              etfList={etfAttivi}
+              etfList={etfFiltrate}
+              etfAttivi={etfAttivi}
               prezziStorici={port.prezziStorici}
             />
           </div>

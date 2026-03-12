@@ -322,9 +322,10 @@ export function serieStoricaDaPrezziStorici(etfList, prezziStorici) {
     }
   }
 
-  // Punto oggi con prezzoCorrente
+  // Punto oggi con prezzoCorrente (solo ETF attivi)
   let valoreOggi = 0
   for (const etf of etfList) {
+    if (etf.archiviato) continue
     const quoteAcc = (etf.acquisti || []).reduce((s, a) => s + a.quoteFrazionate, 0)
     valoreOggi += quoteAcc * (etf.prezzoCorrente || 0)
   }

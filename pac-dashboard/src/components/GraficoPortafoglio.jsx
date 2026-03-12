@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ResponsiveContainer,
   LineChart,
@@ -35,8 +35,14 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-export default function GraficoPortafoglio({ etfList, prezziStorici = [] }) {
+export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici = [] }) {
   const [vista, setVista] = useState('aggregato') // 'aggregato' | etfId
+
+  useEffect(() => {
+    if (vista !== 'aggregato' && !etfAttivi.some(e => e.id === vista)) {
+      setVista('aggregato')
+    }
+  }, [etfAttivi, vista])
 
   const { datiGrafico, oggiStr } = useMemo(() => {
     const oggiStr = format(new Date(), 'yyyy-MM-dd')
@@ -55,7 +61,7 @@ export default function GraficoPortafoglio({ etfList, prezziStorici = [] }) {
     const datiGrafico = serie.map(p => ({ data: p.data, storico: p.valore }))
 
     return { datiGrafico, oggiStr }
-  }, [etfList, prezziStorici, vista])
+  }, [etfList, etfAttivi, prezziStorici, vista])
 
   if (etfList.length === 0) return null
 
@@ -74,7 +80,7 @@ export default function GraficoPortafoglio({ etfList, prezziStorici = [] }) {
           >
             Aggregato
           </button>
-          {etfList.map(e => (
+          {etfAttivi.map(e => (
             <button
               key={e.id}
               onClick={() => setVista(e.id)}
