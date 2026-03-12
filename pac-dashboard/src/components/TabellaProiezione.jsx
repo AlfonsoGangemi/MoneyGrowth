@@ -36,7 +36,7 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, sto
     )
 
     const valoreOggi = etfList.reduce((s, e) => s + valoreAttuale(e.acquisti, e.prezzoCorrente), 0)
-    const versamentoMensile = etfList.reduce((s, e) => s + e.importoFisso, 0)
+    const versamentoMensile = etfList.filter(e => !e.archiviato).reduce((s, e) => s + e.importoFisso, 0)
     const oggiStr = format(new Date(), 'yyyy-MM-dd')
 
     // Proiezioni per ogni scenario (partono da oggi, coprono orizzonteAnni)
@@ -48,6 +48,11 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, sto
     // Righe totali: anni passati con storico + orizzonteAnni di proiezione
     const anniPassati = anniStorici.filter(a => a < annoCorrente)
     const totaleRighe = anniPassati.length + orizzonteAnni
+
+    // Base per il calcolo del totale versato nelle proiezioni
+    const ultimoStorico = storicoAnnuale.length > 0 ? storicoAnnuale[storicoAnnuale.length - 1] : null
+    const annoBaseVersato = ultimoStorico?.anno ?? (annoCorrente - 1)
+    const baseVersato = ultimoStorico?.totaleVersato ?? 0
 
     const righe = []
     for (let i = 0; i < totaleRighe; i++) {
@@ -73,7 +78,7 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, sto
         // Offset di proiezione: n anni dall'anno corrente (1-based)
         const annoProiezione = annoCalendario - annoCorrente + 1
         const idx = annoProiezione * 12 - 1
-        const totaleVersato = versamentoMensile * annoProiezione * 12
+        const totaleVersato = baseVersato + versamentoMensile * 12 * (annoCalendario - annoBaseVersato)
 
         const valoriScenari = proiezioniPerScenario.map(({ scenario, punti }) => {
           const valore = punti[idx]?.valore ?? 0

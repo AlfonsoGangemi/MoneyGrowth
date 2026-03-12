@@ -70,7 +70,7 @@ function calcolaAnnoStorico(anno, brokerId, etfList, prezziStorici) {
   const fineAnno = `${anno}-12-31`
   let totaleVersato = 0
   let valore = 0
-  for (const etf of etfList.filter(e => !e.archiviato)) {
+  for (const etf of etfList) {
     const acquistiAnno = etf.acquisti.filter(a =>
       a.data <= fineAnno && a.brokerId === brokerId
     )
@@ -191,18 +191,19 @@ export function usePortafoglio(user) {
         const coppie = [...new Map(
           etfMappati
             .flatMap(e => e.acquisti.map(a => ({ anno: Number(a.data.slice(0, 4)), brokerId: a.brokerId })))
-            .filter(({ anno }) => anno > 0 && anno < annoCorrente)
+            .filter(({ anno, brokerId }) => anno > 0 && anno < annoCorrente && brokerId != null)
             .map(c => [`${c.anno}-${c.brokerId}`, c])
         ).values()].filter(c => !chiaveSalvate.has(`${c.anno}-${c.brokerId}`))
 
         let storicoTutti = [...storicoRaw]
         if (coppie.length > 0) {
           const nuovi = coppie.map(({ anno, brokerId }) => calcolaAnnoStorico(anno, brokerId, etfMappati, prezziStorici))
+          // Aggiorna sempre in memoria, indipendentemente dal successo del DB
+          storicoTutti = [...storicoRaw, ...nuovi]
           const { error: backfillErr } = await supabase
             .from('portafoglio_storico_annuale')
             .upsert(nuovi.map(r => ({ user_id: user.id, anno: r.anno, broker_id: r.brokerId, valore: r.valore, totale_versato: r.totaleVersato })))
           if (backfillErr) console.error('Errore backfill storico annuale:', backfillErr)
-          else storicoTutti = [...storicoRaw, ...nuovi]
         }
 
         const storicoAnnuale = aggregaPerAnno(storicoTutti)
