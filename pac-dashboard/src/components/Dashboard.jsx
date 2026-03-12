@@ -289,6 +289,10 @@ export default function Dashboard({ user, onSignOut }) {
   const [modalGestoreBroker, setModalGestoreBroker] = useState(false)
   const [dropdownAperto, setDropdownAperto] = useState(false)
   const dropdownRef = useRef(null)
+  const [aggStato, setAggStato] = useState('idle') // 'idle' | 'running'
+  const [aggErroriIsin, setAggErroriIsin] = useState([])
+  const [globalCooldownSec, setGlobalCooldownSec] = useState(0)
+  const lastSyncByEtf = useRef({})
 
   useEffect(() => {
     if (!dropdownAperto) return
@@ -300,6 +304,49 @@ export default function Dashboard({ user, onSignOut }) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [dropdownAperto])
+
+  useEffect(() => {
+    if (globalCooldownSec <= 0) return
+    const t = setTimeout(() => setGlobalCooldownSec(s => s - 1), 1000)
+    return () => clearTimeout(t)
+  }, [globalCooldownSec])
+
+  function handleAggiornaPrezzo(id, prezzo) {
+    lastSyncByEtf.current[id] = Date.now()
+    const etfItem = port.etf.find(e => e.id === id)
+    port.aggiornaETF(id, etfItem?.isin, { prezzoCorrente: prezzo })
+  }
+
+  async function aggiornaTuttiIPrezzi() {
+    if (aggStato === 'running' || globalCooldownSec > 0) return
+    const daAggiornare = etfAttivi.filter(e => e.isin)
+    if (daAggiornare.length === 0) return
+    setAggStato('running')
+    setAggErroriIsin([])
+    const ora = Date.now()
+    const SKIP_MS = 30_000
+    const DELAY_MS = 1_500
+    const errori = []
+    for (let i = 0; i < daAggiornare.length; i++) {
+      const etf = daAggiornare[i]
+      if (ora - (lastSyncByEtf.current[etf.id] ?? 0) < SKIP_MS) continue
+      try {
+        const params = new URLSearchParams({ proxyPath: `api/etfs/${etf.isin}/quote`, locale: 'it', currency: 'EUR', isin: etf.isin })
+        const res = await fetch(`/api/justetf-proxy?${params}`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const prezzo = data?.latestQuote?.raw
+        if (!prezzo || isNaN(prezzo) || prezzo <= 0) throw new Error('prezzo non valido')
+        handleAggiornaPrezzo(etf.id, prezzo)
+      } catch {
+        errori.push(etf.isin)
+      }
+      if (i < daAggiornare.length - 1) await new Promise(r => setTimeout(r, DELAY_MS))
+    }
+    setAggErroriIsin(errori)
+    setAggStato('idle')
+    setGlobalCooldownSec(60)
+  }
 
   // Form nuovo ETF
   const [nomeETF, setNomeETF] = useState('')
@@ -483,28 +530,45 @@ export default function Dashboard({ user, onSignOut }) {
 
         {/* ETF Grid */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-white">
-              ETF ({etfAttivi.length} attivi{etfArchiviati.length > 0 ? ` · ${etfArchiviati.length} archiviati` : ''})
-            </h2>
-            <div className="flex gap-2">
-              {etfAttivi.length > 0 && (
-                <button
-                  onClick={() => setModalAcquisto(true)}
-                  className="text-sm bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-xl transition-colors font-medium"
-                >
-                  + Acquisto
-                </button>
-              )}
-              {port.etf.length < 9 && (
-                <button
-                  onClick={() => setModalNuovoETF(true)}
-                  className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl transition-colors font-medium"
-                >
-                  + ETF
-                </button>
-              )}
+          <div className="mb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-white">
+                ETF ({etfAttivi.length} attivi{etfArchiviati.length > 0 ? ` · ${etfArchiviati.length} archiviati` : ''})
+              </h2>
+              <div className="flex gap-2 items-center">
+                {etfAttivi.filter(e => e.isin).length > 0 && (
+                  <button
+                    onClick={aggiornaTuttiIPrezzi}
+                    disabled={aggStato === 'running' || globalCooldownSec > 0}
+                    className="flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-200 px-3 py-1.5 rounded-xl transition-colors"
+                  >
+                    <svg className={`w-3.5 h-3.5 ${aggStato === 'running' ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {globalCooldownSec > 0 ? `Aggiorna tutti (${globalCooldownSec}s)` : 'Aggiorna tutti'}
+                  </button>
+                )}
+                {etfAttivi.length > 0 && (
+                  <button
+                    onClick={() => setModalAcquisto(true)}
+                    className="text-sm bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-xl transition-colors font-medium"
+                  >
+                    + Acquisto
+                  </button>
+                )}
+                {port.etf.length < 9 && (
+                  <button
+                    onClick={() => setModalNuovoETF(true)}
+                    className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl transition-colors font-medium"
+                  >
+                    + ETF
+                  </button>
+                )}
+              </div>
             </div>
+            {aggErroriIsin.length > 0 && (
+              <p className="text-xs text-red-400 mt-1.5">ISIN con errori: {aggErroriIsin.join(' · ')}</p>
+            )}
           </div>
 
           {etfAttivi.length === 0 && etfArchiviati.length === 0 ? (
@@ -527,7 +591,7 @@ export default function Dashboard({ user, onSignOut }) {
                     etf={etf}
                     onModifica={(id) => setEtfDaModificare(port.etf.find(e => e.id === id))}
                     onArchivia={port.archiviaETF}
-                    onAggiornaPrezzo={(id, p) => { const etf = port.etf.find(e => e.id === id); port.aggiornaETF(id, etf?.isin, { prezzoCorrente: p }) }}
+                    onAggiornaPrezzo={handleAggiornaPrezzo}
                     onRimuoviAcquisto={port.rimuoviAcquisto}
                   />
                 ))}
@@ -550,7 +614,7 @@ export default function Dashboard({ user, onSignOut }) {
                             etf={etf}
                             onModifica={(id) => setEtfDaModificare(port.etf.find(e => e.id === id))}
                             onArchivia={port.archiviaETF}
-                            onAggiornaPrezzo={(id, p) => { const etf = port.etf.find(e => e.id === id); port.aggiornaETF(id, etf?.isin, { prezzoCorrente: p }) }}
+                            onAggiornaPrezzo={handleAggiornaPrezzo}
                             onRimuoviAcquisto={port.rimuoviAcquisto}
                           />
                           <div className="absolute inset-0 flex items-start justify-end p-3 pointer-events-none">

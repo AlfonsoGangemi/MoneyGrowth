@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   totaleInvestito,
   valoreAttuale,
@@ -22,12 +22,17 @@ function Badge({ val }) {
 }
 
 
+const COOLDOWN_MS = 30_000
+
 export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto }) {
   const [espanso, setEspanso] = useState(false)
   const [syncStato, setSyncStato] = useState('idle') // 'idle' | 'loading' | 'error'
+  const [cooldownAttivo, setCooldownAttivo] = useState(false)
+  const lastSyncAt = useRef(0)
 
   async function aggiornaPrezzoAPI() {
     if (!etf.isin) return
+    if (Date.now() - lastSyncAt.current < COOLDOWN_MS) return
     setSyncStato('loading')
     const params = new URLSearchParams({ proxyPath: `api/etfs/${etf.isin}/quote`, locale: 'it', currency: 'EUR', isin: etf.isin })
     const url = `/api/justetf-proxy?${params}`
@@ -50,6 +55,10 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
       console.error('[proxy] ERRORE:', err.message)
       setSyncStato('error')
       setTimeout(() => setSyncStato('idle'), 3000)
+    } finally {
+      lastSyncAt.current = Date.now()
+      setCooldownAttivo(true)
+      setTimeout(() => setCooldownAttivo(false), COOLDOWN_MS)
     }
   }
 
@@ -114,13 +123,15 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
             <p className="text-xl font-semibold text-white">€{fmt(etf.prezzoCorrente)}</p>
             <button
               onClick={aggiornaPrezzoAPI}
-              disabled={syncStato === 'loading' || !etf.isin}
+              disabled={syncStato === 'loading' || !etf.isin || cooldownAttivo}
               title={
                 !etf.isin
                   ? 'ISIN non impostato'
-                  : syncStato === 'error'
-                    ? 'Aggiornamento fallito'
-                    : 'Aggiorna prezzo da JustETF'
+                  : cooldownAttivo
+                    ? 'Aggiornato di recente, riprova tra poco'
+                    : syncStato === 'error'
+                      ? 'Aggiornamento fallito'
+                      : 'Aggiorna prezzo da JustETF'
               }
               className={`p-1 rounded-md transition-colors disabled:cursor-not-allowed ${
                 syncStato === 'error'
