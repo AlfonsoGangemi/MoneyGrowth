@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePortafoglio } from '../hooks/usePortafoglio'
 import ETFCard from './ETFCard'
 import AcquistoForm from './AcquistoForm'
@@ -287,6 +287,19 @@ export default function Dashboard({ user, onSignOut }) {
   const [mostraArchiviati, setMostraArchiviati] = useState(false)
   const [errImport, setErrImport] = useState('')
   const [modalGestoreBroker, setModalGestoreBroker] = useState(false)
+  const [dropdownAperto, setDropdownAperto] = useState(false)
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    if (!dropdownAperto) return
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownAperto(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [dropdownAperto])
 
   // Form nuovo ETF
   const [nomeETF, setNomeETF] = useState('')
@@ -356,27 +369,39 @@ export default function Dashboard({ user, onSignOut }) {
       {/* Navbar */}
       <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">PAC Dashboard</h1>
-            <p className="text-xs text-slate-500">{user.email}</p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          <h1 className="text-lg font-bold text-white tracking-tight">PAC Dashboard</h1>
+
+          {/* Menu utente */}
+          <div className="relative" ref={dropdownRef}>
             <button
-              onClick={port.exportJSON}
-              className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+              onClick={() => setDropdownAperto(v => !v)}
+              className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
             >
-              Export JSON
+              {user.email}
+              <svg className={`w-3 h-3 transition-transform ${dropdownAperto ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
-            <label className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
-              Import JSON
-              <input type="file" accept=".json" onChange={handleImport} className="hidden" />
-            </label>
-            <button
-              onClick={onSignOut}
-              className="text-xs bg-slate-700 hover:bg-red-900 text-slate-400 hover:text-red-300 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Logout
-            </button>
+            {dropdownAperto && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                <button
+                  onClick={() => { port.exportJSON(); setDropdownAperto(false) }}
+                  className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
+                >
+                  Esporta dati
+                </button>
+                <label className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors cursor-pointer block">
+                  Importa dati
+                  <input type="file" accept=".json" onChange={e => { handleImport(e); setDropdownAperto(false) }} className="hidden" />
+                </label>
+                <button
+                  onClick={onSignOut}
+                  className="w-full text-left text-xs text-red-400 hover:bg-slate-700 px-4 py-2.5 transition-colors border-t border-slate-700"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
         {(errImport || port.errore) && (
