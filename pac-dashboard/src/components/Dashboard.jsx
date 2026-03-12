@@ -429,7 +429,7 @@ export default function Dashboard({ user, onSignOut }) {
                     etf={etf}
                     onModifica={(id) => setEtfDaModificare(port.etf.find(e => e.id === id))}
                     onArchivia={port.archiviaETF}
-                    onAggiornaPrezzo={(id, p) => port.aggiornaETF(id, { prezzoCorrente: p })}
+                    onAggiornaPrezzo={(id, p) => { const etf = port.etf.find(e => e.id === id); port.aggiornaETF(id, etf?.isin, { prezzoCorrente: p }) }}
                     onRimuoviAcquisto={port.rimuoviAcquisto}
                   />
                 ))}
@@ -452,7 +452,7 @@ export default function Dashboard({ user, onSignOut }) {
                             etf={etf}
                             onModifica={(id) => setEtfDaModificare(port.etf.find(e => e.id === id))}
                             onArchivia={port.archiviaETF}
-                            onAggiornaPrezzo={(id, p) => port.aggiornaETF(id, { prezzoCorrente: p })}
+                            onAggiornaPrezzo={(id, p) => { const etf = port.etf.find(e => e.id === id); port.aggiornaETF(id, etf?.isin, { prezzoCorrente: p }) }}
                             onRimuoviAcquisto={port.rimuoviAcquisto}
                           />
                           <div className="absolute inset-0 flex items-start justify-end p-3 pointer-events-none">
@@ -556,7 +556,7 @@ export default function Dashboard({ user, onSignOut }) {
       {etfDaModificare && (
         <ModificaETFModal
           etf={etfDaModificare}
-          onSalva={port.aggiornaETF}
+          onSalva={(id, campi) => { const etf = port.etf.find(e => e.id === id); port.aggiornaETF(id, etf?.isin, campi) }}
           onChiudi={() => setEtfDaModificare(null)}
         />
       )}

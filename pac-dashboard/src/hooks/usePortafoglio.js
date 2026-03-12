@@ -192,11 +192,20 @@ export function usePortafoglio(user) {
     }))
   }, [stato.etf, user])
 
-  const aggiornaETF = useCallback(async (etfId, campi) => {
+  const salvaPrezzoStorico = useCallback(async (isin, prezzo) => {
+    if (!isin || !prezzo) return
+    const oggi = new Date()
+    const { error } = await supabase
+      .from('etf_prezzi_storici')
+      .upsert({ isin, anno: oggi.getFullYear(), mese: oggi.getMonth() + 1, prezzo: Number(prezzo) })
+    if (error) console.error('Errore salvataggio storico prezzi:', error)
+  }, [])
+
+  const aggiornaETF = useCallback(async (etfId, isin, campi) => {
     const dbCampi = {}
-    if ('nome' in campi)          dbCampi.nome            = campi.nome
-    if ('emittente' in campi)     dbCampi.emittente       = campi.emittente
-    if ('importoFisso' in campi)  dbCampi.importo_fisso   = campi.importoFisso
+    if ('nome' in campi)           dbCampi.nome            = campi.nome
+    if ('emittente' in campi)      dbCampi.emittente       = campi.emittente
+    if ('importoFisso' in campi)   dbCampi.importo_fisso   = campi.importoFisso
     if ('prezzoCorrente' in campi) dbCampi.prezzo_corrente = campi.prezzoCorrente
 
     const { error } = await supabase
@@ -206,11 +215,15 @@ export function usePortafoglio(user) {
 
     if (error) { setErrore('Errore nell\'aggiornamento dell\'ETF.'); return }
 
+    if ('prezzoCorrente' in campi) {
+      await salvaPrezzoStorico(isin, campi.prezzoCorrente)
+    }
+
     setStato(s => ({
       ...s,
       etf: s.etf.map(e => e.id === etfId ? { ...e, ...campi } : e),
     }))
-  }, [user])
+  }, [user, salvaPrezzoStorico])
 
   // ── Acquisti ─────────────────────────────────────────────────────
   const aggiungiAcquistiMultipli = useCallback(async (items) => {
