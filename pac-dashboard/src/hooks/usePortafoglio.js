@@ -15,6 +15,7 @@ const defaultState = {
   brokerFiltro: [],
   orizzonteAnni: 10,
   mostraProiezione: true,
+  prezziStorici: [],
 }
 
 // ── Mapping DB (snake_case) → JS (camelCase) ──────────────────────
@@ -128,14 +129,26 @@ export function usePortafoglio(user) {
           if (def) broker = [mapBroker(def)]
         }
 
+        const etfData = etfRes.data || []
+        const isins = [...new Set(etfData.map(e => e.isin).filter(Boolean))]
+        let prezziStorici = []
+        if (isins.length > 0) {
+          const { data: psData } = await supabase
+            .from('etf_prezzi_storici')
+            .select('isin, anno, mese, prezzo')
+            .in('isin', isins)
+          prezziStorici = psData || []
+        }
+
         const config = configRes.data
         setStato({
-          etf: (etfRes.data || []).map(mapETF),
+          etf: etfData.map(mapETF),
           scenari,
           broker,
           brokerFiltro: config?.broker_filtro ?? [],
           orizzonteAnni: config?.orizzonte_anni ?? 10,
           mostraProiezione: config?.mostra_proiezione ?? true,
+          prezziStorici,
         })
       } catch (e) {
         console.error(e)

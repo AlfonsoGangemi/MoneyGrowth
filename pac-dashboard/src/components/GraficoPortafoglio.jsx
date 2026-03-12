@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { serieStorica, serieStoricaAggregata, calcolaProiezione, totaleInvestito, valoreAttuale } from '../utils/calcoli'
+import { serieStorica, serieStoricaDaPrezziStorici } from '../utils/calcoli'
 
 function fmtEur(n) {
   return '€' + n.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -35,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-export default function GraficoPortafoglio({ etfList, scenari, orizzonteAnni, mostraProiezione, etfSelezionato }) {
+export default function GraficoPortafoglio({ etfList, prezziStorici = [] }) {
   const [vista, setVista] = useState('aggregato') // 'aggregato' | etfId
 
   const { datiGrafico, oggiStr } = useMemo(() => {
@@ -46,7 +46,7 @@ export default function GraficoPortafoglio({ etfList, scenari, orizzonteAnni, mo
 
     let serie
     if (vista === 'aggregato') {
-      serie = serieStoricaAggregata(etfDaUsare)
+      serie = serieStoricaDaPrezziStorici(etfDaUsare, prezziStorici)
     } else {
       const etf = etfDaUsare[0]
       serie = serieStorica(etf.acquisti, etf.prezzoCorrente)
@@ -55,7 +55,7 @@ export default function GraficoPortafoglio({ etfList, scenari, orizzonteAnni, mo
     const datiGrafico = serie.map(p => ({ data: p.data, storico: p.valore }))
 
     return { datiGrafico, oggiStr }
-  }, [etfList, scenari, orizzonteAnni, mostraProiezione, vista])
+  }, [etfList, prezziStorici, vista])
 
   if (etfList.length === 0) return null
 

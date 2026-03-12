@@ -376,9 +376,7 @@ export default function Dashboard({ user, onSignOut }) {
             
             <GraficoPortafoglio
               etfList={etfAttivi}
-              scenari={port.scenari}
-              orizzonteAnni={port.orizzonteAnni}
-              mostraProiezione={port.mostraProiezione}
+              prezziStorici={port.prezziStorici}
             />
           </div>
         )}

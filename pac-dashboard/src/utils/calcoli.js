@@ -241,6 +241,100 @@ export function serieStoricaAggregata(etfList) {
   return punti
 }
 
+/**
+ * Serie storica mensile basata su etf_prezzi_storici.
+ * Per ogni mese dalla data del primo acquisto ad oggi:
+ *   - quote accumulate di ogni ETF fino a fine mese
+ *   - prezzo con fallback a 3 livelli:
+ *       1. prezzo esatto in etf_prezzi_storici per (isin, anno, mese)
+ *       2. carry-forward: ultimo prezzo storico disponibile con chiave ≤ mese
+ *       3. prezzoUnitario dell'acquisto più recente ≤ fine mese
+ *   - contributo 0 solo se l'ETF non ha ancora acquisti in quel mese
+ *
+ * @param {Array}  etfList       - lista ETF con acquisti e prezzoCorrente
+ * @param {Array}  prezziStorici - array di { isin, anno, mese, prezzo }
+ * @returns array di { data: 'yyyy-MM-dd', valore }
+ */
+export function serieStoricaDaPrezziStorici(etfList, prezziStorici) {
+  if (!etfList || etfList.length === 0) return []
+
+  // Costruisce mappa prezziMap[isin]['yyyy-MM'] = prezzo
+  const prezziMap = {}
+  for (const p of (prezziStorici || [])) {
+    if (!prezziMap[p.isin]) prezziMap[p.isin] = {}
+    const key = `${p.anno}-${String(p.mese).padStart(2, '0')}`
+    prezziMap[p.isin][key] = Number(p.prezzo)
+  }
+
+  // Trova la data del primo acquisto fra tutti gli ETF
+  let minData = null
+  for (const etf of etfList) {
+    for (const acq of (etf.acquisti || [])) {
+      if (!minData || acq.data < minData) minData = acq.data
+    }
+  }
+  if (!minData) return []
+
+  const oggi = new Date()
+  const oggiStr = format(oggi, 'yyyy-MM-dd')
+  const oggiMese = format(oggi, 'yyyy-MM')
+
+  // Timeline mensile dal mese del primo acquisto al mese corrente
+  const timeline = []
+  let cur = parseISO(minData.slice(0, 7) + '-01')
+  while (format(cur, 'yyyy-MM') <= oggiMese) {
+    timeline.push(format(cur, 'yyyy-MM'))
+    cur = addMonths(cur, 1)
+  }
+
+  const punti = []
+  for (const meseKey of timeline) {
+    // Il mese corrente viene aggiunto separatamente con prezzoCorrente
+    if (meseKey === oggiMese) continue
+
+    let valore = 0
+    for (const etf of etfList) {
+      let quoteAcc = 0
+      let ultimoPrezzoAcquisto = null
+      for (const acq of (etf.acquisti || [])) {
+        if (acq.data.slice(0, 7) <= meseKey) {
+          quoteAcc += acq.quoteFrazionate
+          ultimoPrezzoAcquisto = acq.prezzoUnitario
+        }
+      }
+      if (quoteAcc === 0) continue
+
+      // Livello 1: prezzo esatto
+      let prezzo = prezziMap[etf.isin]?.[meseKey] ?? null
+      // Livello 2: carry-forward dal più recente prezzo storico ≤ mese
+      if (prezzo === null && prezziMap[etf.isin]) {
+        const chiavi = Object.keys(prezziMap[etf.isin]).filter(k => k <= meseKey).sort()
+        if (chiavi.length > 0) prezzo = prezziMap[etf.isin][chiavi[chiavi.length - 1]]
+      }
+      // Livello 3: prezzoUnitario acquisto più recente
+      if (prezzo === null) prezzo = ultimoPrezzoAcquisto
+
+      if (prezzo !== null) valore += quoteAcc * prezzo
+    }
+
+    if (valore > 0) {
+      punti.push({ data: meseKey + '-01', valore: Math.round(valore * 100) / 100 })
+    }
+  }
+
+  // Punto oggi con prezzoCorrente
+  let valoreOggi = 0
+  for (const etf of etfList) {
+    const quoteAcc = (etf.acquisti || []).reduce((s, a) => s + a.quoteFrazionate, 0)
+    valoreOggi += quoteAcc * (etf.prezzoCorrente || 0)
+  }
+  if (valoreOggi > 0) {
+    punti.push({ data: oggiStr, valore: Math.round(valoreOggi * 100) / 100 })
+  }
+
+  return punti
+}
+
 // ── Proiezione ─────────────────────────────────────────────────────────────
 
 /**
