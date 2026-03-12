@@ -7,7 +7,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ReferenceLine,
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
@@ -102,9 +101,6 @@ export default function GraficoPortafoglio({ etfList, scenari, orizzonteAnni, mo
             width={80}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ fontSize: 12, color: '#94a3b8', paddingTop: 12 }}
-          />
 
           {/* Linea oggi */}
           <ReferenceLine x={oggiStr} stroke="#475569" strokeDasharray="4 4" label={{ value: 'Oggi', fill: '#64748b', fontSize: 11 }} />
@@ -114,7 +110,7 @@ export default function GraficoPortafoglio({ etfList, scenari, orizzonteAnni, mo
             <Line
               type="monotone"
               dataKey="storico"
-              name="Storico"
+              name="Totale"
               stroke="#60a5fa"
               strokeWidth={2}
               dot={false}
