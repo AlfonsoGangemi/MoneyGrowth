@@ -693,6 +693,7 @@ export default function Dashboard({ user, onSignOut }) {
             etfList={etfAttivi}
             scenari={port.scenari}
             orizzonteAnni={port.orizzonteAnni}
+            storicoAnnuale={port.storicoAnnuale}
           />
         )}
 

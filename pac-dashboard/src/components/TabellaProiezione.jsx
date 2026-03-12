@@ -10,37 +10,87 @@ function fmt(val) {
   }).format(val)
 }
 
-export default function TabellaProiezione({ etfList, scenari, orizzonteAnni }) {
+function fmtPct(val) {
+  return (val >= 0 ? '+' : '') + val.toFixed(1) + '%'
+}
+
+export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, storicoAnnuale = [] }) {
   const [scenarioIdx, setScenarioIdx] = useState(0)
 
   const dati = useMemo(() => {
     if (etfList.length === 0 || scenari.length === 0) return null
 
+    const annoCorrente = new Date().getFullYear()
+    const storicoMap = Object.fromEntries(storicoAnnuale.map(r => [r.anno, r]))
+
+    // annoBase: primo anno con dati storici o acquisti, o annoCorrente se nessuno dei due
+    const anniStorici = storicoAnnuale.map(r => r.anno).sort((a, b) => a - b)
+    const primoAcquistoAnno = etfList
+      .flatMap(e => e.acquisti)
+      .map(a => Number(a.data.slice(0, 4)))
+      .filter(Boolean)
+      .reduce((min, a) => Math.min(min, a), Infinity)
+    const annoBase = Math.min(
+      anniStorici.length > 0 ? anniStorici[0] : annoCorrente,
+      isFinite(primoAcquistoAnno) ? primoAcquistoAnno : annoCorrente
+    )
+
     const valoreOggi = etfList.reduce((s, e) => s + valoreAttuale(e.acquisti, e.prezzoCorrente), 0)
     const versamentoMensile = etfList.reduce((s, e) => s + e.importoFisso, 0)
     const oggiStr = format(new Date(), 'yyyy-MM-dd')
 
-    // Per ogni scenario calcola tutti i punti mensili
+    // Proiezioni per ogni scenario (partono da oggi, coprono orizzonteAnni)
     const proiezioniPerScenario = scenari.map(sc => ({
       scenario: sc,
       punti: calcolaProiezione(valoreOggi, versamentoMensile, sc.rendimentoAnnuo, orizzonteAnni, oggiStr),
     }))
 
-    // Una riga per anno
-    const righe = []
-    for (let anno = 1; anno <= orizzonteAnni; anno++) {
-      const idx = anno * 12 - 1  // indice 0-based dell'ultimo mese dell'anno
-      const totaleVersato = versamentoMensile * anno * 12
+    // Righe totali: anni passati con storico + orizzonteAnni di proiezione
+    const anniPassati = anniStorici.filter(a => a < annoCorrente)
+    const totaleRighe = anniPassati.length + orizzonteAnni
 
-      const valoriScenari = proiezioniPerScenario.map(({ scenario, punti }) => {
-        const valore = punti[idx]?.valore ?? 0
-        return {
-          scenarioId: scenario.id,
-          valore,
-          guadagno: valore - totaleVersato,
-        }
-      })
-      righe.push({ anno, totaleVersato, valoriScenari })
+    const righe = []
+    for (let i = 0; i < totaleRighe; i++) {
+      const annoCalendario = annoBase + i
+      const storico = storicoMap[annoCalendario]
+      const isReale = annoCalendario < annoCorrente && !!storico
+
+      if (isReale) {
+        const rendimentoEur = storico.valore - storico.totaleVersato
+        const rendimentoPct = storico.totaleVersato > 0
+          ? (storico.valore / storico.totaleVersato - 1) * 100
+          : 0
+        righe.push({
+          tipo: 'reale',
+          key: `r-${annoCalendario}`,
+          label: String(annoCalendario),
+          totaleVersato: storico.totaleVersato,
+          valore: storico.valore,
+          rendimentoEur,
+          rendimentoPct,
+        })
+      } else {
+        // Offset di proiezione: n anni dall'anno corrente (1-based)
+        const annoProiezione = annoCalendario - annoCorrente + 1
+        const idx = annoProiezione * 12 - 1
+        const totaleVersato = versamentoMensile * annoProiezione * 12
+
+        const valoriScenari = proiezioniPerScenario.map(({ scenario, punti }) => {
+          const valore = punti[idx]?.valore ?? 0
+          return {
+            scenarioId: scenario.id,
+            valore,
+            guadagno: valore - totaleVersato,
+          }
+        })
+        righe.push({
+          tipo: 'proiezione',
+          key: `p-${annoCalendario}`,
+          label: String(annoCalendario),
+          totaleVersato,
+          valoriScenari,
+        })
+      }
     }
 
     return {
@@ -49,7 +99,7 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni }) {
       versamentoMensile,
       valoreOggi,
     }
-  }, [etfList, scenari, orizzonteAnni])
+  }, [etfList, scenari, orizzonteAnni, storicoAnnuale])
 
   if (!dati || dati.righe.length === 0) return null
 
@@ -106,28 +156,55 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni }) {
             </tr>
           </thead>
           <tbody>
-            {dati.righe.map((riga, i) => (
-              <tr
-                key={riga.anno}
-                className={`border-b border-slate-800 transition-colors hover:bg-slate-800/60 ${
-                  i % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-900'
-                }`}
-              >
-                <td className="px-4 py-3 text-slate-300 font-semibold">Anno {riga.anno}</td>
-                <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{fmt(riga.totaleVersato)}</td>
-                {riga.valoriScenari.map((vs, idx) => (
-                  <td
-                    key={vs.scenarioId}
-                    className={`px-4 py-3 text-right ${idx !== scenarioIdx ? 'hidden sm:table-cell' : ''}`}
+            {dati.righe.map((riga, i) => {
+              if (riga.tipo === 'reale') {
+                return (
+                  <tr
+                    key={riga.key}
+                    className="border-b border-slate-800 border-l-2 border-l-emerald-700 bg-emerald-950/30"
                   >
-                    <div className="text-white font-medium tabular-nums">{fmt(vs.valore)}</div>
-                    <div className={`text-xs tabular-nums ${vs.guadagno >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {vs.guadagno >= 0 ? '+' : ''}{fmt(vs.guadagno)}
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            ))}
+                    <td className="px-4 py-3 text-slate-300 font-semibold">
+                      <div className="flex items-center gap-2">
+                        <span>{riga.label}</span>
+                        <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-400">Reale</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{fmt(riga.totaleVersato)}</td>
+                    <td className="px-4 py-3 text-right" colSpan={dati.scenari.length}>
+                      <div className="text-white font-medium tabular-nums">{fmt(riga.valore)}</div>
+                      <div className={`text-xs tabular-nums ${riga.rendimentoEur >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {riga.rendimentoEur >= 0 ? '+' : ''}{fmt(riga.rendimentoEur)}
+                        {' '}
+                        <span className="opacity-70">{fmtPct(riga.rendimentoPct)}</span>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              }
+
+              return (
+                <tr
+                  key={riga.key}
+                  className={`border-b border-slate-800 transition-colors hover:bg-slate-800/60 ${
+                    i % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-900'
+                  }`}
+                >
+                  <td className="px-4 py-3 text-slate-300 font-semibold">{riga.label}</td>
+                  <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{fmt(riga.totaleVersato)}</td>
+                  {riga.valoriScenari.map((vs, idx) => (
+                    <td
+                      key={vs.scenarioId}
+                      className={`px-4 py-3 text-right ${idx !== scenarioIdx ? 'hidden sm:table-cell' : ''}`}
+                    >
+                      <div className="text-white font-medium tabular-nums">{fmt(vs.valore)}</div>
+                      <div className={`text-xs tabular-nums ${vs.guadagno >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {vs.guadagno >= 0 ? '+' : ''}{fmt(vs.guadagno)}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

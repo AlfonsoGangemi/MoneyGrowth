@@ -16,6 +16,7 @@ const defaultState = {
   orizzonteAnni: 10,
   mostraProiezione: true,
   prezziStorici: [],
+  storicoAnnuale: [],
 }
 
 // ── Mapping DB (snake_case) → JS (camelCase) ──────────────────────
@@ -64,6 +65,36 @@ function mapScenario(row) {
   }
 }
 
+// ── Helper puro: calcola valore e totale versato per anno+broker ──
+function calcolaAnnoStorico(anno, brokerId, etfList, prezziStorici) {
+  const fineAnno = `${anno}-12-31`
+  let totaleVersato = 0
+  let valore = 0
+  for (const etf of etfList.filter(e => !e.archiviato)) {
+    const acquistiAnno = etf.acquisti.filter(a =>
+      a.data <= fineAnno && a.brokerId === brokerId
+    )
+    totaleVersato += acquistiAnno.reduce((s, a) => s + a.importoInvestito, 0)
+    const quote = acquistiAnno.reduce((s, a) => s + a.quoteFrazionate, 0)
+    if (quote === 0) continue
+    const prezziEtf = prezziStorici
+      .filter(p => p.isin === etf.isin && p.anno === anno)
+      .sort((a, b) => b.mese - a.mese)
+    valore += quote * (prezziEtf[0]?.prezzo ?? etf.prezzoCorrente)
+  }
+  return { anno, brokerId, valore, totaleVersato }
+}
+
+// Aggrega record per-broker in un unico valore per anno
+function aggregaPerAnno(records) {
+  const map = new Map()
+  for (const r of records) {
+    const ex = map.get(r.anno) || { anno: r.anno, valore: 0, totaleVersato: 0 }
+    map.set(r.anno, { anno: r.anno, valore: ex.valore + r.valore, totaleVersato: ex.totaleVersato + r.totaleVersato })
+  }
+  return [...map.values()].sort((a, b) => a.anno - b.anno)
+}
+
 // ── Hook ──────────────────────────────────────────────────────────
 export function usePortafoglio(user) {
   const [stato, setStato] = useState(defaultState)
@@ -77,7 +108,7 @@ export function usePortafoglio(user) {
     async function carica() {
       setLoading(true)
       try {
-        const [etfRes, scenariRes, configRes, brokerRes] = await Promise.all([
+        const [etfRes, scenariRes, configRes, brokerRes, storicoRes] = await Promise.all([
           supabase
             .from('etf')
             .select('*, acquisti(*)')
@@ -98,6 +129,11 @@ export function usePortafoglio(user) {
             .select('*')
             .eq('user_id', user.id)
             .order('created_at'),
+          supabase
+            .from('portafoglio_storico_annuale')
+            .select('anno, broker_id, valore, totale_versato')
+            .eq('user_id', user.id)
+            .order('anno'),
         ])
 
         if (etfRes.error) throw etfRes.error
@@ -140,15 +176,47 @@ export function usePortafoglio(user) {
           prezziStorici = psData || []
         }
 
+        // Record raw per-broker dal DB
+        const storicoRaw = (storicoRes.data || []).map(r => ({
+          anno: r.anno,
+          brokerId: r.broker_id,
+          valore: Number(r.valore),
+          totaleVersato: Number(r.totale_versato),
+        }))
+
+        // Backfill: coppie (anno, brokerId) con acquisti ma senza record storico
+        const etfMappati = etfData.map(mapETF)
+        const annoCorrente = new Date().getFullYear()
+        const chiaveSalvate = new Set(storicoRaw.map(r => `${r.anno}-${r.brokerId}`))
+        const coppie = [...new Map(
+          etfMappati
+            .flatMap(e => e.acquisti.map(a => ({ anno: Number(a.data.slice(0, 4)), brokerId: a.brokerId })))
+            .filter(({ anno }) => anno > 0 && anno < annoCorrente)
+            .map(c => [`${c.anno}-${c.brokerId}`, c])
+        ).values()].filter(c => !chiaveSalvate.has(`${c.anno}-${c.brokerId}`))
+
+        let storicoTutti = [...storicoRaw]
+        if (coppie.length > 0) {
+          const nuovi = coppie.map(({ anno, brokerId }) => calcolaAnnoStorico(anno, brokerId, etfMappati, prezziStorici))
+          const { error: backfillErr } = await supabase
+            .from('portafoglio_storico_annuale')
+            .upsert(nuovi.map(r => ({ user_id: user.id, anno: r.anno, broker_id: r.brokerId, valore: r.valore, totale_versato: r.totaleVersato })))
+          if (backfillErr) console.error('Errore backfill storico annuale:', backfillErr)
+          else storicoTutti = [...storicoRaw, ...nuovi]
+        }
+
+        const storicoAnnuale = aggregaPerAnno(storicoTutti)
+
         const config = configRes.data
         setStato({
-          etf: etfData.map(mapETF),
+          etf: etfMappati,
           scenari,
           broker,
           brokerFiltro: config?.broker_filtro ?? [],
           orizzonteAnni: config?.orizzonte_anni ?? 10,
           mostraProiezione: config?.mostra_proiezione ?? true,
           prezziStorici,
+          storicoAnnuale,
         })
       } catch (e) {
         console.error(e)
@@ -205,14 +273,43 @@ export function usePortafoglio(user) {
     }))
   }, [stato.etf, user])
 
+  const aggiornaStoricoAnnuale = useCallback(async (anno) => {
+    // Calcola e salva un record per ogni broker con acquisti in quell'anno
+    const fineAnno = `${anno}-12-31`
+    const brokerIds = [...new Set(
+      stato.etf.flatMap(e => e.acquisti.filter(a => a.data <= fineAnno).map(a => a.brokerId))
+    )].filter(Boolean)
+    if (brokerIds.length === 0) return
+
+    const nuovi = brokerIds.map(brokerId => calcolaAnnoStorico(anno, brokerId, stato.etf, stato.prezziStorici))
+    const { error } = await supabase
+      .from('portafoglio_storico_annuale')
+      .upsert(nuovi.map(r => ({ user_id: user.id, anno: r.anno, broker_id: r.brokerId, valore: r.valore, totale_versato: r.totaleVersato })))
+    if (error) { console.error('Errore salvataggio storico annuale:', error); return }
+
+    setStato(s => {
+      const altri = s.storicoAnnuale.filter(r => r.anno !== anno)
+      const [aggregato] = aggregaPerAnno(nuovi)
+      return { ...s, storicoAnnuale: [...altri, aggregato].sort((a, b) => a.anno - b.anno) }
+    })
+  }, [stato.etf, stato.prezziStorici, user])
+
   const salvaPrezzoStorico = useCallback(async (isin, prezzo) => {
     if (!isin || !prezzo) return
     const oggi = new Date()
+    const annoCorrente = oggi.getFullYear()
     const { error } = await supabase
       .from('etf_prezzi_storici')
-      .upsert({ isin, anno: oggi.getFullYear(), mese: oggi.getMonth() + 1, prezzo: Number(prezzo) })
+      .upsert({ isin, anno: annoCorrente, mese: oggi.getMonth() + 1, prezzo: Number(prezzo) })
     if (error) console.error('Errore salvataggio storico prezzi:', error)
-  }, [])
+
+    // Backfill: per ogni anno passato che ha prezzi storici ma non ancora un record annuale
+    const anniGiàSalvati = new Set(stato.storicoAnnuale.map(r => r.anno))
+    const anniConPrezzi = [...new Set(stato.prezziStorici.map(p => p.anno))].filter(a => a < annoCorrente)
+    for (const anno of anniConPrezzi) {
+      if (!anniGiàSalvati.has(anno)) await aggiornaStoricoAnnuale(anno)
+    }
+  }, [aggiornaStoricoAnnuale, stato.prezziStorici, stato.storicoAnnuale])
 
   const aggiornaETF = useCallback(async (etfId, isin, campi) => {
     const dbCampi = {}
