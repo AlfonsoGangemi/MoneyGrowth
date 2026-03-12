@@ -135,12 +135,89 @@ function ScenarioChip({ scenario, onAggiorna, onRimuovi }) {
   )
 }
 
+// ── Riga broker con nome e colore editabili inline ─────────────────
+
+function BrokerRow({ broker: b, onAggiorna, onElimina }) {
+  const [editing, setEditing] = useState(false)
+  const [nomeTemp, setNomeTemp] = useState(b.nome)
+
+  function iniziaEdit() {
+    setNomeTemp(b.nome)
+    setEditing(true)
+  }
+
+  function salva() {
+    const nome = nomeTemp.trim()
+    if (nome && nome !== b.nome) onAggiorna(b.id, { nome })
+    setEditing(false)
+  }
+
+  function annulla() {
+    setNomeTemp(b.nome)
+    setEditing(false)
+  }
+
+  return (
+    <div className="flex items-center gap-2 py-1">
+      {/* Pallino cliccabile per cambiare colore */}
+      <label
+        className="flex-shrink-0 w-4 h-4 rounded-full cursor-pointer relative overflow-hidden"
+        style={{ backgroundColor: b.colore }}
+        title="Cambia colore"
+      >
+        <input
+          type="color"
+          value={b.colore}
+          onChange={e => onAggiorna(b.id, { colore: e.target.value })}
+          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+        />
+      </label>
+
+      {/* Nome editabile inline */}
+      {editing ? (
+        <input
+          value={nomeTemp}
+          onChange={e => setNomeTemp(e.target.value)}
+          onBlur={salva}
+          onKeyDown={e => {
+            if (e.key === 'Enter') salva()
+            if (e.key === 'Escape') annulla()
+          }}
+          className="flex-1 bg-slate-700 border border-slate-500 rounded px-2 py-0.5 text-sm text-white focus:outline-none focus:border-blue-400"
+          autoFocus
+        />
+      ) : (
+        <span
+          onClick={iniziaEdit}
+          className={`flex-1 text-sm cursor-pointer hover:text-blue-300 transition-colors ${b.archiviato ? 'text-white/50' : 'text-white'}`}
+          title="Clicca per rinominare"
+        >
+          {b.nome}
+          {b.archiviato && <span className="ml-1 text-xs text-amber-400">(archiviato)</span>}
+        </span>
+      )}
+
+      <button
+        onClick={() => onAggiorna(b.id, { archiviato: !b.archiviato })}
+        className="text-xs text-slate-400 hover:text-white transition-colors flex-shrink-0"
+      >
+        {b.archiviato ? 'Ripristina' : 'Archivia'}
+      </button>
+      <button
+        onClick={() => onElimina(b.id)}
+        className="text-xs text-red-500 hover:text-red-300 transition-colors flex-shrink-0"
+      >
+        Elimina
+      </button>
+    </div>
+  )
+}
+
 // ── Gestore Broker Modal ───────────────────────────────────────────
 
 function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiudi }) {
   const [nomeBroker, setNomeBroker] = useState('')
   const [coloreBroker, setColoreBroker] = useState('#6366f1')
-  const [errore, setErrore] = useState('')
 
   async function handleAggiungi(e) {
     e.preventDefault()
@@ -150,36 +227,17 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
     setColoreBroker('#6366f1')
   }
 
-  async function handleElimina(id) {
-    setErrore('')
-    await onElimina(id)
-  }
-
   return (
     <Modal titolo="Gestione broker" onChiudi={onChiudi} wide>
       <div className="space-y-4">
-        {errore && <p className="text-xs text-red-400">{errore}</p>}
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {broker.map(b => (
-            <div key={b.id} className="flex items-center gap-2 py-1">
-              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: b.colore }} />
-              <span className={`flex-1 text-sm text-white ${b.archiviato ? 'opacity-50' : ''}`}>
-                {b.nome}
-                {b.archiviato && <span className="ml-1 text-xs text-amber-400">(archiviato)</span>}
-              </span>
-              <button
-                onClick={() => onAggiorna(b.id, { archiviato: !b.archiviato })}
-                className="text-xs text-slate-400 hover:text-white transition-colors"
-              >
-                {b.archiviato ? 'Ripristina' : 'Archivia'}
-              </button>
-              <button
-                onClick={() => handleElimina(b.id)}
-                className="text-xs text-red-500 hover:text-red-300 transition-colors"
-              >
-                Elimina
-              </button>
-            </div>
+            <BrokerRow
+              key={b.id}
+              broker={b}
+              onAggiorna={onAggiorna}
+              onElimina={onElimina}
+            />
           ))}
         </div>
         <form onSubmit={handleAggiungi} className="border-t border-slate-700 pt-4 space-y-3">
@@ -362,8 +420,13 @@ export default function Dashboard({ user, onSignOut }) {
             )}
             <button
               onClick={() => setModalGestoreBroker(true)}
-              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-            >Gestisci broker…</button>
+              className="text-slate-500 hover:text-slate-300 transition-colors"
+              title="Gestisci broker"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
         )}
 
