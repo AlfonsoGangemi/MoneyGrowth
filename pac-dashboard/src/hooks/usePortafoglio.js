@@ -150,7 +150,7 @@ export function usePortafoglio(user) {
 
   // ── ETF ──────────────────────────────────────────────────────────
   const aggiungiETF = useCallback(async (nome, isin, emittente, importoFisso) => {
-    if (stato.etf.length >= 5) return
+    if (stato.etf.length >= 9) return
 
     const { data, error } = await supabase
       .from('etf')

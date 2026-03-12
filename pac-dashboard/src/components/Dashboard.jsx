@@ -398,7 +398,7 @@ export default function Dashboard({ user, onSignOut }) {
                   + Acquisto
                 </button>
               )}
-              {port.etf.length < 5 && (
+              {port.etf.length < 9 && (
                 <button
                   onClick={() => setModalNuovoETF(true)}
                   className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl transition-colors font-medium"

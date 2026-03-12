@@ -1,7 +1,7 @@
 # Funzionalità
 
 ## Gestione ETF
-- Aggiunta di fino a **5 ETF** (inclusi gli archiviati); gli ETF **non possono essere eliminati**
+- Aggiunta di fino a **9 ETF** (inclusi gli archiviati); gli ETF **non possono essere eliminati**
 - Campi configurabili: nome, ISIN (solo in fase di creazione, non modificabile), emittente, importo fisso mensile PAC, prezzo corrente
 - L'**emittente** viene visualizzato come sottotitolo nella card
 - L'**ISIN** è un link cliccabile alla pagina JustETF dell'ETF (`https://www.justetf.com/it/etf-profile.html?isin={ISIN}#panoramica`), si apre in una nuova tab
