@@ -268,6 +268,13 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
   )
 }
 
+// ── Helpers ────────────────────────────────────────────────────────
+
+function ultimaDataAcquisto(etf) {
+  if (!etf.acquisti.length) return ''
+  return etf.acquisti.reduce((max, a) => a.data > max ? a.data : max, '')
+}
+
 // ── Dashboard principale ───────────────────────────────────────────
 
 export default function Dashboard({ user, onSignOut }) {
@@ -302,12 +309,16 @@ export default function Dashboard({ user, onSignOut }) {
 
   const brokerAttivi = port.broker.filter(b => !b.archiviato)
 
-  const etfFiltrate = port.brokerFiltro.length === 0
+  const etfFiltrate = (port.brokerFiltro.length === 0
     ? port.etf
     : port.etf.map(e => ({
         ...e,
         acquisti: e.acquisti.filter(a => port.brokerFiltro.includes(a.brokerId)),
       }))
+  ).sort((a, b) => {
+    const d = ultimaDataAcquisto(b).localeCompare(ultimaDataAcquisto(a))
+    return d !== 0 ? d : a.isin.localeCompare(b.isin)
+  })
   const etfAttivi = etfFiltrate.filter(e => !e.archiviato)
   const etfArchiviati = etfFiltrate.filter(e => e.archiviato)
 
