@@ -221,7 +221,7 @@ export default function TabellaProiezione({
                 {righeReali.map(riga => (
                   <tr
                     key={riga.key}
-                    className="border-b border-slate-800 border-l-2 border-l-emerald-700 bg-emerald-950/30"
+                    className="border-b border-slate-800 transition-colors hover:bg-slate-800/60"
                   >
                     <td className="px-4 py-3 text-slate-300 font-semibold">{riga.label}</td>
                     <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{fmt(riga.totaleVersato)}</td>

@@ -14,7 +14,7 @@ import { it } from 'date-fns/locale'
 import { serieStorica, serieStoricaDaPrezziStorici } from '../utils/calcoli'
 
 function fmtEur(n) {
-  return '€' + n.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return '€' + Math.round(n / 1000) + 'K'
 }
 
 function fmtData(d) {
@@ -28,7 +28,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       <p className="text-slate-400 mb-2">{fmtData(label)}</p>
       {payload.map(p => (
         <p key={p.name} style={{ color: p.color }} className="font-semibold">
-          {p.name}: {fmtEur(p.value)}
+          {p.name}: €{(p.value / 1000).toFixed(1)}K
         </p>
       ))}
     </div>
@@ -101,7 +101,7 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
 
       <div className="h-52 sm:h-[360px]">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={datiGrafico} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+        <LineChart data={datiGrafico} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
           <XAxis
             dataKey="data"
@@ -112,7 +112,7 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
           <YAxis
             tickFormatter={fmtEur}
             tick={{ fill: '#94a3b8', fontSize: 11 }}
-            width={isMobile ? 0 : 80}
+            width={isMobile ? 0 : 50}
             mirror={isMobile}
           />
           <Tooltip content={<CustomTooltip />} />
