@@ -9,7 +9,7 @@ import {
 } from '../utils/calcoli'
 
 function fmt(n, dec = 2) {
-  return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec })
+  return new Intl.NumberFormat('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n)
 }
 
 function Badge({ val }) {

@@ -5,6 +5,7 @@ function fmt(val) {
   return new Intl.NumberFormat('it-IT', {
     style: 'currency',
     currency: 'EUR',
+    minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(val)
 }
@@ -122,7 +123,8 @@ export default function TabellaProiezione({
     const versamentoMensile = etfList.filter(e => !e.archiviato).reduce((s, e) => s + e.importoFisso, 0)
 
     // Base per il calcolo del totale versato nelle proiezioni
-    const ultimoStorico = storicoAnnuale.length > 0 ? storicoAnnuale[storicoAnnuale.length - 1] : null
+    const storicoOrdinato = [...storicoAnnuale].sort((a, b) => a.anno - b.anno)
+    const ultimoStorico = storicoOrdinato.length > 0 ? storicoOrdinato[storicoOrdinato.length - 1] : null
     const annoBaseVersato = ultimoStorico?.anno ?? (annoCorrente - 1)
     const baseVersato = ultimoStorico?.totaleVersato ?? 0
 
@@ -150,6 +152,7 @@ export default function TabellaProiezione({
       const annoCalendario = annoBase + i
       const storico = storicoMap[annoCalendario]
       const isReale = annoCalendario < annoCorrente && !!storico
+      if (annoCalendario < annoCorrente && !storico) continue
 
       if (isReale) {
         const rendimentoEur = storico.valore - storico.totaleVersato
