@@ -513,8 +513,8 @@ export default function Dashboard({ user, onSignOut }) {
           </div>
         )}
 
-        {/* Indicatori (solo ETF attivi) */}
-        {etfAttivi.length > 0 && <Indicatori etfList={etfAttivi} />}
+        {/* Indicatori (tutti gli ETF, inclusi archiviati) */}
+        {etfFiltrate.length > 0 && <Indicatori etfList={etfFiltrate} />}
 
         {/* Grafico (solo ETF attivi) */}
         {etfAttivi.length > 0 && (
