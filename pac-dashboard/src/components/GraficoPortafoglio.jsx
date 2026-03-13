@@ -37,6 +37,13 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici = [] }) {
   const [vista, setVista] = useState('aggregato') // 'aggregato' | etfId
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   useEffect(() => {
     if (vista !== 'aggregato' && !etfAttivi.some(e => e.id === vista)) {
@@ -69,14 +76,14 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
 
   return (
     <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <h2 className="text-base font-bold text-white">Grafico portafoglio</h2>
+      <div className="flex items-center justify-between mb-3 gap-3">
+        <h2 className="text-base font-bold text-white flex-shrink-0">Grafico portafoglio</h2>
 
-        {/* Selettore vista */}
-        <div className="flex gap-2 flex-wrap">
+        {/* Selettore vista — scroll orizzontale su mobile */}
+        <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <button
             onClick={() => setVista('aggregato')}
-            className={`text-xs px-3 py-1 rounded-full transition-colors ${vista === 'aggregato' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+            className={`flex-shrink-0 text-xs px-3 py-1 rounded-full transition-colors ${vista === 'aggregato' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
           >
             Aggregato
           </button>
@@ -84,7 +91,7 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
             <button
               key={e.id}
               onClick={() => setVista(e.id)}
-              className={`text-xs px-3 py-1 rounded-full transition-colors ${vista === e.id ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+              className={`flex-shrink-0 text-xs px-3 py-1 rounded-full transition-colors ${vista === e.id ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
             >
               {e.nome.split(' ').slice(0, 2).join(' ')}
             </button>
@@ -92,7 +99,8 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={360}>
+      <div className="h-52 sm:h-[360px]">
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart data={datiGrafico} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
           <XAxis
@@ -104,12 +112,13 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
           <YAxis
             tickFormatter={fmtEur}
             tick={{ fill: '#94a3b8', fontSize: 11 }}
-            width={80}
+            width={isMobile ? 0 : 80}
+            mirror={isMobile}
           />
           <Tooltip content={<CustomTooltip />} />
 
           {/* Linea oggi */}
-          <ReferenceLine x={oggiStr} stroke="#475569" strokeDasharray="4 4" label={{ value: 'Oggi', fill: '#64748b', fontSize: 11 }} />
+          <ReferenceLine x={oggiStr} stroke="#475569" strokeDasharray="4 4" />
 
           {/* Serie storica */}
           {hasStorico && (
@@ -125,6 +134,7 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
           )}
         </LineChart>
       </ResponsiveContainer>
+      </div>
     </div>
   )
 }
