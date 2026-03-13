@@ -1,43 +1,45 @@
 # MoneyGrowth — PAC Dashboard
 
-Dashboard web per la gestione e il monitoraggio di un **Piano di Accumulo Capitale (PAC)** su più ETF. 
+![version](https://img.shields.io/badge/version-1.0.0-blue)
 
-Traccia gli acquisti, calcola gli indicatori di rendimento e proietta la crescita futura del portafoglio su scenari personalizzabili.
+Web dashboard for managing and monitoring a **Capital Accumulation Plan (PAC)** across multiple ETFs.
 
----
-
-## Funzionalità principali
-
-- **Gestione ETF** — aggiungi fino a 5 ETF, aggiorna il prezzo corrente via API JustETF, archivia quelli non più attivi
-- **Multi-broker** — associa ogni acquisto a un broker (Degiro, Trade Republic, FINECO…); filtra indicatori e grafico per broker; gestione completa con archiviazione e colore personalizzabile
-- **Inserimento acquisti** — form multi-ETF con una sola data e broker per tutti gli strumenti; quote frazionate calcolate automaticamente
-- **Grafico storico** — andamento reale del portafoglio nel tempo, per singolo ETF e aggregato
-- **Scenari futuri** — proiezione fino a 10 anni con capitalizzazione composta mensile; scenari personalizzabili per nome, rendimento e colore
-- **Indicatori** — ROI, rendimento netto, durata mesi, CAGR, TWRR, ATWRR
+Track purchases, compute performance indicators, and project future portfolio growth across customisable scenarios.
 
 ---
 
-## Stack tecnologico
+## Features
 
-| Ruolo | Tecnologia |
+- **ETF management** — add up to 5 ETFs, update current price via JustETF API, archive inactive ones
+- **Multi-broker** — associate each purchase with a broker (Degiro, Trade Republic, FINECO…); filter indicators and chart by broker
+- **Purchase entry** — multi-ETF form with a single date and broker for all instruments; fractional shares calculated automatically
+- **Historical chart** — real portfolio value over time, per ETF and aggregated
+- **Future scenarios** — projection up to 20 years with monthly compound interest; customisable name, return rate and colour
+- **Indicators** — ROI, net return, months active, CAGR, TWRR, ATWRR
+
+---
+
+## Tech Stack
+
+| Role | Technology |
 |---|---|
 | Framework | React + Vite |
 | Styling | Tailwind CSS |
-| Grafici | Recharts |
-| Date | date-fns |
+| Charts | Recharts |
+| Dates | date-fns |
 | Auth & DB | Supabase (Auth + PostgreSQL) |
 | Deploy | Vercel |
 
 ---
 
-## Setup locale
+## Quick Start
 
-### Prerequisiti
+### Prerequisites
 
 - Node.js ≥ 18
-- Un progetto [Supabase](https://supabase.com) con le tabelle inizializzate (vedi [`spec/model.md`](spec/model.md))
+- A [Supabase](https://supabase.com) project with tables initialised (see [`docs/model.md`](docs/model.md))
 
-### Installazione
+### Install
 
 ```bash
 git clone https://github.com/AlfonsoGangemi/MoneyGrowth.git
@@ -45,16 +47,16 @@ cd MoneyGrowth/pac-dashboard
 npm install
 ```
 
-### Variabili d'ambiente
+### Environment variables
 
-Crea un file `.env.local` nella cartella `pac-dashboard/`:
+Create a `.env.local` file inside `pac-dashboard/`:
 
 ```env
 VITE_SUPABASE_URL=https://<project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key>
 ```
 
-### Avvio
+### Run
 
 ```bash
 npm run dev
@@ -62,28 +64,28 @@ npm run dev
 
 ---
 
-## Deploy su Vercel
+## Deploy on Vercel
 
-1. Collega il repository a [Vercel](https://vercel.com)
-2. Imposta la **Root Directory** su `pac-dashboard`
-3. Aggiungi le variabili d'ambiente nel pannello Vercel:
+1. Connect the repository to [Vercel](https://vercel.com)
+2. Set the **Root Directory** to `pac-dashboard`
+3. Add the environment variables in the Vercel dashboard:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-4. Il deploy avviene automaticamente ad ogni push su `main`
+4. Every push to `main` triggers an automatic deployment
 
 ---
 
-## Documentazione
+## Documentation
 
-| File | Contenuto |
+| File | Contents |
 |---|---|
-| [`spec/function.md`](spec/function.md) | Funzionalità dettagliate |
-| [`spec/model.md`](spec/model.md) | Schema DB, RLS e modello dati frontend |
-| [`spec/details.md`](spec/details.md) | Dettagli implementativi (auth, persistenza) |
-| [`spec/deploy.md`](spec/deploy.md) | Deploy su Vercel |
+| [`docs/function.md`](docs/function.md) | Detailed feature specifications |
+| [`docs/model.md`](docs/model.md) | DB schema, RLS and frontend data model |
+| [`docs/details.md`](docs/details.md) | Implementation details (auth, persistence) |
+| [`docs/deploy.md`](docs/deploy.md) | Vercel deploy guide |
 
 ---
 
-## Licenza
+## License
 
 [MIT](LICENSE)
