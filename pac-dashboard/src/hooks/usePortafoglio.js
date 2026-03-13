@@ -232,7 +232,7 @@ export function usePortafoglio(user) {
 
   // ── ETF ──────────────────────────────────────────────────────────
   const aggiungiETF = useCallback(async (nome, isin, emittente, importoFisso) => {
-    if (stato.etf.length >= 9) return
+    if (stato.etf.filter(e => !e.archiviato).length >= 9) return
 
     const { data, error } = await supabase
       .from('etf')
@@ -513,18 +513,23 @@ export function usePortafoglio(user) {
           const { error: delScenErr } = await supabase.from('scenari').delete().eq('user_id', user.id)
           if (delScenErr) throw delScenErr
 
-          // Inserisce ETF
+          // Inserisce ETF (max 9 attivi — gli eventuali in eccesso vengono archiviati)
           if ((data.etf || []).length > 0) {
-            const etfRows = data.etf.map(etf => ({
-              id:              etf.id,
-              user_id:         user.id,
-              nome:            etf.nome,
-              isin:            etf.isin,
-              emittente:       etf.emittente || '',
-              importo_fisso:   etf.importoFisso,
-              prezzo_corrente: etf.prezzoCorrente,
-              archiviato:      etf.archiviato,
-            }))
+            let attiviCount = 0
+            const etfRows = data.etf.map(etf => {
+              const archiviato = etf.archiviato || attiviCount >= 9
+              if (!archiviato) attiviCount++
+              return {
+                id:              etf.id,
+                user_id:         user.id,
+                nome:            etf.nome,
+                isin:            etf.isin,
+                emittente:       etf.emittente || '',
+                importo_fisso:   etf.importoFisso,
+                prezzo_corrente: etf.prezzoCorrente,
+                archiviato,
+              }
+            })
             const { error: insEtfErr } = await supabase.from('etf').insert(etfRows)
             if (insEtfErr) throw insEtfErr
           }

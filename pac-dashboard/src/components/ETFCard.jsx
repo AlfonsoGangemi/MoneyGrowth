@@ -24,7 +24,7 @@ function Badge({ val }) {
 
 const COOLDOWN_MS = 30_000
 
-export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto }) {
+export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto, archivaDisabilitato }) {
   const [espanso, setEspanso] = useState(false)
   const [syncStato, setSyncStato] = useState('idle') // 'idle' | 'loading' | 'error'
   const [cooldownAttivo, setCooldownAttivo] = useState(false)
@@ -104,9 +104,10 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
             </svg>
           </button>
           <button
-            onClick={() => onArchivia(etf.id)}
-            className="text-slate-500 hover:text-amber-400 transition-colors p-1.5 rounded-lg hover:bg-slate-700"
-            title="Archivia ETF"
+            onClick={() => !archivaDisabilitato && onArchivia(etf.id)}
+            disabled={archivaDisabilitato}
+            className={`transition-colors p-1.5 rounded-lg ${archivaDisabilitato ? 'text-slate-700 cursor-not-allowed' : 'text-slate-500 hover:text-amber-400 hover:bg-slate-700'}`}
+            title={archivaDisabilitato ? 'Limite di 9 ETF attivi raggiunto' : 'Archivia ETF'}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />

@@ -321,6 +321,8 @@ export default function Dashboard({ user, onSignOut }) {
   })
   const etfAttivi = etfFiltrate.filter(e => !e.archiviato)
   const etfArchiviati = etfFiltrate.filter(e => e.archiviato)
+  const etfAttiviReali = port.etf.filter(e => !e.archiviato).length
+  const limitRaggiunto = etfAttiviReali >= 9
 
   function handleAggiungiETF(e) {
     e.preventDefault()
@@ -496,14 +498,6 @@ export default function Dashboard({ user, onSignOut }) {
                     + Acquisto
                   </button>
                 )}
-                {port.etf.length < 9 && (
-                  <button
-                    onClick={() => setModalNuovoETF(true)}
-                    className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl transition-colors font-medium"
-                  >
-                    + ETF
-                  </button>
-                )}
               </div>
             </div>
             {aggErroriIsin.length > 0 && (
@@ -537,6 +531,20 @@ export default function Dashboard({ user, onSignOut }) {
                 ))}
               </div>
 
+              {/* CTA aggiunta ETF in fondo alla lista */}
+              {!limitRaggiunto ? (
+                <button
+                  onClick={() => setModalNuovoETF(true)}
+                  className="mt-4 w-full text-sm border-2 border-dashed border-slate-700 hover:border-blue-500 text-slate-500 hover:text-blue-400 py-3 rounded-2xl transition-colors"
+                >
+                  + Aggiungi ETF
+                </button>
+              ) : (
+                <p className="mt-4 text-center text-xs text-slate-500">
+                  Limite di 9 ETF attivi raggiunto — archivia un ETF per aggiungerne un altro
+                </p>
+              )}
+
               {/* ETF archiviati */}
               {etfArchiviati.length > 0 && (
                 <div className="mt-6">
@@ -556,6 +564,7 @@ export default function Dashboard({ user, onSignOut }) {
                             onArchivia={port.archiviaETF}
                             onAggiornaPrezzo={handleAggiornaPrezzo}
                             onRimuoviAcquisto={port.rimuoviAcquisto}
+                            archivaDisabilitato={limitRaggiunto}
                           />
                           <div className="absolute inset-0 flex items-start justify-end p-3 pointer-events-none">
                             <span className="text-xs bg-amber-800/80 text-amber-300 px-2 py-0.5 rounded-full">Archiviato</span>
