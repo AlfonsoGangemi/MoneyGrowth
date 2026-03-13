@@ -667,12 +667,14 @@ export default function Dashboard({ user, onSignOut }) {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-white">Scenari proiezione</h2>
-              <button
-                onClick={() => setModalScenario(true)}
-                className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl transition-colors"
-              >
-                + Scenario
-              </button>
+              {port.scenari.length < 3 && (
+                <button
+                  onClick={() => setModalScenario(true)}
+                  className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl transition-colors"
+                >
+                  + Scenario
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap gap-3">
               {port.scenari.map(sc => (

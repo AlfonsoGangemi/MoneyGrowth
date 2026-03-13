@@ -548,9 +548,9 @@ export function usePortafoglio(user) {
             if (insAcqErr) throw insAcqErr
           }
 
-          // Inserisce scenari
+          // Inserisce scenari (max 3)
           if ((data.scenari || []).length > 0) {
-            const scenariRows = data.scenari.map(s => ({
+            const scenariRows = data.scenari.slice(0, 3).map(s => ({
               id:               s.id,
               user_id:          user.id,
               nome:             s.nome,
