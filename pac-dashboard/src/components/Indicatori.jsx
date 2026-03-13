@@ -22,7 +22,8 @@ function Kpi({ label, valore, sub, positivo, neutro }) {
   )
 }
 
-export default function Indicatori({ etfList, prezziStorici = [] }) {
+export default function Indicatori({ etfList, prezziStorici = [], privacyMode = false }) {
+  const pv = (f) => privacyMode ? '••••' : f
   if (etfList.length === 0) return null
 
   const { totInvestito, totValore, roi, netto, durataM, cagr } = indicatoriPortafoglio(etfList)
@@ -72,8 +73,8 @@ export default function Indicatori({ etfList, prezziStorici = [] }) {
         />
         <Kpi
           label="Rendimento netto"
-          valore={`${netto >= 0 ? '+' : ''}€${fmt(netto, 0)}`}
-          sub={`su €${fmt(totInvestito, 0)} investiti`}
+          valore={pv(`${netto >= 0 ? '+' : ''}€${fmt(netto, 0)}`)}
+          sub={pv(`su €${fmt(totInvestito, 0)}`)+` investiti`}
           positivo={netto >= 0}
         />
         <Kpi
@@ -91,7 +92,7 @@ export default function Indicatori({ etfList, prezziStorici = [] }) {
         {/* Contesto */}
         <Kpi
           label="Valore portafoglio"
-          valore={`€${fmt(totValore, 0)}`}
+          valore={pv(`€${fmt(totValore, 0)}`)}
           neutro
         />
         <Kpi

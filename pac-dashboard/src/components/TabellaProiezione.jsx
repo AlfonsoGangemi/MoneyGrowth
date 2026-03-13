@@ -93,7 +93,9 @@ function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
 export default function TabellaProiezione({
   etfList, scenari, orizzonteAnni, storicoAnnuale = [],
   onSetOrizzonteAnni, onNuovoScenario, onAggiornaScenario, onRimuoviScenario,
+  privacyMode = false,
 }) {
+  const pv = (f) => privacyMode ? '••••' : f
   const [scenarioIdx, setScenarioIdx] = useState(0)
 
   const scenariOrdinati = useMemo(
@@ -227,11 +229,11 @@ export default function TabellaProiezione({
                     className="border-b border-slate-800 transition-colors hover:bg-slate-800/60"
                   >
                     <td className="px-4 py-3 text-slate-300 font-semibold">{riga.label}</td>
-                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{fmt(riga.totaleVersato)}</td>
+                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{pv(fmt(riga.totaleVersato))}</td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      <div className="text-white font-medium">{fmt(riga.valore)}</div>
+                      <div className="text-white font-medium">{pv(fmt(riga.valore))}</div>
                       <div className={`text-xs ${riga.rendimentoEur >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {riga.rendimentoEur >= 0 ? '+' : ''}{fmt(riga.rendimentoEur)} ({fmtPct(riga.rendimentoPct)})
+                        {pv(`${riga.rendimentoEur >= 0 ? '+' : ''}${fmt(riga.rendimentoEur)} (${fmtPct(riga.rendimentoPct)})`)}
                       </div>
                     </td>
                   </tr>
@@ -336,7 +338,7 @@ export default function TabellaProiezione({
                     className="border-b border-slate-800 transition-colors hover:bg-slate-800/60"
                   >
                     <td className="px-4 py-3 text-slate-300 font-semibold">{riga.label}</td>
-                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{fmt(riga.totaleVersato)}</td>
+                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{pv(fmt(riga.totaleVersato))}</td>
                     {riga.valoriScenari.map((vs, idx) => {
                       const isBreakEven = breakEvenKey[vs.scenarioId] === riga.key
                       return (
@@ -345,11 +347,11 @@ export default function TabellaProiezione({
                         className={`px-4 py-3 text-right ${idx !== scenarioIdx ? 'hidden sm:table-cell' : ''} ${isBreakEven ? 'bg-emerald-900/20' : ''}`}
                       >
                         <div className={`font-medium tabular-nums ${isBreakEven ? 'text-emerald-400' : 'text-white'}`}>
-                          {fmt(vs.valore)}
+                          {pv(fmt(vs.valore))}
                           {isBreakEven && <span className="ml-1 text-xs opacity-70" title="Break-even">↑</span>}
                         </div>
                         <div className={`text-xs tabular-nums ${vs.guadagno >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {vs.guadagno >= 0 ? '+' : ''}{fmt(vs.guadagno)}
+                          {pv(`${vs.guadagno >= 0 ? '+' : ''}${fmt(vs.guadagno)}`)}
                         </div>
                       </td>
                       )
@@ -365,7 +367,7 @@ export default function TabellaProiezione({
 
       {dati && (
         <p className="text-xs text-slate-500">
-          Versamento mensile: {fmt(dati.versamentoMensile)} · Portafoglio attuale: {fmt(dati.valoreOggi)}
+          Versamento mensile: {pv(fmt(dati.versamentoMensile))} · Portafoglio attuale: {pv(fmt(dati.valoreOggi))}
         </p>
       )}
     </div>

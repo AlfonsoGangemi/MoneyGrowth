@@ -21,21 +21,21 @@ function fmtData(d) {
   try { return format(parseISO(d), 'MMM yy', { locale: it }) } catch { return d }
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, privacyMode }) => {
   if (!active || !payload?.length) return null
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 shadow-xl text-sm">
       <p className="text-slate-400 mb-2">{fmtData(label)}</p>
       {payload.map(p => (
         <p key={p.name} style={{ color: p.color }} className="font-semibold">
-          {p.name}: €{(p.value / 1000).toFixed(1)}K
+          {p.name}: {privacyMode ? '••••' : `€${(p.value / 1000).toFixed(1)}K`}
         </p>
       ))}
     </div>
   )
 }
 
-export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici = [] }) {
+export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici = [], privacyMode = false }) {
   const [vista, setVista] = useState('aggregato') // 'aggregato' | etfId
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
 
@@ -110,12 +110,12 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
             minTickGap={40}
           />
           <YAxis
-            tickFormatter={fmtEur}
+            tickFormatter={privacyMode ? () => '••••' : fmtEur}
             tick={{ fill: '#94a3b8', fontSize: 11 }}
             width={isMobile ? 0 : 50}
             mirror={isMobile}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip privacyMode={privacyMode} />} />
 
           {/* Linea oggi */}
           <ReferenceLine x={oggiStr} stroke="#475569" strokeDasharray="4 4" />

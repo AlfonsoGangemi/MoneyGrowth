@@ -24,7 +24,8 @@ function Badge({ val }) {
 
 const COOLDOWN_MS = 30_000
 
-export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto, archivaDisabilitato, brokerAcquisti = [], attenuata = false }) {
+export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto, archivaDisabilitato, brokerAcquisti = [], attenuata = false, privacyMode = false }) {
+  const pv = (f) => privacyMode ? '••••' : f
   const [espanso, setEspanso] = useState(false)
   const [syncStato, setSyncStato] = useState('idle') // 'idle' | 'loading' | 'error'
   const [cooldownAttivo, setCooldownAttivo] = useState(false)
@@ -135,7 +136,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
         <div>
           <p className="text-xs text-slate-400">Prezzo corrente</p>
           <div className="flex items-center gap-1.5">
-            <p className="text-xl font-semibold text-white">€{fmt(etf.prezzoCorrente)}</p>
+            <p className="text-xl font-semibold text-white">{pv(`€${fmt(etf.prezzoCorrente)}`)}</p>
             <button
               onClick={aggiornaPrezzoAPI}
               disabled={syncStato === 'loading' || !etf.isin || cooldownAttivo}
@@ -170,7 +171,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
         </div>
         <div className="text-right">
           <p className="text-xs text-slate-400">PAC mensile</p>
-          <p className="text-lg font-semibold text-white">€{fmt(etf.importoFisso, 0)}</p>
+          <p className="text-lg font-semibold text-white">{pv(`€${fmt(etf.importoFisso, 0)}`)}</p>
         </div>
       </div>
 
@@ -178,15 +179,15 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="bg-slate-900/50 rounded-xl p-3">
           <p className="text-xs text-slate-400">Investito</p>
-          <p className="font-semibold text-white">€{fmt(inv, 0)}</p>
+          <p className="font-semibold text-white">{pv(`€${fmt(inv, 0)}`)}</p>
         </div>
         <div className="bg-slate-900/50 rounded-xl p-3">
           <p className="text-xs text-slate-400">Valore</p>
-          <p className="font-semibold text-white">€{fmt(val, 0)}</p>
+          <p className="font-semibold text-white">{pv(`€${fmt(val, 0)}`)}</p>
         </div>
         <div className="bg-slate-900/50 rounded-xl p-3">
           <p className="text-xs text-slate-400">Quote</p>
-          <p className="font-semibold text-white">{fmt(etf.acquisti.reduce((s, a) => s + a.quoteFrazionate, 0), 4)}</p>
+          <p className="font-semibold text-white">{pv(fmt(etf.acquisti.reduce((s, a) => s + a.quoteFrazionate, 0), 4))}</p>
         </div>
       </div>
 
@@ -197,13 +198,13 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
         <span className="text-xs text-slate-500">|</span>
         <span className="text-xs text-slate-300">
           Netto: <span className={netto >= 0 ? 'text-green-400' : 'text-red-400'}>
-            {netto >= 0 ? '+' : ''}€{fmt(netto, 0)}
+            {pv(`${netto >= 0 ? '+' : ''}€${fmt(netto, 0)}`)}
           </span>
         </span>
         {durataM >= 1 && (
           <>
             <span className="text-xs text-slate-500">|</span>
-            <span className="text-xs text-slate-300">CAGR: <span className="text-blue-300">{fmt(cagr)}%</span></span>
+            <span className="text-xs text-slate-300">CAGR: <span className="text-blue-300">{`${fmt(cagr)}%`}</span></span>
           </>
         )}
       </div>
@@ -222,12 +223,12 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
             {[...etf.acquisti].sort((a, b) => b.data.localeCompare(a.data)).map(acq => (
               <div key={acq.id} className="flex items-center justify-between text-xs bg-slate-900/50 rounded-lg px-3 py-2">
                 <span className="text-slate-400">{acq.data}</span>
-                <span className="text-white">€{fmt(acq.importoInvestito, 0)}</span>
+                <span className="text-white">{pv(`€${fmt(acq.importoInvestito, 0)}`)}</span>
                 {acq.fee > 0 && (
-                  <span className="text-amber-400">+€{fmt(acq.fee, 2)} fee</span>
+                  <span className="text-amber-400">{pv(`+€${fmt(acq.fee, 2)} fee`)}</span>
                 )}
-                <span className="text-slate-400">@ €{fmt(acq.prezzoUnitario)}</span>
-                <span className="text-blue-300">{fmt(acq.quoteFrazionate, 4)} q.</span>
+                <span className="text-slate-400">{`@ €${fmt(acq.prezzoUnitario)}`}</span>
+                <span className="text-blue-300">{pv(`${fmt(acq.quoteFrazionate, 4)} q.`)}</span>
                 <button
                   onClick={() => onRimuoviAcquisto(etf.id, acq.id)}
                   className="text-slate-600 hover:text-red-400 transition-colors ml-2"
