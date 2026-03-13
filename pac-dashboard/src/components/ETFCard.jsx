@@ -24,7 +24,7 @@ function Badge({ val }) {
 
 const COOLDOWN_MS = 30_000
 
-export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto, archivaDisabilitato }) {
+export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto, archivaDisabilitato, brokerAcquisti = [], attenuata = false }) {
   const [espanso, setEspanso] = useState(false)
   const [syncStato, setSyncStato] = useState('idle') // 'idle' | 'loading' | 'error'
   const [cooldownAttivo, setCooldownAttivo] = useState(false)
@@ -72,7 +72,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
   const justEtfUrl = `https://www.justetf.com/it/etf-profile.html?isin=${etf.isin}#panoramica`
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col gap-4">
+    <div className={`border rounded-2xl p-5 flex flex-col gap-4 ${attenuata ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-800 border-slate-700'}`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
@@ -93,26 +93,40 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
           </a>
         </div>
 
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <button
-            onClick={() => onModifica(etf.id)}
-            className="text-slate-500 hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-slate-700"
-            title="Modifica ETF"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
-          <button
-            onClick={() => !archivaDisabilitato && onArchivia(etf.id)}
-            disabled={archivaDisabilitato}
-            className={`transition-colors p-1.5 rounded-lg ${archivaDisabilitato ? 'text-slate-700 cursor-not-allowed' : 'text-slate-500 hover:text-amber-400 hover:bg-slate-700'}`}
-            title={archivaDisabilitato ? 'Limite di 9 ETF attivi raggiunto' : 'Archivia ETF'}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-            </svg>
-          </button>
+        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onModifica(etf.id)}
+              className="text-slate-500 hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-slate-700"
+              title="Modifica ETF"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => !archivaDisabilitato && onArchivia(etf.id)}
+              disabled={archivaDisabilitato}
+              className={`transition-colors p-1.5 rounded-lg ${archivaDisabilitato ? 'text-slate-700 cursor-not-allowed' : 'text-slate-500 hover:text-amber-400 hover:bg-slate-700'}`}
+              title={archivaDisabilitato ? 'Limite di 9 ETF attivi raggiunto' : 'Archivia ETF'}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+            </button>
+          </div>
+          {brokerAcquisti.length > 0 && (
+            <div className="flex items-center gap-1.5 px-1.5">
+              {brokerAcquisti.map(b => (
+                <span
+                  key={b.id}
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0 cursor-default"
+                  style={{ backgroundColor: b.colore }}
+                  title={b.nome}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -223,6 +237,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
           </div>
         )}
       </div>
+
     </div>
   )
 }

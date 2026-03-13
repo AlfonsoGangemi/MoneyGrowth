@@ -324,6 +324,16 @@ export default function Dashboard({ user, onSignOut }) {
   const etfAttiviReali = port.etf.filter(e => !e.archiviato).length
   const limitRaggiunto = etfAttiviReali >= 9
 
+  // Per ogni ETF, lista dei broker con almeno un acquisto (dati non filtrati)
+  const brokerPerETF = Object.fromEntries(
+    port.etf.map(e => [
+      e.id,
+      [...new Set(e.acquisti.map(a => a.brokerId))]
+        .map(id => port.broker.find(b => b.id === id))
+        .filter(Boolean),
+    ])
+  )
+
   function handleAggiungiETF(e) {
     e.preventDefault()
     if (!nomeETF.trim()) return
@@ -527,6 +537,8 @@ export default function Dashboard({ user, onSignOut }) {
                     onArchivia={port.archiviaETF}
                     onAggiornaPrezzo={handleAggiornaPrezzo}
                     onRimuoviAcquisto={port.rimuoviAcquisto}
+                    brokerAcquisti={brokerPerETF[etf.id] ?? []}
+                    attenuata={port.brokerFiltro.length > 0 && etf.acquisti.length === 0}
                   />
                 ))}
               </div>
