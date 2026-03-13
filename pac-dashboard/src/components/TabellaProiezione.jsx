@@ -315,26 +315,48 @@ export default function TabellaProiezione({
                 </tr>
               </thead>
               <tbody>
-                {righeProiezione.map((riga) => (
+                {(() => {
+                  // Precomputa: per ogni scenarioId, la key della prima riga in break-even
+                  const breakEvenKey = {}
+                  if (righeProiezione.length > 0) {
+                    const nScenari = righeProiezione[0].valoriScenari.length
+                    for (let si = 0; si < nScenari; si++) {
+                      for (const riga of righeProiezione) {
+                        const vs = riga.valoriScenari[si]
+                        if (vs && vs.valore > riga.totaleVersato) {
+                          breakEvenKey[vs.scenarioId] = riga.key
+                          break
+                        }
+                      }
+                    }
+                  }
+                  return righeProiezione.map((riga) => (
                   <tr
                     key={riga.key}
                     className="border-b border-slate-800 transition-colors hover:bg-slate-800/60"
                   >
                     <td className="px-4 py-3 text-slate-300 font-semibold">{riga.label}</td>
                     <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{fmt(riga.totaleVersato)}</td>
-                    {riga.valoriScenari.map((vs, idx) => (
+                    {riga.valoriScenari.map((vs, idx) => {
+                      const isBreakEven = breakEvenKey[vs.scenarioId] === riga.key
+                      return (
                       <td
                         key={vs.scenarioId}
-                        className={`px-4 py-3 text-right ${idx !== scenarioIdx ? 'hidden sm:table-cell' : ''}`}
+                        className={`px-4 py-3 text-right ${idx !== scenarioIdx ? 'hidden sm:table-cell' : ''} ${isBreakEven ? 'bg-emerald-900/20' : ''}`}
                       >
-                        <div className="text-white font-medium tabular-nums">{fmt(vs.valore)}</div>
+                        <div className={`font-medium tabular-nums ${isBreakEven ? 'text-emerald-400' : 'text-white'}`}>
+                          {fmt(vs.valore)}
+                          {isBreakEven && <span className="ml-1 text-xs opacity-70" title="Break-even">↑</span>}
+                        </div>
                         <div className={`text-xs tabular-nums ${vs.guadagno >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {vs.guadagno >= 0 ? '+' : ''}{fmt(vs.guadagno)}
                         </div>
                       </td>
-                    ))}
+                      )
+                    })}
                   </tr>
-                ))}
+                  ))
+                })()}
               </tbody>
             </table>
           </div>

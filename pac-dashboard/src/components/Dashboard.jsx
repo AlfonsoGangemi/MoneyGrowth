@@ -466,7 +466,7 @@ export default function Dashboard({ user, onSignOut }) {
         )}
 
         {/* Indicatori (tutti gli ETF, inclusi archiviati) */}
-        {etfFiltrate.length > 0 && <Indicatori etfList={etfFiltrate} />}
+        {etfFiltrate.length > 0 && <Indicatori etfList={etfFiltrate} prezziStorici={port.prezziStorici} />}
 
         {/* Grafico (solo ETF attivi) */}
         {etfAttivi.length > 0 && (

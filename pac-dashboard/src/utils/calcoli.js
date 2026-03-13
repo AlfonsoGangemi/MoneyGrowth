@@ -335,6 +335,44 @@ export function serieStoricaDaPrezziStorici(etfList, prezziStorici) {
   return punti
 }
 
+// ── Indicatori di rischio ───────────────────────────────────────────────────
+
+/**
+ * Max Drawdown: massima perdita percentuale dal picco.
+ * @param {Array} serie - array di { data, valore }
+ * @returns numero in % (negativo), es. -23.5 per -23.5%, o null se dati insufficienti
+ */
+export function calcolaMaxDrawdown(serie) {
+  if (!serie || serie.length < 2) return null
+  let picco = -Infinity
+  let maxDrawdown = 0
+  for (const { valore } of serie) {
+    if (valore > picco) picco = valore
+    const dd = (valore - picco) / picco
+    if (dd < maxDrawdown) maxDrawdown = dd
+  }
+  return maxDrawdown * 100
+}
+
+/**
+ * Volatilità mensile annualizzata (deviazione standard dei rendimenti mensili * sqrt(12)).
+ * @param {Array} serie - array di { data, valore } ordinato per data
+ * @returns numero in % (es. 12.3 per 12.3%), o null se dati insufficienti (< 3 punti)
+ */
+export function calcolaVolatilita(serie) {
+  if (!serie || serie.length < 3) return null
+  const rendimenti = []
+  for (let i = 1; i < serie.length; i++) {
+    if (serie[i - 1].valore > 0) {
+      rendimenti.push((serie[i].valore - serie[i - 1].valore) / serie[i - 1].valore)
+    }
+  }
+  if (rendimenti.length < 2) return null
+  const media = rendimenti.reduce((s, r) => s + r, 0) / rendimenti.length
+  const varianza = rendimenti.reduce((s, r) => s + (r - media) ** 2, 0) / (rendimenti.length - 1)
+  return Math.sqrt(varianza) * Math.sqrt(12) * 100
+}
+
 // ── Proiezione ─────────────────────────────────────────────────────────────
 
 /**
