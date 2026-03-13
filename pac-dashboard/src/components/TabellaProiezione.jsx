@@ -13,11 +13,95 @@ function fmtPct(val) {
   return (val >= 0 ? '+' : '') + val.toFixed(1) + '%'
 }
 
-export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, storicoAnnuale = [] }) {
+// ── Intestazione colonna scenario con controlli inline ──────────────
+
+function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
+  const [editRend, setEditRend] = useState(false)
+  const [nuovoRend, setNuovoRend] = useState('')
+  const [conferma, setConferma] = useState(false)
+
+  function apriEdit() {
+    setNuovoRend(String((sc.rendimentoAnnuo * 100).toFixed(1)))
+    setEditRend(true)
+  }
+
+  function salvaRend() {
+    const r = parseFloat(nuovoRend.replace(',', '.'))
+    if (!isNaN(r) && r > 0) onAggiorna(sc.id, { rendimentoAnnuo: r / 100 })
+    setEditRend(false)
+  }
+
+  return (
+    <th className={`px-4 py-3 text-right font-medium whitespace-nowrap ${idx !== scenarioIdx ? 'hidden sm:table-cell' : ''}`}>
+      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: sc.colore }} />
+        <span style={{ color: sc.colore }}>{sc.nome}</span>
+
+        {editRend ? (
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              value={nuovoRend}
+              onChange={e => setNuovoRend(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') salvaRend()
+                if (e.key === 'Escape') setEditRend(false)
+              }}
+              className="w-14 bg-slate-700 border border-slate-500 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none focus:border-blue-400"
+              autoFocus
+            />
+            <span className="text-xs text-slate-400">%</span>
+            <button onClick={salvaRend} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">✓</button>
+            <button onClick={() => setEditRend(false)} className="text-xs text-slate-500 hover:text-white transition-colors">✕</button>
+          </div>
+        ) : (
+          <button
+            onClick={apriEdit}
+            className="text-slate-500 font-normal text-xs hover:text-white transition-colors underline decoration-dotted underline-offset-2"
+            title="Modifica rendimento"
+          >
+            {(sc.rendimentoAnnuo * 100).toFixed(1)}%/a
+          </button>
+        )}
+
+        {conferma ? (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onRimuovi(sc.id)}
+              className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium"
+            >Elimina</button>
+            <button
+              onClick={() => setConferma(false)}
+              className="text-xs text-slate-500 hover:text-white transition-colors"
+            >✕</button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConferma(true)}
+            className="text-slate-600 hover:text-red-400 transition-colors text-xs"
+          >✕</button>
+        )}
+      </div>
+    </th>
+  )
+}
+
+export default function TabellaProiezione({
+  etfList, scenari, orizzonteAnni, storicoAnnuale = [],
+  onSetOrizzonteAnni, onNuovoScenario, onAggiornaScenario, onRimuoviScenario,
+}) {
   const [scenarioIdx, setScenarioIdx] = useState(0)
 
+  const scenariOrdinati = useMemo(
+    () => [...scenari].sort((a, b) => a.rendimentoAnnuo - b.rendimentoAnnuo),
+    [scenari]
+  )
+
   const dati = useMemo(() => {
-    if (etfList.length === 0 || scenari.length === 0) return null
+    if (etfList.length === 0 || scenariOrdinati.length === 0) return null
 
     const annoCorrente = new Date().getFullYear()
     const storicoMap = Object.fromEntries(storicoAnnuale.map(r => [r.anno, r]))
@@ -47,7 +131,7 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, sto
     const valoreBase = ultimoStorico?.valore ?? valoreOggi
     const versamentoAnnuo = versamentoMensile * 12
 
-    const proiezioniPerScenario = scenari.map(sc => {
+    const proiezioniPerScenario = scenariOrdinati.map(sc => {
       const valori = []
       let val = valoreBase
       for (let y = 0; y < orizzonteAnni; y++) {
@@ -111,13 +195,11 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, sto
       versamentoMensile,
       valoreOggi,
     }
-  }, [etfList, scenari, orizzonteAnni, storicoAnnuale])
+  }, [etfList, scenariOrdinati, orizzonteAnni, storicoAnnuale])
 
-  if (!dati || dati.righe.length === 0) return null
-
-  const righeReali = dati.righe.filter(r => r.tipo === 'reale')
-  const righeProiezione = dati.righe.filter(r => r.tipo === 'proiezione')
-  const scAttivo = dati.scenari[scenarioIdx]
+  const righeReali = dati ? dati.righe.filter(r => r.tipo === 'reale') : []
+  const righeProiezione = dati ? dati.righe.filter(r => r.tipo === 'proiezione') : []
+  const scAttivo = dati ? dati.scenari[scenarioIdx] : null
 
   return (
     <div className="space-y-6">
@@ -158,10 +240,35 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, sto
       )}
 
       {/* ── Sezione previsionale ────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <h2 className="text-base font-bold text-white">Proiezione</h2>
+          <div className="flex items-center gap-2 text-sm text-slate-300">
+            <span>Orizzonte:</span>
+            <input
+              type="number"
+              step="1"
+              min="1"
+              max="20"
+              value={orizzonteAnni}
+              onChange={e => onSetOrizzonteAnni(e.target.value)}
+              className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:border-blue-400"
+            />
+            <span>anni</span>
+          </div>
+        </div>
+        {scenari.length < 3 && (
+          <button
+            onClick={onNuovoScenario}
+            className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl transition-colors"
+          >
+            + Scenario
+          </button>
+        )}
+      </div>
+
       {righeProiezione.length > 0 && (
         <div>
-          <h3 className="text-base font-bold text-white mb-3">Proiezione</h3>
-
           {/* Navigazione scenario — solo mobile */}
           <div className="flex items-center justify-between mb-3 sm:hidden">
             <button
@@ -193,23 +300,19 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, sto
                   <th className="px-4 py-3 text-left text-slate-400 font-medium whitespace-nowrap w-20">Anno</th>
                   <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap w-36">Totale versato</th>
                   {dati.scenari.map((sc, idx) => (
-                    <th
+                    <ScenarioTh
                       key={sc.id}
-                      className={`px-4 py-3 text-right font-medium whitespace-nowrap ${idx !== scenarioIdx ? 'hidden sm:table-cell' : ''}`}
-                    >
-                      <div className="flex items-center justify-end gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: sc.colore }} />
-                        <span style={{ color: sc.colore }}>{sc.nome}</span>
-                        <span className="text-slate-500 font-normal text-xs">
-                          ({(sc.rendimentoAnnuo * 100).toFixed(1)}%/a)
-                        </span>
-                      </div>
-                    </th>
+                      sc={sc}
+                      idx={idx}
+                      scenarioIdx={scenarioIdx}
+                      onAggiorna={onAggiornaScenario}
+                      onRimuovi={onRimuoviScenario}
+                    />
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {righeProiezione.map((riga, i) => (
+                {righeProiezione.map((riga) => (
                   <tr
                     key={riga.key}
                     className="border-b border-slate-800 transition-colors hover:bg-slate-800/60"
@@ -235,9 +338,11 @@ export default function TabellaProiezione({ etfList, scenari, orizzonteAnni, sto
         </div>
       )}
 
-      <p className="text-xs text-slate-500">
-        Versamento mensile: {fmt(dati.versamentoMensile)} · Portafoglio attuale: {fmt(dati.valoreOggi)}
-      </p>
+      {dati && (
+        <p className="text-xs text-slate-500">
+          Versamento mensile: {fmt(dati.versamentoMensile)} · Portafoglio attuale: {fmt(dati.valoreOggi)}
+        </p>
+      )}
     </div>
   )
 }
