@@ -62,7 +62,6 @@ create table scenari (
 create table config (
   user_id           uuid references auth.users(id) on delete cascade primary key,
   orizzonte_anni    integer not null default 10,
-  mostra_proiezione boolean not null default true,
   broker_filtro     uuid[] not null default '{}'
 );
 
@@ -171,6 +170,12 @@ set broker_id = b.id
 from broker b
 where b.user_id = p.user_id and b.nome = 'Default'
   and p.broker_id is null;
+```
+
+### Migrazione PAC-61 — rimozione colonna obsoleta
+
+```sql
+ALTER TABLE config DROP COLUMN IF EXISTS mostra_proiezione;
 ```
 
 ### Variabili d'ambiente

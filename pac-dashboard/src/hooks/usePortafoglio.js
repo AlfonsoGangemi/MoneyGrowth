@@ -14,7 +14,6 @@ const defaultState = {
   broker: [],
   brokerFiltro: [],
   orizzonteAnni: 10,
-  mostraProiezione: true,
   prezziStorici: [],
   storicoAnnuale: [],
 }
@@ -215,7 +214,6 @@ export function usePortafoglio(user) {
           broker,
           brokerFiltro: config?.broker_filtro ?? [],
           orizzonteAnni: config?.orizzonte_anni ?? 10,
-          mostraProiezione: config?.mostra_proiezione ?? true,
           prezziStorici,
           storicoAnnuale,
         })
@@ -434,13 +432,6 @@ export function usePortafoglio(user) {
     setStato(s => ({ ...s, orizzonteAnni: val }))
   }, [user])
 
-  const setMostraProiezione = useCallback(async (val) => {
-    await supabase
-      .from('config')
-      .upsert({ user_id: user.id, mostra_proiezione: val })
-    setStato(s => ({ ...s, mostraProiezione: val }))
-  }, [user])
-
   // ── Broker ────────────────────────────────────────────────────────
   const aggiungiBroker = useCallback(async (nome, colore) => {
     const { data, error } = await supabase
@@ -630,7 +621,6 @@ export function usePortafoglio(user) {
     rimuoviScenario,
     aggiornaScenario,
     setOrizzonteAnni,
-    setMostraProiezione,
     aggiungiBroker,
     aggiornaBroker,
     eliminaBroker,
