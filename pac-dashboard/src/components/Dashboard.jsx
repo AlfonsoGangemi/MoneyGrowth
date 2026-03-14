@@ -227,7 +227,7 @@ export default function Dashboard({ user, onSignOut }) {
   const [mostraArchiviati, setMostraArchiviati] = useState(false)
   const [errImport, setErrImport] = useState('')
   const [modalGestoreBroker, setModalGestoreBroker] = useState(false)
-  const [privacyMode, setPrivacyMode] = useState(false)
+  const [privacyMode, setPrivacyMode] = useState(() => localStorage.getItem('privacyMode') === 'true')
   const [dropdownAperto, setDropdownAperto] = useState(false)
   const dropdownRef = useRef(null)
   const [aggStato, setAggStato] = useState('idle') // 'idle' | 'running'
@@ -374,7 +374,7 @@ export default function Dashboard({ user, onSignOut }) {
           {/* Azioni navbar destra */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setPrivacyMode(v => !v)}
+              onClick={() => setPrivacyMode(v => { const next = !v; localStorage.setItem('privacyMode', next); return next })}
               className={`transition-colors ${privacyMode ? 'text-amber-400' : 'text-slate-400 hover:text-white'}`}
               title={privacyMode ? 'Mostra importi' : 'Nascondi importi'}
             >
