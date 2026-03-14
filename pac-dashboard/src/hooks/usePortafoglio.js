@@ -489,7 +489,21 @@ export function usePortafoglio(user) {
 
   // ── Export ────────────────────────────────────────────────────────
   const exportJSON = useCallback(() => {
-    const blob = new Blob([JSON.stringify(stato, null, 2)], { type: 'application/json' })
+    // Escludi: dati condivisi, derivati, stato UI e configurazione obsoleta
+    // eslint-disable-next-line no-unused-vars
+    const { prezziStorici, storicoAnnuale, brokerFiltro, mostraProiezione, scenari, ...daEsportare } = stato
+
+    // Aggiungi brokerNome in ogni acquisto per mapping portabile tra account
+    const brokerMap = new Map(stato.broker.map(b => [b.id, b.nome]))
+    const etfConMeta = daEsportare.etf.map(etf => ({
+      ...etf,
+      acquisti: (etf.acquisti || []).map(a => ({
+        ...a,
+        brokerNome: brokerMap.get(a.brokerId) ?? null,
+      })),
+    }))
+
+    const blob = new Blob([JSON.stringify({ ...daEsportare, etf: etfConMeta }, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -498,7 +512,7 @@ export function usePortafoglio(user) {
     URL.revokeObjectURL(url)
   }, [stato])
 
-  // ── Import (sovrascrive tutti i dati su Supabase) ─────────────────
+  // ── Import (sovrascrive ETF e acquisti su Supabase) ───────────────
   const importJSON = useCallback((file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -506,75 +520,93 @@ export function usePortafoglio(user) {
         try {
           const data = JSON.parse(e.target.result)
 
-          // Cancella ETF (cascade elimina automaticamente gli acquisti collegati)
+          // Mappa oldId→nome dai broker del JSON (backward compat con file senza brokerNome)
+          const oldBrokerIdToNome = new Map((data.broker || []).map(b => [b.id, b.nome]))
+
+          // Carica broker esistenti nel DB e inserisce quelli mancanti dal JSON
+          const { data: brokerEsistenti, error: brkLoadErr } = await supabase
+            .from('broker').select('id, nome').eq('user_id', user.id)
+          if (brkLoadErr) throw brkLoadErr
+          const brokerNomi = new Map((brokerEsistenti || []).map(b => [b.nome, b.id]))
+          for (const b of (data.broker || [])) {
+            if (!brokerNomi.has(b.nome)) {
+              const { data: row } = await supabase
+                .from('broker')
+                .insert({ user_id: user.id, nome: b.nome, colore: b.colore })
+                .select('id, nome')
+                .single()
+              if (row) brokerNomi.set(row.nome, row.id)
+            }
+          }
+
+          // Cancella ETF esistenti (cascade elimina automaticamente gli acquisti)
           const { error: delEtfErr } = await supabase.from('etf').delete().eq('user_id', user.id)
           if (delEtfErr) throw delEtfErr
 
-          const { error: delScenErr } = await supabase.from('scenari').delete().eq('user_id', user.id)
-          if (delScenErr) throw delScenErr
-
-          // Inserisce ETF (max 9 attivi — gli eventuali in eccesso vengono archiviati)
+          // Inserisce ETF uno alla volta per ottenere gli UUID reali → Map<isin, dbId>
+          const isinMap = new Map()
           if ((data.etf || []).length > 0) {
             let attiviCount = 0
-            const etfRows = data.etf.map(etf => {
+            for (const etf of data.etf) {
               const archiviato = etf.archiviato || attiviCount >= 9
               if (!archiviato) attiviCount++
-              return {
-                id:              etf.id,
-                user_id:         user.id,
-                nome:            etf.nome,
-                isin:            etf.isin,
-                emittente:       etf.emittente || '',
-                importo_fisso:   etf.importoFisso,
-                prezzo_corrente: etf.prezzoCorrente,
-                archiviato,
-              }
-            })
-            const { error: insEtfErr } = await supabase.from('etf').insert(etfRows)
-            if (insEtfErr) throw insEtfErr
+              const { data: row, error } = await supabase
+                .from('etf')
+                .insert({
+                  user_id:         user.id,
+                  nome:            etf.nome,
+                  isin:            etf.isin,
+                  emittente:       etf.emittente || '',
+                  importo_fisso:   etf.importoFisso,
+                  prezzo_corrente: etf.prezzoCorrente,
+                  archiviato,
+                })
+                .select('id, isin')
+                .single()
+              if (error) throw error
+              isinMap.set(etf.isin, row.id)
+            }
           }
 
-          // Inserisce acquisti
+          // Inserisce acquisti con etf_id da isinMap e broker_id da brokerNomi
           const acquistiRows = (data.etf || []).flatMap(etf =>
-            (etf.acquisti || []).map(a => ({
-              id:                a.id,
-              etf_id:            etf.id,
-              user_id:           user.id,
-              data:              a.data,
-              importo_investito: a.importoInvestito,
-              prezzo_unitario:   a.prezzoUnitario,
-              quote_frazionate:  a.quoteFrazionate,
-              fee:               Number(a.fee),
-              broker_id:         a.brokerId,
-            }))
+            (etf.acquisti || []).map(a => {
+              const bNome = a.brokerNome ?? oldBrokerIdToNome.get(a.brokerId) ?? null
+              return {
+                id:                a.id,
+                etf_id:            isinMap.get(etf.isin),
+                user_id:           user.id,
+                data:              a.data,
+                importo_investito: a.importoInvestito,
+                prezzo_unitario:   a.prezzoUnitario,
+                quote_frazionate:  a.quoteFrazionate,
+                fee:               Number(a.fee),
+                broker_id:         bNome ? (brokerNomi.get(bNome) ?? null) : null,
+              }
+            })
           )
           if (acquistiRows.length > 0) {
             const { error: insAcqErr } = await supabase.from('acquisti').insert(acquistiRows)
             if (insAcqErr) throw insAcqErr
           }
 
-          // Inserisce scenari (max 3)
-          if ((data.scenari || []).length > 0) {
-            const scenariRows = data.scenari.slice(0, 3).map(s => ({
-              id:               s.id,
-              user_id:          user.id,
-              nome:             s.nome,
-              rendimento_annuo: s.rendimentoAnnuo,
-              colore:           s.colore,
-            }))
-            const { error: insScenErr } = await supabase.from('scenari').insert(scenariRows)
-            if (insScenErr) throw insScenErr
-          }
-
-          // Aggiorna config
+          // Aggiorna config (mostra_proiezione escluso: campo obsoleto)
           const { error: confErr } = await supabase.from('config').upsert({
-            user_id:           user.id,
-            orizzonte_anni:    data.orizzonteAnni ?? 10,
-            mostra_proiezione: data.mostraProiezione ?? true,
+            user_id:        user.id,
+            orizzonte_anni: data.orizzonteAnni ?? 10,
           })
           if (confErr) throw confErr
 
-          setStato({ ...defaultState, ...data })
+          // Ricarica broker freschi dal DB (UUID corretti post-import)
+          const { data: brokerFreschi } = await supabase.from('broker').select('*').eq('user_id', user.id)
+
+          setStato(s => ({
+            ...defaultState,
+            ...data,
+            broker:       (brokerFreschi || []).map(mapBroker),
+            scenari:      s.scenari,      // preservati: non toccati dall'import
+            brokerFiltro: s.brokerFiltro, // preservato: stato UI
+          }))
           resolve()
         } catch (err) {
           reject(err instanceof SyntaxError ? new Error('File JSON non valido') : err)
