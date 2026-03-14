@@ -636,8 +636,8 @@ export default function Dashboard({ user, onSignOut }) {
       {modalNuovoETF && (
         <Modal titolo="Nuovo ETF" onChiudi={() => setModalNuovoETF(false)}>
           <form onSubmit={handleAggiungiETF} className="space-y-4">
-            <Input label="Nome ETF" value={nomeETF} onChange={e => setNomeETF(e.target.value)} placeholder="iShares Core MSCI World" required />
             <Input label="ISIN" value={isinETF} onChange={e => setIsinETF(e.target.value)} placeholder="IE00B4L5Y983" />
+            <Input label="Nome ETF" value={nomeETF} onChange={e => setNomeETF(e.target.value)} placeholder="iShares Core MSCI World" required />
             <Input label="Emittente" value={emittenteETF} onChange={e => setEmittenteETF(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
             <Input label="Importo PAC mensile (€)" type="number" step="0.01" min="0" value={importoETF} onChange={e => setImportoETF(e.target.value)} placeholder="200" />
             <div className="flex gap-3 pt-2">
