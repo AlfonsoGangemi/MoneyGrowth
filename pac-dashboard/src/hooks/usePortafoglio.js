@@ -100,11 +100,9 @@ export function usePortafoglio(user) {
   const [loading, setLoading] = useState(true)
   const [errore, setErrore] = useState('')
 
-  // ── Caricamento iniziale ───────────────────────────────────────
-  useEffect(() => {
+  // ── Caricamento dati (riutilizzabile) ─────────────────────────
+  const caricaDati = useCallback(async () => {
     if (!user) return
-
-    async function carica() {
       setLoading(true)
       try {
         const [etfRes, scenariRes, configRes, brokerRes, storicoRes] = await Promise.all([
@@ -223,10 +221,9 @@ export function usePortafoglio(user) {
       } finally {
         setLoading(false)
       }
-    }
-
-    carica()
   }, [user])
+
+  useEffect(() => { caricaDati() }, [caricaDati])
 
   // ── ETF ──────────────────────────────────────────────────────────
   const aggiungiETF = useCallback(async (nome, isin, emittente, importoFisso) => {
@@ -486,15 +483,16 @@ export function usePortafoglio(user) {
 
     // Aggiungi brokerNome in ogni acquisto per mapping portabile tra account
     const brokerMap = new Map(stato.broker.map(b => [b.id, b.nome]))
-    const etfConMeta = daEsportare.etf.map(etf => ({
+    const etfConMeta = daEsportare.etf.map(({ id: _etfId, ...etf }) => ({
       ...etf,
-      acquisti: (etf.acquisti || []).map(a => ({
+      acquisti: (etf.acquisti || []).map(({ id: _aId, brokerId, ...a }) => ({
         ...a,
-        brokerNome: brokerMap.get(a.brokerId) ?? null,
+        brokerNome: brokerMap.get(brokerId) ?? null,
       })),
     }))
+    const brokerSenzaId = (daEsportare.broker || []).map(({ id: _bId, ...b }) => b)
 
-    const blob = new Blob([JSON.stringify({ ...daEsportare, etf: etfConMeta }, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify({ ...daEsportare, broker: brokerSenzaId, etf: etfConMeta }, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -508,11 +506,9 @@ export function usePortafoglio(user) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = async (e) => {
+        setLoading(true)
         try {
           const data = JSON.parse(e.target.result)
-
-          // Mappa oldId→nome dai broker del JSON (backward compat con file senza brokerNome)
-          const oldBrokerIdToNome = new Map((data.broker || []).map(b => [b.id, b.nome]))
 
           // Carica broker esistenti nel DB e inserisce quelli mancanti dal JSON
           const { data: brokerEsistenti, error: brkLoadErr } = await supabase
@@ -562,9 +558,8 @@ export function usePortafoglio(user) {
           // Inserisce acquisti con etf_id da isinMap e broker_id da brokerNomi
           const acquistiRows = (data.etf || []).flatMap(etf =>
             (etf.acquisti || []).map(a => {
-              const bNome = a.brokerNome ?? oldBrokerIdToNome.get(a.brokerId) ?? null
+              const bNome = a.brokerNome ?? null
               return {
-                id:                a.id,
                 etf_id:            isinMap.get(etf.isin),
                 user_id:           user.id,
                 data:              a.data,
@@ -588,24 +583,16 @@ export function usePortafoglio(user) {
           })
           if (confErr) throw confErr
 
-          // Ricarica broker freschi dal DB (UUID corretti post-import)
-          const { data: brokerFreschi } = await supabase.from('broker').select('*').eq('user_id', user.id)
-
-          setStato(s => ({
-            ...defaultState,
-            ...data,
-            broker:       (brokerFreschi || []).map(mapBroker),
-            scenari:      s.scenari,      // preservati: non toccati dall'import
-            brokerFiltro: s.brokerFiltro, // preservato: stato UI
-          }))
+          await caricaDati()
           resolve()
         } catch (err) {
+          setLoading(false)
           reject(err instanceof SyntaxError ? new Error('File JSON non valido') : err)
         }
       }
       reader.readAsText(file)
     })
-  }, [user])
+  }, [user, caricaDati])
 
   return {
     ...stato,
