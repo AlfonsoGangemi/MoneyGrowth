@@ -215,6 +215,61 @@ function ultimaDataAcquisto(etf) {
   return etf.acquisti.reduce((max, a) => a.data > max ? a.data : max, '')
 }
 
+// ── Modale crediti ────────────────────────────────────────────────
+
+const GITHUB_URL = 'https://github.com/AlfonsoGangemi/MoneyGrowth'
+
+function CreditsModal({ onChiudi }) {
+  const link = 'text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors'
+  return (
+    <Modal titolo="Crediti" onChiudi={onChiudi}>
+      <div className="space-y-4 text-sm text-slate-300">
+        <div className="flex items-start gap-3">
+          <span className="text-slate-500 mt-0.5 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+          </span>
+          <div>
+            <p className="text-white font-medium mb-0.5">Progetto open source</p>
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className={link}>
+              github.com/AlfonsoGangemi/MoneyGrowth
+            </a>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <span className="text-slate-500 mt-0.5 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+            </svg>
+          </span>
+          <div>
+            <p className="text-white font-medium mb-0.5">Licenza</p>
+            <a href={`${GITHUB_URL}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer" className={link}>
+              MIT License
+            </a>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <span className="text-slate-500 mt-0.5 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
+            </svg>
+          </span>
+          <div>
+            <p className="text-white font-medium mb-0.5">Dati di mercato</p>
+            <a href="https://www.justetf.com" target="_blank" rel="noopener noreferrer" className={link}>
+              JustETF
+            </a>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 // ── Dashboard principale ───────────────────────────────────────────
 
 export default function Dashboard({ user, onSignOut }) {
@@ -228,6 +283,7 @@ export default function Dashboard({ user, onSignOut }) {
   const [errImport, setErrImport] = useState('')
   const [modalGestoreBroker, setModalGestoreBroker] = useState(false)
   const [privacyMode, setPrivacyMode] = useState(() => localStorage.getItem('privacyMode') === 'true')
+  const [modalCrediti, setModalCrediti] = useState(false)
   const [dropdownAperto, setDropdownAperto] = useState(false)
   const dropdownRef = useRef(null)
   const [aggStato, setAggStato] = useState('idle') // 'idle' | 'running'
@@ -413,6 +469,12 @@ export default function Dashboard({ user, onSignOut }) {
                   Importa dati
                   <input type="file" accept=".json" onChange={e => { handleImport(e); setDropdownAperto(false) }} className="hidden" />
                 </label>
+                <button
+                  onClick={() => { setModalCrediti(true); setDropdownAperto(false) }}
+                  className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
+                >
+                  Crediti
+                </button>
                 <button
                   onClick={onSignOut}
                   className="w-full text-left text-xs text-red-400 hover:bg-slate-700 px-4 py-2.5 transition-colors border-t border-slate-700"
@@ -677,6 +739,9 @@ export default function Dashboard({ user, onSignOut }) {
           onChiudi={() => setModalGestoreBroker(false)}
         />
       )}
+
+      {/* Modal: crediti */}
+      {modalCrediti && <CreditsModal onChiudi={() => setModalCrediti(false)} />}
 
       {/* Modal: nuovo scenario */}
       {modalScenario && (
