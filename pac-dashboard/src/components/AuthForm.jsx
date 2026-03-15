@@ -125,6 +125,15 @@ export default function AuthForm({ onSignIn, onSignUp }) {
             >
               {loading ? '…' : tab === 'login' ? 'Accedi' : 'Registrati'}
             </button>
+
+            {tab === 'register' && (
+              <p className="text-xs text-slate-500 text-center">
+                Registrandoti accetti i{' '}
+                <a href="/termini" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300 transition-colors">Termini di Servizio</a>
+                {' '}e la{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300 transition-colors">Privacy Policy</a>.
+              </p>
+            )}
           </form>
 
         </div>

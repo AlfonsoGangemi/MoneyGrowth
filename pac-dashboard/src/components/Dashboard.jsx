@@ -215,14 +215,14 @@ function ultimaDataAcquisto(etf) {
   return etf.acquisti.reduce((max, a) => a.data > max ? a.data : max, '')
 }
 
-// ── Modale crediti ────────────────────────────────────────────────
+// ── Modale informazioni ───────────────────────────────────────────
 
 const GITHUB_URL = 'https://github.com/AlfonsoGangemi/MoneyGrowth'
 
-function CreditsModal({ onChiudi }) {
+function InfoModal({ onChiudi }) {
   const link = 'text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors'
   return (
-    <Modal titolo="Crediti" onChiudi={onChiudi}>
+    <Modal titolo="Informazioni" onChiudi={onChiudi}>
       <div className="space-y-4 text-sm text-slate-300">
         <div className="flex items-start gap-3">
           <span className="text-slate-500 mt-0.5 flex-shrink-0">
@@ -233,7 +233,7 @@ function CreditsModal({ onChiudi }) {
           <div>
             <p className="text-white font-medium mb-0.5">Progetto open source</p>
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className={link}>
-              github.com/AlfonsoGangemi/MoneyGrowth
+              Github
             </a>
           </div>
         </div>
@@ -264,6 +264,11 @@ function CreditsModal({ onChiudi }) {
               JustETF
             </a>
           </div>
+        </div>
+
+        <div className="border-t border-slate-700 pt-4 flex gap-4">
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className={link}>Privacy Policy</a>
+          <a href="/termini" target="_blank" rel="noopener noreferrer" className={link}>Termini di Servizio</a>
         </div>
       </div>
     </Modal>
@@ -473,7 +478,7 @@ export default function Dashboard({ user, onSignOut }) {
                   onClick={() => { setModalCrediti(true); setDropdownAperto(false) }}
                   className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
                 >
-                  Crediti
+                  Info Prodotto
                 </button>
                 <button
                   onClick={onSignOut}
@@ -740,8 +745,8 @@ export default function Dashboard({ user, onSignOut }) {
         />
       )}
 
-      {/* Modal: crediti */}
-      {modalCrediti && <CreditsModal onChiudi={() => setModalCrediti(false)} />}
+      {/* Modal: informazioni */}
+      {modalCrediti && <InfoModal onChiudi={() => setModalCrediti(false)} />}
 
       {/* Modal: nuovo scenario */}
       {modalScenario && (
