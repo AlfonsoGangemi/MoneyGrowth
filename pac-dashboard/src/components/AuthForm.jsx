@@ -14,7 +14,7 @@ function Input({ label, ...props }) {
 
 function tradErrore(msg) {
   if (msg.includes('Invalid login credentials')) return 'Email o password errati.'
-  if (msg.includes('Email not confirmed'))       return 'Email non ancora confermata. Controlla la tua casella.'
+  if (msg.includes('Email not confirmed'))       return 'Email o password errati.'
   if (msg.includes('User already registered'))   return 'Email già registrata. Usa Accedi.'
   if (msg.includes('Password should be'))        return 'La password deve essere di almeno 6 caratteri.'
   return 'Errore: ' + msg

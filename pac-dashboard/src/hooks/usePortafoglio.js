@@ -508,7 +508,13 @@ export function usePortafoglio(user) {
       reader.onload = async (e) => {
         setLoading(true)
         try {
+          if (e.target.result.length > 1024 * 1024) {
+            throw new Error('File troppo grande (max 1 MB)')
+          }
           const data = JSON.parse(e.target.result)
+          if (!Array.isArray(data.etf) || !Array.isArray(data.broker)) {
+            throw new Error('File JSON non valido: struttura non riconosciuta')
+          }
 
           // Carica broker esistenti nel DB e inserisce quelli mancanti dal JSON
           const { data: brokerEsistenti, error: brkLoadErr } = await supabase
