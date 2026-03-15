@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { isTempmail } from '../utils/tempmail'
 
 function Input({ label, ...props }) {
   return (
@@ -43,6 +44,10 @@ export default function AuthForm({ onSignIn, onSignUp }) {
       if (tab === 'login') {
         await onSignIn(email, password)
       } else {
+        if (isTempmail(email)) {
+          setErrore('Le email temporanee non sono accettate. Usa un indirizzo reale.')
+          return
+        }
         const data = await onSignUp(email, password)
         if (!data.session) {
           setMessaggio('Registrazione completata. Controlla la tua email per confermare l\'account.')
