@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Non indicizzare la dashboard autenticata
+Disallow: /dashboard
+Disallow: /app
