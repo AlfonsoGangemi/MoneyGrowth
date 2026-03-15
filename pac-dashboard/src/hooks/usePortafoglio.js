@@ -15,7 +15,7 @@ const defaultState = {
   brokerFiltro: [],
   orizzonteAnni: 10,
   prezziStorici: [],
-  storicoAnnuale: [],
+  storicoPerBroker: [],
 }
 
 // ── Mapping DB (snake_case) → JS (camelCase) ──────────────────────
@@ -203,8 +203,6 @@ export function usePortafoglio(user) {
           if (backfillErr) console.error('Errore backfill storico annuale:', backfillErr)
         }
 
-        const storicoAnnuale = aggregaPerAnno(storicoTutti)
-
         const config = configRes.data
         setStato({
           etf: etfMappati,
@@ -213,7 +211,7 @@ export function usePortafoglio(user) {
           brokerFiltro: config?.broker_filtro ?? [],
           orizzonteAnni: config?.orizzonte_anni ?? 10,
           prezziStorici,
-          storicoAnnuale,
+          storicoPerBroker: storicoTutti,
         })
       } catch (e) {
         console.error(e)
@@ -284,9 +282,8 @@ export function usePortafoglio(user) {
     if (error) { console.error('Errore salvataggio storico annuale:', error); return }
 
     setStato(s => {
-      const altri = s.storicoAnnuale.filter(r => r.anno !== anno)
-      const [aggregato] = aggregaPerAnno(nuovi)
-      return { ...s, storicoAnnuale: [...altri, aggregato].sort((a, b) => a.anno - b.anno) }
+      const altri = s.storicoPerBroker.filter(r => r.anno !== anno)
+      return { ...s, storicoPerBroker: [...altri, ...nuovi].sort((a, b) => a.anno - b.anno) }
     })
   }, [stato.etf, stato.prezziStorici, user])
 
@@ -300,12 +297,12 @@ export function usePortafoglio(user) {
     if (error) console.error('Errore salvataggio storico prezzi:', error)
 
     // Backfill: per ogni anno passato che ha prezzi storici ma non ancora un record annuale
-    const anniGiàSalvati = new Set(stato.storicoAnnuale.map(r => r.anno))
+    const anniGiàSalvati = new Set(stato.storicoPerBroker.map(r => r.anno))
     const anniConPrezzi = [...new Set(stato.prezziStorici.map(p => p.anno))].filter(a => a < annoCorrente)
     for (const anno of anniConPrezzi) {
       if (!anniGiàSalvati.has(anno)) await aggiornaStoricoAnnuale(anno)
     }
-  }, [aggiornaStoricoAnnuale, stato.prezziStorici, stato.storicoAnnuale])
+  }, [aggiornaStoricoAnnuale, stato.prezziStorici, stato.storicoPerBroker])
 
   const aggiornaETF = useCallback(async (etfId, isin, campi) => {
     const dbCampi = {}
@@ -355,6 +352,7 @@ export function usePortafoglio(user) {
 
     if (error) { setErrore('Errore nell\'inserimento degli acquisti.'); return }
 
+    let storicoToUpsert = null
     setStato(s => {
       let etf = s.etf
       for (const row of data) {
@@ -363,8 +361,37 @@ export function usePortafoglio(user) {
           ? { ...e, acquisti: [...e.acquisti, acq].sort((a, b) => a.data.localeCompare(b.data)) }
           : e)
       }
-      return { ...s, etf }
+      const annoCorrente = new Date().getFullYear()
+      const anniPassati = [...new Set(
+        items.map(i => Number(i.data.slice(0, 4))).filter(a => a > 0 && a < annoCorrente)
+      )]
+      let storicoPerBroker = s.storicoPerBroker
+      if (anniPassati.length > 0) {
+        const perBroker = anniPassati.flatMap(anno => {
+          const fineAnno = `${anno}-12-31`
+          const brokerIds = [...new Set(
+            etf.flatMap(e => e.acquisti.filter(a => a.data <= fineAnno).map(a => a.brokerId))
+          )].filter(Boolean)
+          return brokerIds.map(brokerId => calcolaAnnoStorico(anno, brokerId, etf, s.prezziStorici))
+        })
+        storicoToUpsert = perBroker
+        const anniToccati = new Set(anniPassati)
+        storicoPerBroker = [
+          ...s.storicoPerBroker.filter(r => !anniToccati.has(r.anno)),
+          ...perBroker,
+        ].sort((a, b) => a.anno - b.anno)
+      }
+      return { ...s, etf, storicoPerBroker }
     })
+    if (storicoToUpsert) {
+      supabase
+        .from('portafoglio_storico_annuale')
+        .upsert(storicoToUpsert.map(r => ({
+          user_id: user.id, anno: r.anno, broker_id: r.brokerId,
+          valore: r.valore, totale_versato: r.totaleVersato,
+        })))
+        .then(({ error: e }) => { if (e) console.error('Errore storico:', e) })
+    }
   }, [user])
 
   const rimuoviAcquisto = useCallback(async (etfId, acquistoId) => {
@@ -479,7 +506,7 @@ export function usePortafoglio(user) {
   const exportJSON = useCallback(() => {
     // Escludi: dati condivisi, derivati, stato UI e configurazione obsoleta
     // eslint-disable-next-line no-unused-vars
-    const { prezziStorici, storicoAnnuale, brokerFiltro, mostraProiezione, scenari, ...daEsportare } = stato
+    const { prezziStorici, storicoPerBroker, brokerFiltro, mostraProiezione, scenari, ...daEsportare } = stato
 
     // Aggiungi brokerNome in ogni acquisto per mapping portabile tra account
     const brokerMap = new Map(stato.broker.map(b => [b.id, b.nome]))
@@ -600,8 +627,15 @@ export function usePortafoglio(user) {
     })
   }, [user, caricaDati])
 
+  const storicoAnnuale = stato.storicoPerBroker.length === 0
+    ? []
+    : stato.brokerFiltro.length === 0
+      ? aggregaPerAnno(stato.storicoPerBroker)
+      : aggregaPerAnno(stato.storicoPerBroker.filter(r => stato.brokerFiltro.includes(r.brokerId)))
+
   return {
     ...stato,
+    storicoAnnuale,
     loading,
     errore,
     setErrore,
