@@ -21,8 +21,8 @@ function tradErrore(msg) {
   return 'Errore: ' + msg
 }
 
-export default function AuthForm({ onSignIn, onSignUp }) {
-  const [tab, setTab] = useState('login')
+export default function AuthForm({ onSignIn, onSignUp, defaultTab = 'login', onBack }) {
+  const [tab, setTab] = useState(defaultTab)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -67,6 +67,15 @@ export default function AuthForm({ onSignIn, onSignUp }) {
       <div className="w-full max-w-sm">
 
         <div className="text-center mb-8">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors mb-4 flex items-center gap-1 mx-auto"
+            >
+              ← Torna alla home
+            </button>
+          )}
           <h1 className="text-2xl font-bold text-white tracking-tight">PAC Dashboard</h1>
           <p className="text-sm text-slate-500 mt-1">Piano di Accumulo Capitale</p>
         </div>
