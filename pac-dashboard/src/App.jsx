@@ -1,10 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
+import { LocaleProvider } from './hooks/useLocale'
 import AuthForm from './components/AuthForm'
 import Dashboard from './components/Dashboard'
 import LandingPage from './components/LandingPage'
+import Termini from './components/Termini'
+import Privacy from './components/Privacy'
+
+const path = window.location.pathname
 
 export default function App() {
+  if (path === '/termini') return <LocaleProvider><Termini /></LocaleProvider>
+  if (path === '/privacy') return <LocaleProvider><Privacy /></LocaleProvider>
+
+  return (
+    <LocaleProvider>
+      <AppInner />
+    </LocaleProvider>
+  )
+}
+
+function AppInner() {
   const { user, loading, signIn, signUp, signOut } = useAuth()
   const [mostraAuth, setMostraAuth] = useState(false)
   const [defaultTab, setDefaultTab] = useState('login')

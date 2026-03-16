@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { isTempmail } from '../utils/tempmail'
+import { useLocale } from '../hooks/useLocale'
 
 function Input({ label, ...props }) {
   return (
@@ -13,15 +14,16 @@ function Input({ label, ...props }) {
   )
 }
 
-function tradErrore(msg) {
-  if (msg.includes('Invalid login credentials')) return 'Email o password errati.'
-  if (msg.includes('Email not confirmed'))       return 'Email o password errati.'
-  if (msg.includes('User already registered'))   return 'Email già registrata. Usa Accedi.'
-  if (msg.includes('Password should be'))        return 'La password deve essere di almeno 6 caratteri.'
+function tradErrore(msg, t) {
+  if (msg.includes('Invalid login credentials')) return t('auth_err_credentials')
+  if (msg.includes('Email not confirmed'))       return t('auth_err_credentials')
+  if (msg.includes('User already registered'))   return t('auth_err_registered')
+  if (msg.includes('Password should be'))        return t('auth_err_password')
   return 'Errore: ' + msg
 }
 
 export default function AuthForm({ onSignIn, onSignUp, defaultTab = 'login', onBack }) {
+  const { t } = useLocale()
   const [tab, setTab] = useState(defaultTab)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -45,18 +47,18 @@ export default function AuthForm({ onSignIn, onSignUp, defaultTab = 'login', onB
         await onSignIn(email, password)
       } else {
         if (isTempmail(email)) {
-          setErrore('Le email temporanee non sono accettate. Usa un indirizzo reale.')
+          setErrore(t('auth_err_tempmail'))
           return
         }
         const data = await onSignUp(email, password)
         if (!data.session) {
-          setMessaggio('Registrazione completata. Controlla la tua email per confermare l\'account.')
+          setMessaggio(t('auth_registered_ok'))
           setEmail('')
           setPassword('')
         }
       }
     } catch (err) {
-      setErrore(tradErrore(err.message))
+      setErrore(tradErrore(err.message, t))
     } finally {
       setLoading(false)
     }
@@ -73,11 +75,11 @@ export default function AuthForm({ onSignIn, onSignUp, defaultTab = 'login', onB
               onClick={onBack}
               className="text-xs text-slate-500 hover:text-slate-300 transition-colors mb-4 flex items-center gap-1 mx-auto"
             >
-              ← Torna alla home
+              {t('auth_back')}
             </button>
           )}
           <h1 className="text-2xl font-bold text-white tracking-tight">PAC Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Piano di Accumulo Capitale</p>
+          <p className="text-sm text-slate-500 mt-1">{t('auth_subtitle')}</p>
         </div>
 
         <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl">
@@ -89,14 +91,14 @@ export default function AuthForm({ onSignIn, onSignUp, defaultTab = 'login', onB
               onClick={() => cambiaTab('login')}
               className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'login' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
             >
-              Accedi
+              {t('auth_tab_login')}
             </button>
             <button
               type="button"
               onClick={() => cambiaTab('register')}
               className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'register' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
             >
-              Registrati
+              {t('auth_tab_register')}
             </button>
           </div>
 
@@ -132,15 +134,15 @@ export default function AuthForm({ onSignIn, onSignUp, defaultTab = 'login', onB
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
             >
-              {loading ? '…' : tab === 'login' ? 'Accedi' : 'Registrati'}
+              {loading ? '…' : tab === 'login' ? t('auth_submit_login') : t('auth_submit_register')}
             </button>
 
             {tab === 'register' && (
               <p className="text-xs text-slate-500 text-center">
-                Registrandoti accetti i{' '}
-                <a href="/termini" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300 transition-colors">Termini di Servizio</a>
-                {' '}e la{' '}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300 transition-colors">Privacy Policy</a>.
+                {t('auth_terms_prefix')}{' '}
+                <a href="/termini" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300 transition-colors">{t('auth_terms_link')}</a>
+                {' '}{t('auth_terms_mid')}{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300 transition-colors">{t('auth_privacy_link')}</a>.
               </p>
             )}
           </form>

@@ -1,4 +1,5 @@
 import { indicatoriPortafoglio, calcolaIRR, calcolaTWRR, calcolaATWRR, serieStoricaDaPrezziStorici, calcolaMaxDrawdown, calcolaVolatilita } from '../utils/calcoli'
+import { useLocale } from '../hooks/useLocale'
 
 function fmt(n, dec = 2) {
   return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec })
@@ -23,6 +24,7 @@ function Kpi({ label, valore, sub, positivo, neutro }) {
 }
 
 export default function Indicatori({ etfList, prezziStorici = [], privacyMode = false }) {
+  const { t } = useLocale()
   const pv = (f) => privacyMode ? '••••' : f
   if (etfList.length === 0) return null
 
@@ -57,70 +59,70 @@ export default function Indicatori({ etfList, prezziStorici = [], privacyMode = 
   const anni = Math.floor(durataM / 12)
   const mesiRest = durataM % 12
   const durataStr = anni > 0
-    ? `${anni} ann${anni === 1 ? 'o' : 'i'} e ${mesiRest} mes${mesiRest === 1 ? 'e' : 'i'}`
-    : `${mesiRest} mes${mesiRest === 1 ? 'e' : 'i'}`
+    ? `${anni} ${anni === 1 ? t('dur_anno_s') : t('dur_anno_p')} ${t('dur_e')} ${mesiRest} ${mesiRest === 1 ? t('dur_mese_s') : t('dur_mese_p')}`
+    : `${mesiRest} ${mesiRest === 1 ? t('dur_mese_s') : t('dur_mese_p')}`
 
   return (
     <div>
-      <h2 className="text-base font-bold text-white mb-3">Indicatori portafoglio</h2>
+      <h2 className="text-base font-bold text-white mb-3">{t('indicatori_titolo')}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {/* Rendimento */}
         <Kpi
-          label="ROI"
+          label={t('roi')}
           valore={`${roi >= 0 ? '+' : ''}${fmt(roi)}%`}
-          sub="Rendimento totale"
+          sub={t('rendimento_totale')}
           positivo={roi >= 0}
         />
         <Kpi
-          label="Rendimento netto"
+          label={t('rendimento_netto')}
           valore={pv(`${netto >= 0 ? '+' : ''}€${fmt(netto, 0)}`)}
-          sub={pv(`su €${fmt(totInvestito, 0)}`)+` investiti`}
+          sub={pv(`${t('su')} €${fmt(totInvestito, 0)}`) + ` ${t('investiti')}`}
           positivo={netto >= 0}
         />
         <Kpi
           label="CAGR"
-          valore={durataM >= 1 ? `${cagr >= 0 ? '+' : ''}${fmt(cagr)}%` : 'n/d'}
-          sub="Rendimento annualizzato"
+          valore={durataM >= 1 ? `${cagr >= 0 ? '+' : ''}${fmt(cagr)}%` : t('nd')}
+          sub={t('rendimento_annualizzato')}
           positivo={durataM >= 1 ? cagr >= 0 : null}
         />
         <Kpi
-          label="XIRR"
-          valore={irr != null ? `${irr >= 0 ? '+' : ''}${fmt(irr)}%` : 'n/d'}
-          sub="Crescita annua composta"
+          label={t('xirr')}
+          valore={irr != null ? `${irr >= 0 ? '+' : ''}${fmt(irr)}%` : t('nd')}
+          sub={t('crescita_annua')}
           positivo={irr != null ? irr >= 0 : null}
         />
         {/* Contesto */}
         <Kpi
-          label="Valore portafoglio"
+          label={t('valore_portafoglio')}
           valore={pv(`€${fmt(totValore, 0)}`)}
           neutro
         />
         <Kpi
-          label="Durata"
+          label={t('durata')}
           valore={durataStr}
-          sub={`${durataM} mesi totali`}
+          sub={`${durataM} ${t('mesi_totali')}`}
           neutro
         />
         {/* Qualità */}
         <Kpi
-          label="TWRR / ATWRR"
+          label={t('twrr')}
           valore={`${fmt(twrr)}%`}
-          sub={`Annualizzato: ${fmt(atwrr)}%`}
+          sub={`${t('annualizzato')}: ${fmt(atwrr)}%`}
           positivo={twrr >= 0}
         />
         {maxDrawdown != null && (
           <Kpi
-            label="Max Drawdown"
+            label={t('max_drawdown')}
             valore={`${fmt(maxDrawdown)}%`}
-            sub="Perdita massima dal picco"
+            sub={t('perdita_picco')}
             positivo={false}
           />
         )}
         {volatilita != null && (
           <Kpi
-            label="Volatilità"
+            label={t('volatilita')}
             valore={`${fmt(volatilita)}%`}
-            sub="Deviazione std. annualizzata"
+            sub={t('dev_std')}
             neutro
           />
         )}

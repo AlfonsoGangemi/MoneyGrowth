@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { valoreAttuale } from '../utils/calcoli'
+import { useLocale } from '../hooks/useLocale'
 
 function fmt(val) {
   return new Intl.NumberFormat('it-IT', {
@@ -17,6 +18,7 @@ function fmtPct(val) {
 // ── Intestazione colonna scenario con controlli inline ──────────────
 
 function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
+  const { t } = useLocale()
   const [editRend, setEditRend] = useState(false)
   const [nuovoRend, setNuovoRend] = useState('')
   const [conferma, setConferma] = useState(false)
@@ -62,7 +64,7 @@ function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
           <button
             onClick={apriEdit}
             className="text-slate-500 font-normal text-xs hover:text-white transition-colors underline decoration-dotted underline-offset-2"
-            title="Modifica rendimento"
+            title={t('modifica_rendimento')}
           >
             {(sc.rendimentoAnnuo * 100).toFixed(1)}%/a
           </button>
@@ -73,7 +75,7 @@ function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
             <button
               onClick={() => onRimuovi(sc.id)}
               className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium"
-            >Elimina</button>
+            >{t('elimina')}</button>
             <button
               onClick={() => setConferma(false)}
               className="text-xs text-slate-500 hover:text-white transition-colors"
@@ -95,6 +97,7 @@ export default function TabellaProiezione({
   onSetOrizzonteAnni, onNuovoScenario, onAggiornaScenario, onRimuoviScenario,
   privacyMode = false,
 }) {
+  const { t } = useLocale()
   const pv = (f) => privacyMode ? '••••' : f
   const [scenarioIdx, setScenarioIdx] = useState(0)
 
@@ -212,14 +215,14 @@ export default function TabellaProiezione({
       {/* ── Sezione storica ─────────────────────────────────────────── */}
       {righeReali.length > 0 && (
         <div>
-          <h3 className="text-base font-bold text-white mb-3">Storico</h3>
+          <h3 className="text-base font-bold text-white mb-3">{t('storico')}</h3>
           <div className="overflow-x-auto rounded-xl border border-slate-700">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-800 border-b border-slate-700">
-                  <th className="px-4 py-3 text-left text-slate-400 font-medium whitespace-nowrap w-20">Anno</th>
-                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap w-36">Totale versato</th>
-                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap">Valore reale</th>
+                  <th className="px-4 py-3 text-left text-slate-400 font-medium whitespace-nowrap w-20">{t('col_anno')}</th>
+                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap w-36">{t('totale_versato')}</th>
+                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap">{t('valore_reale')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -247,9 +250,9 @@ export default function TabellaProiezione({
       {/* ── Sezione previsionale ────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-white">Proiezione</h2>
+          <h2 className="text-base font-bold text-white">{t('proiezione')}</h2>
           <div className="flex items-center gap-2 text-sm text-slate-300">
-            <span>Orizzonte:</span>
+            <span>{t('orizzonte')}</span>
             <input
               type="number"
               step="1"
@@ -259,7 +262,7 @@ export default function TabellaProiezione({
               onChange={e => onSetOrizzonteAnni(e.target.value)}
               className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:border-blue-400"
             />
-            <span>anni</span>
+            <span>{t('anni_label')}</span>
           </div>
         </div>
         {scenari.length < 3 && (
@@ -267,7 +270,7 @@ export default function TabellaProiezione({
             onClick={onNuovoScenario}
             className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl transition-colors"
           >
-            + Scenario
+            {t('aggiungi_scenario')}
           </button>
         )}
       </div>
@@ -302,8 +305,8 @@ export default function TabellaProiezione({
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-800 border-b border-slate-700">
-                  <th className="px-4 py-3 text-left text-slate-400 font-medium whitespace-nowrap w-20">Anno</th>
-                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap w-36">Totale versato</th>
+                  <th className="px-4 py-3 text-left text-slate-400 font-medium whitespace-nowrap w-20">{t('col_anno')}</th>
+                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap w-36">{t('totale_versato')}</th>
                   {dati.scenari.map((sc, idx) => (
                     <ScenarioTh
                       key={sc.id}
@@ -367,7 +370,7 @@ export default function TabellaProiezione({
 
       {dati && (
         <p className="text-xs text-slate-500">
-          Versamento mensile: {pv(fmt(dati.versamentoMensile))} · Portafoglio attuale: {pv(fmt(dati.valoreOggi))}
+          {t('versamento_mensile')}: {pv(fmt(dati.versamentoMensile))} · {t('portafoglio_attuale')}: {pv(fmt(dati.valoreOggi))}
         </p>
       )}
     </div>

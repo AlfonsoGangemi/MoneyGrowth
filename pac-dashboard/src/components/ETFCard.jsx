@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useLocale } from '../hooks/useLocale'
 import {
   totaleInvestito,
   valoreAttuale,
@@ -25,6 +26,7 @@ function Badge({ val }) {
 const COOLDOWN_MS = 30_000
 
 export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto, archivaDisabilitato, brokerAcquisti = [], attenuata = false, privacyMode = false }) {
+  const { t } = useLocale()
   const pv = (f) => privacyMode ? '••••' : f
   const [espanso, setEspanso] = useState(false)
   const [syncStato, setSyncStato] = useState('idle') // 'idle' | 'loading' | 'error'
@@ -99,7 +101,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
             <button
               onClick={() => onModifica(etf.id)}
               className="text-slate-500 hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-slate-700"
-              title="Modifica ETF"
+              title={t('etf_modifica_title')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -109,7 +111,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
               onClick={() => !archivaDisabilitato && onArchivia(etf.id)}
               disabled={archivaDisabilitato}
               className={`transition-colors p-1.5 rounded-lg ${archivaDisabilitato ? 'text-slate-700 cursor-not-allowed' : 'text-slate-500 hover:text-amber-400 hover:bg-slate-700'}`}
-              title={archivaDisabilitato ? 'Limite di 9 ETF attivi raggiunto' : 'Archivia ETF'}
+              title={archivaDisabilitato ? t('etf_archivia_limite_title') : t('etf_archivia_title')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -134,7 +136,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
       {/* Prezzo + PAC */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-slate-400">Prezzo corrente</p>
+          <p className="text-xs text-slate-400">{t('prezzo_corrente')}</p>
           <div className="flex items-center gap-1.5">
             <p className="text-xl font-semibold text-white">{pv(`€${fmt(etf.prezzoCorrente)}`)}</p>
             <button
@@ -142,12 +144,12 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
               disabled={syncStato === 'loading' || !etf.isin || cooldownAttivo}
               title={
                 !etf.isin
-                  ? 'ISIN non impostato'
+                  ? t('etf_isin_mancante')
                   : cooldownAttivo
-                    ? 'Aggiornato di recente, riprova tra poco'
+                    ? t('etf_cooldown')
                     : syncStato === 'error'
-                      ? 'Aggiornamento fallito'
-                      : 'Aggiorna prezzo da JustETF'
+                      ? t('etf_sync_error')
+                      : t('etf_sync_update')
               }
               className={`p-1 rounded-md transition-colors disabled:cursor-not-allowed ${
                 syncStato === 'error'
@@ -165,12 +167,12 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
               </svg>
             </button>
             {syncStato === 'error' && (
-              <span className="text-xs text-red-400">Errore</span>
+              <span className="text-xs text-red-400">{t('etf_errore')}</span>
             )}
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xs text-slate-400">PAC mensile</p>
+          <p className="text-xs text-slate-400">{t('pac_mensile')}</p>
           <p className="text-lg font-semibold text-white">{pv(`€${fmt(etf.importoFisso, 0)}`)}</p>
         </div>
       </div>
@@ -178,15 +180,15 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
       {/* KPI */}
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="bg-slate-900/50 rounded-xl p-3">
-          <p className="text-xs text-slate-400">Investito</p>
+          <p className="text-xs text-slate-400">{t('investito')}</p>
           <p className="font-semibold text-white">{pv(`€${fmt(inv, 0)}`)}</p>
         </div>
         <div className="bg-slate-900/50 rounded-xl p-3">
-          <p className="text-xs text-slate-400">Valore</p>
+          <p className="text-xs text-slate-400">{t('valore')}</p>
           <p className="font-semibold text-white">{pv(`€${fmt(val, 0)}`)}</p>
         </div>
         <div className="bg-slate-900/50 rounded-xl p-3">
-          <p className="text-xs text-slate-400">Quote</p>
+          <p className="text-xs text-slate-400">{t('quote')}</p>
           <p className="font-semibold text-white">{pv(fmt(etf.acquisti.reduce((s, a) => s + a.quoteFrazionate, 0), 4))}</p>
         </div>
       </div>
@@ -197,7 +199,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
         <span className="text-xs text-slate-400">ROI</span>
         <span className="text-xs text-slate-500">|</span>
         <span className="text-xs text-slate-300">
-          Netto: <span className={netto >= 0 ? 'text-green-400' : 'text-red-400'}>
+          {t('netto')}: <span className={netto >= 0 ? 'text-green-400' : 'text-red-400'}>
             {pv(`${netto >= 0 ? '+' : ''}€${fmt(netto, 0)}`)}
           </span>
         </span>
@@ -215,7 +217,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
           onClick={() => setEspanso(e => !e)}
           className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
         >
-          {espanso ? '▲' : '▼'} {etf.acquisti.length} acquist{etf.acquisti.length === 1 ? 'o' : 'i'} · {durataM} mes{durataM === 1 ? 'e' : 'i'}
+          {espanso ? '▲' : '▼'} {etf.acquisti.length} {etf.acquisti.length === 1 ? t('acq_s') : t('acq_p')} · {durataM} {durataM === 1 ? t('dur_mese_s') : t('dur_mese_p')}
         </button>
 
         {espanso && (

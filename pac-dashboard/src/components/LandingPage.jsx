@@ -1,12 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocale } from '../hooks/useLocale'
+import LinguaToggle from './LinguaToggle'
 
 const GITHUB_URL = 'https://github.com/AlfonsoGangemi/MoneyGrowth'
-
-const KPI_CARDS = [
-  { label: 'ROI',               valore: '+18,4%',  sub: 'Rendimento totale',        color: '#4ade80' },
-  { label: 'CAGR',              valore: '+9,2%',   sub: 'Rendimento annualizzato',   color: '#4ade80' },
-  { label: 'Valore portafoglio', valore: '€27.720', sub: 'su €23.400 investiti',     color: '#f1f5f9' },
-]
 
 const POSIZIONI = [
   { top: 56, left: 80, opacity: 1,    zIndex: 3, border: '1px solid rgba(148,163,184,0.5)', shadow: '0 10px 30px rgba(0,0,0,0.5)' },
@@ -14,7 +10,7 @@ const POSIZIONI = [
   { top: 0,  left: 0,  opacity: 0.35, zIndex: 1, border: '1px solid rgba(148,163,184,0.1)', shadow: '0 2px 6px rgba(0,0,0,0.2)'  },
 ]
 
-function StackCardsAnimated() {
+function StackCardsAnimated({ kpiCards }) {
   const [activeIdx, setActiveIdx] = useState(0)
   const pausedRef = useRef(false)
 
@@ -33,7 +29,7 @@ function StackCardsAnimated() {
       onMouseEnter={() => { pausedRef.current = true }}
       onMouseLeave={() => { pausedRef.current = false }}
     >
-      {KPI_CARDS.map((card, i) => {
+      {kpiCards.map((card, i) => {
         const pos = POSIZIONI[(i - activeIdx + 3) % 3]
         return (
           <div
@@ -88,13 +84,6 @@ function GraficoDecorativo() {
     </div>
   )
 }
-
-const ALTRI_INDICATORI = [
-  { label: 'XIRR',            desc: 'Tasso interno di rendimento che considera le date esatte di ogni versamento, più preciso del semplice ROI annualizzato.' },
-  { label: 'TWRR',            desc: 'Time-Weighted Rate of Return: rendimento pesato per il tempo, non influenzato dalla dimensione o dal momento dei versamenti.' },
-  { label: 'Max Drawdown',    desc: 'Massima perdita percentuale dal picco massimo raggiunto: misura il peggior momento possibile di uscita.' },
-  { label: 'Volatilità',      desc: 'Deviazione standard annualizzata dei rendimenti periodici: indica quanto il portafoglio oscilla nel tempo.' },
-]
 
 function Tooltip({ label, desc }) {
   return (
@@ -157,18 +146,18 @@ const FEATURE_CARDS = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
       </svg>
     ),
-    titolo: 'Storico acquisti',
-    sub: 'Registra ogni acquisto per ISIN con data, prezzo e broker.',
-    dettaglio: (
+    titolo: (t) => t('feat_storico_titolo'),
+    sub: (t) => t('feat_storico_sub'),
+    dettaglio: (t) => (
       <div className="mt-4 border-t border-slate-700 pt-4">
-        <p className="text-xs text-slate-500 mb-2">Esempio di storico acquisti</p>
+        <p className="text-xs text-slate-500 mb-2">{t('feat_storico_esempio')}</p>
         <table className="w-full text-xs text-slate-300">
           <thead>
             <tr className="text-slate-500 border-b border-slate-700">
-              <th className="text-left pb-1.5 font-medium">Data</th>
-              <th className="text-left pb-1.5 font-medium">ETF</th>
-              <th className="text-right pb-1.5 font-medium">Prezzo</th>
-              <th className="text-right pb-1.5 font-medium">Quote</th>
+              <th className="text-left pb-1.5 font-medium">{t('feat_storico_col_data')}</th>
+              <th className="text-left pb-1.5 font-medium">{t('feat_storico_col_etf')}</th>
+              <th className="text-right pb-1.5 font-medium">{t('feat_storico_col_prezzo')}</th>
+              <th className="text-right pb-1.5 font-medium">{t('feat_storico_col_quote')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/60">
@@ -192,7 +181,7 @@ const FEATURE_CARDS = [
             </tr>
           </tbody>
         </table>
-        <p className="text-xs text-slate-500 mt-3">Supporta più ETF contemporaneamente, con ISIN e broker separati per acquisto.</p>
+        <p className="text-xs text-slate-500 mt-3">{t('feat_storico_note')}</p>
       </div>
     ),
   },
@@ -203,33 +192,33 @@ const FEATURE_CARDS = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
       </svg>
     ),
-    titolo: 'Scenari futuri',
-    sub: 'Proietta il valore del portafoglio con rendimenti personalizzabili.',
-    dettaglio: (
+    titolo: (t) => t('feat_scenari_titolo'),
+    sub: (t) => t('feat_scenari_sub'),
+    dettaglio: (t) => (
       <div className="mt-4 border-t border-slate-700 pt-4 space-y-2.5">
-        <p className="text-xs text-slate-500 mb-3">Tre scenari configurabili, calcolati dal valore reale attuale</p>
+        <p className="text-xs text-slate-500 mb-3">{t('feat_scenari_intro')}</p>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400">Conservativo</span>
+          <span className="text-xs text-slate-400">{t('feat_scenari_conservativo')}</span>
           <div className="flex items-center gap-2">
             <span className="text-xs tabular-nums text-blue-400 font-medium">5% / anno</span>
             <span className="text-xs tabular-nums text-slate-400">→ €41.200 in 10 anni</span>
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400">Moderato</span>
+          <span className="text-xs text-slate-400">{t('feat_scenari_moderato')}</span>
           <div className="flex items-center gap-2">
             <span className="text-xs tabular-nums text-blue-400 font-medium">7% / anno</span>
             <span className="text-xs tabular-nums text-slate-400">→ €48.600 in 10 anni</span>
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400">Ottimistico</span>
+          <span className="text-xs text-slate-400">{t('feat_scenari_ottimistico')}</span>
           <div className="flex items-center gap-2">
             <span className="text-xs tabular-nums text-green-400 font-medium">10% / anno</span>
             <span className="text-xs tabular-nums text-slate-400">→ €61.500 in 10 anni</span>
           </div>
         </div>
-        <p className="text-xs text-slate-500 pt-1">Ogni rendimento è personalizzabile. I risultati mostrano versato, valore proiettato e guadagno stimato per ogni scenario.</p>
+        <p className="text-xs text-slate-500 pt-1">{t('feat_scenari_note')}</p>
       </div>
     ),
   },
@@ -240,25 +229,25 @@ const FEATURE_CARDS = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
       </svg>
     ),
-    titolo: 'I tuoi dati',
-    sub: 'Export e import JSON — nessun lock-in, portabili ovunque.',
-    dettaglio: (
+    titolo: (t) => t('feat_dati_titolo'),
+    sub: (t) => t('feat_dati_sub'),
+    dettaglio: (t) => (
       <div className="mt-4 border-t border-slate-700 pt-4 space-y-3">
         <div className="flex items-start gap-2">
           <IconCheck />
-          <p className="text-xs text-slate-400">Esporta tutti i tuoi acquisti in un file JSON leggibile</p>
+          <p className="text-xs text-slate-400">{t('feat_dati_1')}</p>
         </div>
         <div className="flex items-start gap-2">
           <IconCheck />
-          <p className="text-xs text-slate-400">Importa da un file precedente per migrare o fare backup</p>
+          <p className="text-xs text-slate-400">{t('feat_dati_2')}</p>
         </div>
         <div className="flex items-start gap-2">
           <IconCheck />
-          <p className="text-xs text-slate-400">Formato aperto: compatibile con Excel, Python, o qualsiasi tool di analisi</p>
+          <p className="text-xs text-slate-400">{t('feat_dati_3')}</p>
         </div>
         <div className="flex items-start gap-2">
           <IconCheck />
-          <p className="text-xs text-slate-400">I dati sono sincronizzati sul tuo account — accessibili da qualsiasi dispositivo</p>
+          <p className="text-xs text-slate-400">{t('feat_dati_4')}</p>
         </div>
       </div>
     ),
@@ -266,7 +255,21 @@ const FEATURE_CARDS = [
 ]
 
 export default function LandingPage({ onCTA }) {
+  const { t } = useLocale()
   const [aperta, setAperta] = useState(null)
+
+  const kpiCards = [
+    { label: 'ROI',               valore: '+18,4%',  sub: t('kpi_roi_sub'),   color: '#4ade80' },
+    { label: 'CAGR',              valore: '+9,2%',   sub: t('kpi_cagr_sub'),  color: '#4ade80' },
+    { label: t('valore_portafoglio'), valore: '€27.720', sub: t('kpi_valore_sub'), color: '#f1f5f9' },
+  ]
+
+  const altriIndicatori = [
+    { label: 'XIRR',         desc: t('altri_xirr_desc') },
+    { label: 'TWRR',         desc: t('altri_twrr_desc') },
+    { label: 'Max Drawdown', desc: t('altri_drawdown_desc') },
+    { label: t('volatilita'),    desc: t('altri_volatilita_desc') },
+  ]
 
   function toggleCard(id) {
     setAperta(prev => prev === id ? null : id)
@@ -279,18 +282,19 @@ export default function LandingPage({ onCTA }) {
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <span className="font-semibold text-white text-sm tracking-tight">PAC Dashboard</span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <LinguaToggle />
             <button
               onClick={() => onCTA('login')}
               className="text-sm text-slate-300 hover:text-white px-3 py-1.5 transition-colors"
             >
-              Accedi
+              {t('accedi')}
             </button>
             <button
               onClick={() => onCTA('register')}
               className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg font-medium transition-colors"
             >
-              Inizia gratis
+              {t('inizia_gratis')}
             </button>
           </div>
         </div>
@@ -301,15 +305,15 @@ export default function LandingPage({ onCTA }) {
         <div className="max-w-2xl mx-auto">
           <WordArt />
           <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight leading-tight mb-4">
-            Il tuo Piano di Accumulo,<br className="hidden sm:block" /> sempre sotto controllo
+            {t('hero_title')}
           </h1>
           <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-            Traccia acquisti ETF, misura i rendimenti reali e proietta<br className="hidden sm:block" /> il futuro del tuo portafoglio.
+            {t('hero_sub')}
           </p>
           <div className="flex items-center justify-center gap-6 text-sm text-slate-500">
-            <span className="flex items-center gap-1.5"><IconCheck /> Gratuito</span>
-            <span className="flex items-center gap-1.5"><IconCheck /> Open source</span>
-            <span className="flex items-center gap-1.5"><IconCheck /> I tuoi dati restano tuoi</span>
+            <span className="flex items-center gap-1.5"><IconCheck /> {t('badge_gratuito')}</span>
+            <span className="flex items-center gap-1.5"><IconCheck /> {t('badge_open_source')}</span>
+            <span className="flex items-center gap-1.5"><IconCheck /> {t('badge_dati')}</span>
           </div>
           <GraficoDecorativo />
         </div>
@@ -327,20 +331,20 @@ export default function LandingPage({ onCTA }) {
               </svg>
             </span>
             <div>
-              <p className="text-white font-semibold">Analisi realtime del portafoglio</p>
-              <p className="text-sm text-slate-400 mt-0.5">Indicatori di performance calcolati automaticamente sui tuoi dati effettivi.</p>
+              <p className="text-white font-semibold">{t('analisi_title')}</p>
+              <p className="text-sm text-slate-400 mt-0.5">{t('analisi_sub')}</p>
             </div>
           </div>
 
-          <StackCardsAnimated />
+          <StackCardsAnimated kpiCards={kpiCards} />
 
           {/* Altri indicatori disponibili */}
           <p className="text-center text-xs text-slate-500 mt-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
-            <span>e ancora:</span>
-            {ALTRI_INDICATORI.map((ind, i) => (
+            <span>{t('e_ancora')}</span>
+            {altriIndicatori.map((ind, i) => (
               <span key={ind.label} className="inline-flex items-center gap-1.5">
                 <Tooltip label={ind.label} desc={ind.desc} />
-                {i < ALTRI_INDICATORI.length - 1 && <span className="text-slate-600">·</span>}
+                {i < altriIndicatori.length - 1 && <span className="text-slate-600">·</span>}
               </span>
             ))}
           </p>
@@ -361,9 +365,9 @@ export default function LandingPage({ onCTA }) {
                   <span className="text-blue-400 flex-shrink-0 mt-0.5">{card.icon}</span>
                   <IconChevron open={isOpen} />
                 </div>
-                <p className="text-white font-semibold mt-3 mb-1">{card.titolo}</p>
-                <p className="text-sm text-slate-400">{card.sub}</p>
-                {isOpen && card.dettaglio}
+                <p className="text-white font-semibold mt-3 mb-1">{card.titolo(t)}</p>
+                <p className="text-sm text-slate-400">{card.sub(t)}</p>
+                {isOpen && card.dettaglio(t)}
               </button>
             )
           })}
@@ -375,13 +379,13 @@ export default function LandingPage({ onCTA }) {
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
           <span>PAC Dashboard</span>
           <div className="flex items-center gap-4">
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
-            <a href="/termini" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">Termini di Servizio</a>
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">{t('footer_privacy')}</a>
+            <a href="/termini" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">{t('footer_termini')}</a>
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
               </svg>
-              GitHub
+              {t('footer_github')}
             </a>
           </div>
         </div>

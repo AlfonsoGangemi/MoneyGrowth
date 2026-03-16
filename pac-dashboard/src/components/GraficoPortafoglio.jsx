@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocale } from '../hooks/useLocale'
 import {
   ResponsiveContainer,
   LineChart,
@@ -36,6 +37,7 @@ const CustomTooltip = ({ active, payload, label, privacyMode }) => {
 }
 
 export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici = [], privacyMode = false }) {
+  const { t } = useLocale()
   const [vista, setVista] = useState('aggregato') // 'aggregato' | etfId
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
 
@@ -77,7 +79,7 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
   return (
     <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
       <div className="flex items-center justify-between mb-3 gap-3">
-        <h2 className="text-base font-bold text-white flex-shrink-0">Grafico portafoglio</h2>
+        <h2 className="text-base font-bold text-white flex-shrink-0">{t('grafico_titolo')}</h2>
 
         {/* Selettore vista — scroll orizzontale su mobile */}
         <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -85,7 +87,7 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
             onClick={() => setVista('aggregato')}
             className={`flex-shrink-0 text-xs px-3 py-1 rounded-full transition-colors ${vista === 'aggregato' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
           >
-            Aggregato
+            {t('aggregato')}
           </button>
           {etfAttivi.map(e => (
             <button
@@ -125,7 +127,7 @@ export default function GraficoPortafoglio({ etfList, etfAttivi, prezziStorici =
             <Line
               type="monotone"
               dataKey="storico"
-              name="Totale"
+              name={t('linea_totale')}
               stroke="#60a5fa"
               strokeWidth={2}
               dot={false}

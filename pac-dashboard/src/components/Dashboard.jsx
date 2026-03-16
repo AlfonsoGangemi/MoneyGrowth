@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePortafoglio } from '../hooks/usePortafoglio'
+import { useLocale } from '../hooks/useLocale'
 import ETFCard from './ETFCard'
 import AcquistoForm from './AcquistoForm'
 import GraficoPortafoglio from './GraficoPortafoglio'
 import Indicatori from './Indicatori'
 import TabellaProiezione from './TabellaProiezione'
+import LinguaToggle from './LinguaToggle'
 
 // ── Componenti base ────────────────────────────────────────────────
 
@@ -37,6 +39,7 @@ function Input({ label, ...props }) {
 // ── Modal modifica ETF ─────────────────────────────────────────────
 
 function ModificaETFModal({ etf, onSalva, onChiudi }) {
+  const { t } = useLocale()
   const [nome, setNome] = useState(etf.nome)
   const [emittente, setEmittente] = useState(etf.emittente || '')
   const [importoFisso, setImportoFisso] = useState(String(etf.importoFisso))
@@ -55,20 +58,20 @@ function ModificaETFModal({ etf, onSalva, onChiudi }) {
   }
 
   return (
-    <Modal titolo="Modifica ETF" onChiudi={onChiudi}>
+    <Modal titolo={t('modal_modifica_etf')} onChiudi={onChiudi}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* ISIN in sola lettura */}
         <div>
-          <p className="text-xs text-slate-400 mb-1">ISIN</p>
+          <p className="text-xs text-slate-400 mb-1">{t('label_isin')}</p>
           <p className="text-sm font-mono text-slate-300 bg-slate-900/50 rounded-lg px-3 py-2">{etf.isin}</p>
         </div>
-        <Input label="Nome ETF" value={nome} onChange={e => setNome(e.target.value)} required />
-        <Input label="Emittente" value={emittente} onChange={e => setEmittente(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
-        <Input label="Importo PAC mensile (€)" type="number" step="0.01" min="0" value={importoFisso} onChange={e => setImportoFisso(e.target.value)} />
-        <Input label="Prezzo corrente (€)" type="number" step="0.0001" min="0" value={prezzoCorrente} onChange={e => setPrezzoCorrente(e.target.value)} />
+        <Input label={t('label_nome_etf')} value={nome} onChange={e => setNome(e.target.value)} required />
+        <Input label={t('label_emittente')} value={emittente} onChange={e => setEmittente(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
+        <Input label={t('label_importo_pac')} type="number" step="0.01" min="0" value={importoFisso} onChange={e => setImportoFisso(e.target.value)} />
+        <Input label={t('label_prezzo_corrente_eur')} type="number" step="0.0001" min="0" value={prezzoCorrente} onChange={e => setPrezzoCorrente(e.target.value)} />
         <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onChiudi} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">Annulla</button>
-          <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">Salva</button>
+          <button type="button" onClick={onChiudi} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
+          <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('salva')}</button>
         </div>
       </form>
     </Modal>
@@ -78,6 +81,7 @@ function ModificaETFModal({ etf, onSalva, onChiudi }) {
 // ── Riga broker con nome e colore editabili inline ─────────────────
 
 function BrokerRow({ broker: b, onAggiorna, onElimina }) {
+  const { t } = useLocale()
   const [editing, setEditing] = useState(false)
   const [nomeTemp, setNomeTemp] = useState(b.nome)
 
@@ -103,7 +107,7 @@ function BrokerRow({ broker: b, onAggiorna, onElimina }) {
       <label
         className="flex-shrink-0 w-4 h-4 rounded-full cursor-pointer relative overflow-hidden"
         style={{ backgroundColor: b.colore }}
-        title="Cambia colore"
+        title={t('broker_cambia_colore')}
       >
         <input
           type="color"
@@ -130,10 +134,10 @@ function BrokerRow({ broker: b, onAggiorna, onElimina }) {
         <span
           onClick={iniziaEdit}
           className={`flex-1 text-sm cursor-pointer hover:text-blue-300 transition-colors ${b.archiviato ? 'text-white/50' : 'text-white'}`}
-          title="Clicca per rinominare"
+          title={t('broker_rinomina')}
         >
           {b.nome}
-          {b.archiviato && <span className="ml-1 text-xs text-amber-400">(archiviato)</span>}
+          {b.archiviato && <span className="ml-1 text-xs text-amber-400">{t('broker_archiviato')}</span>}
         </span>
       )}
 
@@ -141,13 +145,13 @@ function BrokerRow({ broker: b, onAggiorna, onElimina }) {
         onClick={() => onAggiorna(b.id, { archiviato: !b.archiviato })}
         className="text-xs text-slate-400 hover:text-white transition-colors flex-shrink-0"
       >
-        {b.archiviato ? 'Ripristina' : 'Archivia'}
+        {b.archiviato ? t('ripristina') : t('archivia')}
       </button>
       <button
         onClick={() => onElimina(b.id)}
         className="text-xs text-red-500 hover:text-red-300 transition-colors flex-shrink-0"
       >
-        Elimina
+        {t('elimina')}
       </button>
     </div>
   )
@@ -156,6 +160,7 @@ function BrokerRow({ broker: b, onAggiorna, onElimina }) {
 // ── Gestore Broker Modal ───────────────────────────────────────────
 
 function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiudi }) {
+  const { t } = useLocale()
   const [nomeBroker, setNomeBroker] = useState('')
   const [coloreBroker, setColoreBroker] = useState('#6366f1')
 
@@ -168,7 +173,7 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
   }
 
   return (
-    <Modal titolo="Gestione broker" onChiudi={onChiudi} wide>
+    <Modal titolo={t('modal_broker')} onChiudi={onChiudi} wide>
       <div className="space-y-4">
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {broker.map(b => (
@@ -181,7 +186,7 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
           ))}
         </div>
         <form onSubmit={handleAggiungi} className="border-t border-slate-700 pt-4 space-y-3">
-          <p className="text-xs text-slate-400 font-medium">Nuovo broker</p>
+          <p className="text-xs text-slate-400 font-medium">{t('broker_nuovo')}</p>
           <div className="flex gap-2">
             <input
               value={nomeBroker}
@@ -200,7 +205,7 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2 text-sm font-medium transition-colors"
           >
-            Aggiungi broker
+            {t('broker_aggiungi')}
           </button>
         </form>
       </div>
@@ -220,9 +225,10 @@ function ultimaDataAcquisto(etf) {
 const GITHUB_URL = 'https://github.com/AlfonsoGangemi/MoneyGrowth'
 
 function InfoModal({ onChiudi }) {
+  const { t } = useLocale()
   const link = 'text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors'
   return (
-    <Modal titolo="Informazioni" onChiudi={onChiudi}>
+    <Modal titolo={t('modal_info')} onChiudi={onChiudi}>
       <div className="space-y-4 text-sm text-slate-300">
         <div className="flex items-start gap-3">
           <span className="text-slate-500 mt-0.5 flex-shrink-0">
@@ -231,7 +237,7 @@ function InfoModal({ onChiudi }) {
             </svg>
           </span>
           <div>
-            <p className="text-white font-medium mb-0.5">Progetto open source</p>
+            <p className="text-white font-medium mb-0.5">{t('info_open_source')}</p>
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className={link}>
               Github
             </a>
@@ -245,7 +251,7 @@ function InfoModal({ onChiudi }) {
             </svg>
           </span>
           <div>
-            <p className="text-white font-medium mb-0.5">Licenza</p>
+            <p className="text-white font-medium mb-0.5">{t('info_licenza')}</p>
             <a href={`${GITHUB_URL}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer" className={link}>
               MIT License
             </a>
@@ -259,7 +265,7 @@ function InfoModal({ onChiudi }) {
             </svg>
           </span>
           <div>
-            <p className="text-white font-medium mb-0.5">Dati di mercato</p>
+            <p className="text-white font-medium mb-0.5">{t('info_dati_mercato')}</p>
             <a href="https://www.justetf.com" target="_blank" rel="noopener noreferrer" className={link}>
               JustETF
             </a>
@@ -267,8 +273,8 @@ function InfoModal({ onChiudi }) {
         </div>
 
         <div className="border-t border-slate-700 pt-4 flex gap-4">
-          <a href="/privacy" target="_blank" rel="noopener noreferrer" className={link}>Privacy Policy</a>
-          <a href="/termini" target="_blank" rel="noopener noreferrer" className={link}>Termini di Servizio</a>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className={link}>{t('footer_privacy')}</a>
+          <a href="/termini" target="_blank" rel="noopener noreferrer" className={link}>{t('footer_termini')}</a>
         </div>
       </div>
     </Modal>
@@ -278,6 +284,7 @@ function InfoModal({ onChiudi }) {
 // ── Dashboard principale ───────────────────────────────────────────
 
 export default function Dashboard({ user, onSignOut }) {
+  const { t } = useLocale()
   const port = usePortafoglio(user)
 
   const [modalNuovoETF, setModalNuovoETF] = useState(false)
@@ -420,7 +427,7 @@ export default function Dashboard({ user, onSignOut }) {
     try {
       await port.importJSON(file)
     } catch {
-      setErrImport('File non valido. Importazione annullata.')
+      setErrImport(t('import_errore'))
     }
     e.target.value = ''
   }
@@ -437,7 +444,7 @@ export default function Dashboard({ user, onSignOut }) {
             <button
               onClick={() => setPrivacyMode(v => { const next = !v; localStorage.setItem('privacyMode', next); return next })}
               className={`transition-colors ${privacyMode ? 'text-amber-400' : 'text-slate-400 hover:text-white'}`}
-              title={privacyMode ? 'Mostra importi' : 'Nascondi importi'}
+              title={privacyMode ? t('nav_mostra_importi') : t('nav_nascondi_importi')}
             >
               {privacyMode ? (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
@@ -450,6 +457,8 @@ export default function Dashboard({ user, onSignOut }) {
                 </svg>
               )}
             </button>
+
+            <LinguaToggle />
 
           {/* Menu utente */}
           <div className="relative" ref={dropdownRef}>
@@ -468,23 +477,23 @@ export default function Dashboard({ user, onSignOut }) {
                   onClick={() => { port.exportJSON(); setDropdownAperto(false) }}
                   className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
                 >
-                  Esporta dati
+                  {t('export_dati')}
                 </button>
                 <label className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors cursor-pointer block">
-                  Importa dati
+                  {t('import_dati')}
                   <input type="file" accept=".json" onChange={e => { handleImport(e); setDropdownAperto(false) }} className="hidden" />
                 </label>
                 <button
                   onClick={() => { setModalCrediti(true); setDropdownAperto(false) }}
                   className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
                 >
-                  Info Prodotto
+                  {t('info_prodotto')}
                 </button>
                 <button
                   onClick={onSignOut}
                   className="w-full text-left text-xs text-red-400 hover:bg-slate-700 px-4 py-2.5 transition-colors border-t border-slate-700"
                 >
-                  Logout
+                  {t('logout')}
                 </button>
               </div>
             )}
@@ -509,7 +518,7 @@ export default function Dashboard({ user, onSignOut }) {
           <div className="flex items-center gap-2 flex-wrap">
             {port.broker.length > 1 && (
               <>
-                <span className="text-xs text-slate-400">Broker:</span>
+                <span className="text-xs text-slate-400">{t('broker_label')}</span>
                 <button
                   onClick={() => port.setBrokerFiltro([])}
                   className={`text-xs px-3 py-1 rounded-full border transition-colors ${
@@ -517,7 +526,7 @@ export default function Dashboard({ user, onSignOut }) {
                       ? 'bg-blue-600 border-blue-500 text-white'
                       : 'border-slate-600 text-slate-400 hover:text-white'
                   }`}
-                >Tutti</button>
+                >{t('broker_tutti')}</button>
                 {port.broker.map(b => (
                   <button
                     key={b.id}
@@ -536,7 +545,7 @@ export default function Dashboard({ user, onSignOut }) {
                   >
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: b.colore }} />
                     {b.nome}
-                    {b.archiviato && <span className="opacity-70">(arch.)</span>}
+                    {b.archiviato && <span className="opacity-70">{t('broker_arch')}</span>}
                   </button>
                 ))}
               </>
@@ -544,7 +553,7 @@ export default function Dashboard({ user, onSignOut }) {
             <button
               onClick={() => setModalGestoreBroker(true)}
               className="text-slate-500 hover:text-slate-300 transition-colors"
-              title="Gestisci broker"
+              title={t('broker_gestisci')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                 <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
@@ -574,7 +583,7 @@ export default function Dashboard({ user, onSignOut }) {
           <div className="mb-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-white">
-                ETF ({etfAttivi.length} attivi{etfArchiviati.length > 0 ? ` · ${etfArchiviati.length} archiviati` : ''})
+                ETF ({etfAttivi.length} {t('etf_sezione_attivi')}{etfArchiviati.length > 0 ? ` · ${etfArchiviati.length} ${t('etf_sezione_archiviati_info')}` : ''})
               </h2>
               <div className="flex gap-2 items-center">
                 {etfAttivi.filter(e => e.isin).length > 0 && (
@@ -586,7 +595,7 @@ export default function Dashboard({ user, onSignOut }) {
                     <svg className={`w-3.5 h-3.5 ${aggStato === 'running' ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    {globalCooldownSec > 0 ? `Aggiorna tutti (${globalCooldownSec}s)` : 'Aggiorna tutti'}
+                    {globalCooldownSec > 0 ? `${t('etf_aggiorna_tutti')} (${globalCooldownSec}s)` : t('etf_aggiorna_tutti')}
                   </button>
                 )}
                 {etfAttivi.length > 0 && (
@@ -594,25 +603,25 @@ export default function Dashboard({ user, onSignOut }) {
                     onClick={() => setModalAcquisto(true)}
                     className="text-sm bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-xl transition-colors font-medium"
                   >
-                    + Acquisto
+                    {t('etf_acquisto')}
                   </button>
                 )}
               </div>
             </div>
             {aggErroriIsin.length > 0 && (
-              <p className="text-xs text-red-400 mt-1.5">ISIN con errori: {aggErroriIsin.join(' · ')}</p>
+              <p className="text-xs text-red-400 mt-1.5">{t('isin_errori')} {aggErroriIsin.join(' · ')}</p>
             )}
           </div>
 
           {etfAttivi.length === 0 && etfArchiviati.length === 0 ? (
             <div className="text-center py-16 text-slate-500">
               <p className="text-3xl mb-3">📈</p>
-              <p className="text-sm">Nessun ETF configurato.</p>
+              <p className="text-sm">{t('etf_nessuno')}</p>
               <button
                 onClick={() => setModalNuovoETF(true)}
                 className="mt-4 text-sm bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl transition-colors"
               >
-                Aggiungi il primo ETF
+                {t('etf_aggiungi_primo')}
               </button>
             </div>
           ) : (
@@ -639,11 +648,11 @@ export default function Dashboard({ user, onSignOut }) {
                   onClick={() => setModalNuovoETF(true)}
                   className="mt-4 w-full text-sm border-2 border-dashed border-slate-700 hover:border-blue-500 text-slate-500 hover:text-blue-400 py-3 rounded-2xl transition-colors"
                 >
-                  + Aggiungi ETF
+                  {t('etf_aggiungi')}
                 </button>
               ) : (
                 <p className="mt-4 text-center text-xs text-slate-500">
-                  Limite di 9 ETF attivi raggiunto — archivia un ETF per aggiungerne un altro
+                  {t('etf_limite')}
                 </p>
               )}
 
@@ -654,7 +663,7 @@ export default function Dashboard({ user, onSignOut }) {
                     onClick={() => setMostraArchiviati(v => !v)}
                     className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1 mb-3"
                   >
-                    {mostraArchiviati ? '▲' : '▼'} ETF archiviati ({etfArchiviati.length})
+                    {mostraArchiviati ? '▲' : '▼'} {t('etf_archiviati_btn')} ({etfArchiviati.length})
                   </button>
                   {mostraArchiviati && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 opacity-50">
@@ -670,7 +679,7 @@ export default function Dashboard({ user, onSignOut }) {
                             privacyMode={privacyMode}
                           />
                           <div className="absolute inset-0 flex items-start justify-end p-3 pointer-events-none">
-                            <span className="text-xs bg-amber-800/80 text-amber-300 px-2 py-0.5 rounded-full">Archiviato</span>
+                            <span className="text-xs bg-amber-800/80 text-amber-300 px-2 py-0.5 rounded-full">{t('etf_archiviato_badge')}</span>
                           </div>
                         </div>
                       ))}
@@ -701,15 +710,15 @@ export default function Dashboard({ user, onSignOut }) {
 
       {/* Modal: nuovo ETF */}
       {modalNuovoETF && (
-        <Modal titolo="Nuovo ETF" onChiudi={() => setModalNuovoETF(false)}>
+        <Modal titolo={t('modal_nuovo_etf')} onChiudi={() => setModalNuovoETF(false)}>
           <form onSubmit={handleAggiungiETF} className="space-y-4">
-            <Input label="ISIN" value={isinETF} onChange={e => setIsinETF(e.target.value)} placeholder="IE00B4L5Y983" />
-            <Input label="Nome ETF" value={nomeETF} onChange={e => setNomeETF(e.target.value)} placeholder="iShares Core MSCI World" required />
-            <Input label="Emittente" value={emittenteETF} onChange={e => setEmittenteETF(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
-            <Input label="Importo PAC mensile (€)" type="number" step="0.01" min="0" value={importoETF} onChange={e => setImportoETF(e.target.value)} placeholder="200" />
+            <Input label={t('label_isin')} value={isinETF} onChange={e => setIsinETF(e.target.value)} placeholder="IE00B4L5Y983" />
+            <Input label={t('label_nome_etf')} value={nomeETF} onChange={e => setNomeETF(e.target.value)} placeholder="iShares Core MSCI World" required />
+            <Input label={t('label_emittente')} value={emittenteETF} onChange={e => setEmittenteETF(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
+            <Input label={t('label_importo_pac')} type="number" step="0.01" min="0" value={importoETF} onChange={e => setImportoETF(e.target.value)} placeholder="200" />
             <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setModalNuovoETF(false)} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">Annulla</button>
-              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">Aggiungi</button>
+              <button type="button" onClick={() => setModalNuovoETF(false)} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
+              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('aggiungi')}</button>
             </div>
           </form>
         </Modal>
@@ -750,17 +759,17 @@ export default function Dashboard({ user, onSignOut }) {
 
       {/* Modal: nuovo scenario */}
       {modalScenario && (
-        <Modal titolo="Nuovo scenario" onChiudi={() => setModalScenario(false)}>
+        <Modal titolo={t('modal_scenario')} onChiudi={() => setModalScenario(false)}>
           <form onSubmit={handleAggiungiScenario} className="space-y-4">
-            <Input label="Nome scenario" value={nomeScen} onChange={e => setNomeScen(e.target.value)} placeholder="Ottimistico" required />
-            <Input label="Rendimento annuo (%)" type="number" step="0.1" min="0" max="100" value={rendScen} onChange={e => setRendScen(e.target.value)} placeholder="10" required />
+            <Input label={t('label_nome_scenario')} value={nomeScen} onChange={e => setNomeScen(e.target.value)} placeholder="Ottimistico" required />
+            <Input label={t('label_rendimento_annuo')} type="number" step="0.1" min="0" max="100" value={rendScen} onChange={e => setRendScen(e.target.value)} placeholder="10" required />
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Colore linea</label>
+              <label className="block text-xs text-slate-400 mb-1">{t('label_colore_linea')}</label>
               <input type="color" value={coloreScen} onChange={e => setColoreScen(e.target.value)} className="h-9 w-full rounded-lg border border-slate-600 bg-slate-700 cursor-pointer" />
             </div>
             <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setModalScenario(false)} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">Annulla</button>
-              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">Aggiungi</button>
+              <button type="button" onClick={() => setModalScenario(false)} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
+              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('aggiungi')}</button>
             </div>
           </form>
         </Modal>

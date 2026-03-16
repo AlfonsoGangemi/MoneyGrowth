@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
+import { useLocale } from '../hooks/useLocale'
 
 export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi }) {
+  const { t } = useLocale()
   const oggi = format(new Date(), 'yyyy-MM-dd')
   const [data, setData] = useState(oggi)
   const [brokerId, setBrokerId] = useState(brokerList[0]?.id ?? '')
@@ -65,7 +67,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">Nuovo acquisto PAC</h2>
+          <h2 className="text-lg font-bold text-white">{t('nuovo_acquisto')}</h2>
           <button onClick={onChiudi} className="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
         </div>
 
@@ -73,7 +75,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
           {/* Broker */}
           {brokerList.length >= 1 && (
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Broker</label>
+              <label className="block text-xs text-slate-400 mb-1">{t('broker')}</label>
               <select
                 value={brokerId}
                 onChange={e => setBrokerId(e.target.value)}
@@ -88,7 +90,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
 
           {/* Data unica */}
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Data acquisto</label>
+            <label className="block text-xs text-slate-400 mb-1">{t('data_acquisto')}</label>
             <input
               type="date"
               value={data}
@@ -100,7 +102,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
 
           {/* Lista ETF con checkbox */}
           <div className="flex-1 min-h-0 overflow-y-auto space-y-2">
-            <p className="text-xs text-slate-400 sticky top-0 bg-slate-800 pb-1">Seleziona gli ETF da acquistare</p>
+            <p className="text-xs text-slate-400 sticky top-0 bg-slate-800 pb-1">{t('seleziona_etf')}</p>
             {righe.map(riga => {
               const etf = etfList.find(e => e.id === riga.etfId)
               return (
@@ -131,7 +133,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                   {riga.selezionato && (
                     <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1">Importo (€)</label>
+                        <label className="block text-xs text-slate-400 mb-1">{t('importo_eur')}</label>
                         <input
                           type="number"
                           step="0.01"
@@ -143,7 +145,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1">Fee (€)</label>
+                        <label className="block text-xs text-slate-400 mb-1">{t('fee_eur')}</label>
                         <input
                           type="number"
                           step="0.01"
@@ -155,7 +157,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1">Prezzo (€)</label>
+                        <label className="block text-xs text-slate-400 mb-1">{t('prezzo_eur')}</label>
                         <input
                           type="number"
                           step="0.0001"
@@ -167,7 +169,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                         />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400 mb-1">Quote</p>
+                        <p className="text-xs text-slate-400 mb-1">{t('quote')}</p>
                         <p className="text-sm font-semibold text-blue-300 py-1.5 px-2 bg-slate-900/50 rounded-lg">
                           {calcolaQuote(riga)}
                         </p>
@@ -185,14 +187,14 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
               onClick={onChiudi}
               className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
             >
-              Annulla
+              {t('annulla')}
             </button>
             <button
               type="submit"
               disabled={!almenaUna}
               className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
             >
-              Aggiungi {almenaUna ? `(${righe.filter(r => r.selezionato).length})` : ''}
+              {t('aggiungi')} {almenaUna ? `(${righe.filter(r => r.selezionato).length})` : ''}
             </button>
           </div>
         </form>
