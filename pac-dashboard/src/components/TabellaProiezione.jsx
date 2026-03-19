@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { valoreAttuale } from '../utils/calcoli'
+import { valoreAttuale, totaleInvestito } from '../utils/calcoli'
 import { useLocale } from '../hooks/useLocale'
 
 function fmt(val) {
@@ -125,6 +125,7 @@ export default function TabellaProiezione({
     )
 
     const valoreOggi = etfList.reduce((s, e) => s + valoreAttuale(e.acquisti, e.prezzoCorrente), 0)
+    const investitoOggi = etfList.reduce((s, e) => s + totaleInvestito(e.acquisti), 0)
     const versamentoMensile = etfList.filter(e => !e.archiviato).reduce((s, e) => s + e.importoFisso, 0)
 
     // Base per il calcolo del totale versato nelle proiezioni
@@ -197,6 +198,19 @@ export default function TabellaProiezione({
       }
     }
 
+    // Riga anno corrente (valore parziale da prezzi live)
+    const rendimentoEurOggi = valoreOggi - investitoOggi
+    righe.push({
+      tipo: 'reale',
+      parziale: true,
+      key: `r-${annoCorrente}`,
+      label: String(annoCorrente),
+      totaleVersato: investitoOggi,
+      valore: valoreOggi,
+      rendimentoEur: rendimentoEurOggi,
+      rendimentoPct: investitoOggi > 0 ? (valoreOggi / investitoOggi - 1) * 100 : 0,
+    })
+
     return {
       righe,
       scenari: proiezioniPerScenario.map(p => p.scenario),
@@ -226,13 +240,28 @@ export default function TabellaProiezione({
                 </tr>
               </thead>
               <tbody>
-                {righeReali.map(riga => (
+                {righeReali.map((riga, i) => {
+                  const delta = i === 0 ? riga.totaleVersato : riga.totaleVersato - righeReali[i - 1].totaleVersato
+                  return (
                   <tr
                     key={riga.key}
                     className="border-b border-slate-800 transition-colors hover:bg-slate-800/60"
                   >
-                    <td className="px-4 py-3 text-slate-300 font-semibold">{riga.label}</td>
-                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{pv(fmt(riga.totaleVersato))}</td>
+                    <td className="px-4 py-3 text-slate-300 font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        {riga.label}
+                        {riga.parziale && (
+                          <span
+                            title={t('storico_parziale_tooltip')}
+                            className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-slate-600 text-slate-300 text-[9px] font-bold cursor-default leading-none flex-shrink-0"
+                          >~</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">
+                      <div>{pv(fmt(riga.totaleVersato))}</div>
+                      <div className="text-xs text-slate-500">{pv(`(${fmt(delta)})`)}</div>
+                    </td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       <div className="text-white font-medium">{pv(fmt(riga.valore))}</div>
                       <div className={`text-xs ${riga.rendimentoEur >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -240,7 +269,7 @@ export default function TabellaProiezione({
                       </div>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>
@@ -341,7 +370,7 @@ export default function TabellaProiezione({
                       </td>
                     ))}
                   </tr>
-                ))}}
+                ))}
               </tbody>
             </table>
           </div>

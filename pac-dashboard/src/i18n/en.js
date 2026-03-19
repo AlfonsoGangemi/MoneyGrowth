@@ -161,6 +161,7 @@ export default {
 
   // --- TabellaProiezione ---
   storico: 'History',
+  storico_parziale_tooltip: 'Partial value: reflects current data, not the year-end total.',
   col_anno: 'Year',
   totale_versato: 'Total invested',
   valore_reale: 'Actual value',

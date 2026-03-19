@@ -161,6 +161,7 @@ export default {
 
   // --- TabellaProiezione ---
   storico: 'Storico',
+  storico_parziale_tooltip: 'Valore parziale: riflette i dati attuali, non il consuntivo a fine anno.',
   col_anno: 'Anno',
   totale_versato: 'Totale versato',
   valore_reale: 'Valore reale',
