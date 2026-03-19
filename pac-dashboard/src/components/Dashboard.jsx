@@ -437,10 +437,15 @@ export default function Dashboard({ user, onSignOut }) {
       {/* Navbar */}
       <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-white tracking-tight">PAC Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-white tracking-tight">PAC Dashboard</h1>
+            <LinguaToggle />
+          </div>
 
-          {/* Azioni navbar destra */}
+          {/* Colonna destra */}
           <div className="flex items-center gap-3">
+
+            {/* Privacy toggle */}
             <button
               onClick={() => setPrivacyMode(v => { const next = !v; localStorage.setItem('privacyMode', next); return next })}
               className={`transition-colors ${privacyMode ? 'text-amber-400' : 'text-slate-400 hover:text-white'}`}
@@ -458,46 +463,45 @@ export default function Dashboard({ user, onSignOut }) {
               )}
             </button>
 
-            <LinguaToggle />
+            {/* Riga 2 (mobile) / stesso livello (desktop): menu utente */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownAperto(v => !v)}
+                className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+              >
+                {user.email}
+                <svg className={`w-3 h-3 transition-transform ${dropdownAperto ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {dropdownAperto && (
+                <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                  <button
+                    onClick={() => { port.exportJSON(); setDropdownAperto(false) }}
+                    className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
+                  >
+                    {t('export_dati')}
+                  </button>
+                  <label className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors cursor-pointer block">
+                    {t('import_dati')}
+                    <input type="file" accept=".json" onChange={e => { handleImport(e); setDropdownAperto(false) }} className="hidden" />
+                  </label>
+                  <button
+                    onClick={() => { setModalCrediti(true); setDropdownAperto(false) }}
+                    className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
+                  >
+                    {t('info_prodotto')}
+                  </button>
+                  <button
+                    onClick={onSignOut}
+                    className="w-full text-left text-xs text-red-400 hover:bg-slate-700 px-4 py-2.5 transition-colors border-t border-slate-700"
+                  >
+                    {t('logout')}
+                  </button>
+                </div>
+              )}
+            </div>
 
-          {/* Menu utente */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setDropdownAperto(v => !v)}
-              className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
-            >
-              {user.email}
-              <svg className={`w-3 h-3 transition-transform ${dropdownAperto ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {dropdownAperto && (
-              <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
-                <button
-                  onClick={() => { port.exportJSON(); setDropdownAperto(false) }}
-                  className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
-                >
-                  {t('export_dati')}
-                </button>
-                <label className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors cursor-pointer block">
-                  {t('import_dati')}
-                  <input type="file" accept=".json" onChange={e => { handleImport(e); setDropdownAperto(false) }} className="hidden" />
-                </label>
-                <button
-                  onClick={() => { setModalCrediti(true); setDropdownAperto(false) }}
-                  className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
-                >
-                  {t('info_prodotto')}
-                </button>
-                <button
-                  onClick={onSignOut}
-                  className="w-full text-left text-xs text-red-400 hover:bg-slate-700 px-4 py-2.5 transition-colors border-t border-slate-700"
-                >
-                  {t('logout')}
-                </button>
-              </div>
-            )}
-          </div>
           </div>
         </div>
         {(errImport || port.errore) && (

@@ -281,9 +281,11 @@ export default function LandingPage({ onCTA }) {
       {/* ── Header sticky ─────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <span className="font-semibold text-white text-sm tracking-tight">PAC Dashboard</span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-white text-sm tracking-tight">PAC Dashboard</span>
             <LinguaToggle />
+          </div>
+          <div className="flex items-center gap-3">
             <button
               onClick={() => onCTA('login')}
               className="text-sm text-slate-300 hover:text-white px-3 py-1.5 transition-colors"
