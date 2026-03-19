@@ -39,23 +39,17 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
     setSyncStato('loading')
     const params = new URLSearchParams({ proxyPath: `api/etfs/${etf.isin}/quote`, locale: 'it', currency: 'EUR', isin: etf.isin })
     const url = `/api/justetf-proxy?${params}`
-    console.log('[proxy] → GET', url)
     try {
       const res = await fetch(url)
-      console.log('[proxy] ← status:', res.status, '| ok:', res.ok)
-      console.log('[proxy]    headers:', Object.fromEntries(res.headers.entries()))
-      const text = await res.text()
-      console.log('[proxy]    body (raw):', text.slice(0, 500))
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = JSON.parse(text)
-      console.log('[proxy]    data:', data)
+      const data = await res.json()
       const prezzo = data?.latestQuote?.raw
       if (!prezzo) throw new Error('latestQuote.raw assente')
       if (isNaN(prezzo) || prezzo <= 0) throw new Error(`prezzo non valido: ${prezzo}`)
       onAggiornaPrezzo(etf.id, prezzo)
       setSyncStato('idle')
     } catch (err) {
-      console.error('[proxy] ERRORE:', err.message)
+      // errore silenzioso in prod — l'UI mostra già lo stato 'error'
       setSyncStato('error')
       setTimeout(() => setSyncStato('idle'), 3000)
     } finally {
