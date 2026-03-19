@@ -48,11 +48,12 @@ function ModificaETFModal({ etf, onSalva, onChiudi }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (!nome.trim()) return
+    const pc = parseFloat(prezzoCorrente.replace(',', '.'))
     onSalva(etf.id, {
       nome: nome.trim(),
       emittente: emittente.trim(),
       importoFisso: Number(importoFisso) || 0,
-      prezzoCorrente: parseFloat(prezzoCorrente.replace(',', '.')) || 0,
+      prezzoCorrente: Number.isFinite(pc) && pc >= 0 ? pc : 0,
     })
     onChiudi()
   }

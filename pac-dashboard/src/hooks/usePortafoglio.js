@@ -384,13 +384,13 @@ export function usePortafoglio(user) {
       return { ...s, etf, storicoPerBroker }
     })
     if (storicoToUpsert) {
-      supabase
+      const { error: errStorico } = await supabase
         .from('portafoglio_storico_annuale')
         .upsert(storicoToUpsert.map(r => ({
           user_id: user.id, anno: r.anno, broker_id: r.brokerId,
           valore: r.valore, totale_versato: r.totaleVersato,
         })))
-        .then(({ error: e }) => { if (e) console.error('Errore storico:', e) })
+      if (errStorico) setErrore('Errore nel salvataggio storico annuale.')
     }
   }, [user])
 
@@ -541,6 +541,31 @@ export function usePortafoglio(user) {
           const data = JSON.parse(e.target.result)
           if (!Array.isArray(data.etf) || !Array.isArray(data.broker)) {
             throw new Error('File JSON non valido: struttura non riconosciuta')
+          }
+
+          // Validazione schema: campi obbligatori, formati, valori numerici positivi
+          const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+          for (const etf of data.etf) {
+            if (typeof etf.nome !== 'string' || !etf.nome.trim())
+              throw new Error('ETF con nome mancante o non valido')
+            if (!Number.isFinite(Number(etf.importoFisso)) || Number(etf.importoFisso) < 0)
+              throw new Error(`ETF "${etf.nome}": importoFisso non valido`)
+            if (!Number.isFinite(Number(etf.prezzoCorrente)) || Number(etf.prezzoCorrente) < 0)
+              throw new Error(`ETF "${etf.nome}": prezzoCorrente non valido`)
+            for (const a of (etf.acquisti || [])) {
+              if (typeof a.data !== 'string' || !DATE_RE.test(a.data))
+                throw new Error(`ETF "${etf.nome}": data acquisto non valida "${a.data}"`)
+              if (!Number.isFinite(Number(a.importoInvestito)) || Number(a.importoInvestito) <= 0)
+                throw new Error(`ETF "${etf.nome}": importoInvestito non valido`)
+              if (!Number.isFinite(Number(a.prezzoUnitario)) || Number(a.prezzoUnitario) <= 0)
+                throw new Error(`ETF "${etf.nome}": prezzoUnitario non valido`)
+              if (!Number.isFinite(Number(a.quoteFrazionate)) || Number(a.quoteFrazionate) < 0)
+                throw new Error(`ETF "${etf.nome}": quoteFrazionate non valido`)
+            }
+          }
+          for (const b of data.broker) {
+            if (typeof b.nome !== 'string' || !b.nome.trim())
+              throw new Error('Broker con nome mancante o non valido')
           }
 
           // Carica broker esistenti nel DB e inserisce quelli mancanti dal JSON

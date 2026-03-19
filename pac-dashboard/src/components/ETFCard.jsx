@@ -39,8 +39,10 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
     setSyncStato('loading')
     const params = new URLSearchParams({ proxyPath: `api/etfs/${etf.isin}/quote`, locale: 'it', currency: 'EUR', isin: etf.isin })
     const url = `/api/justetf-proxy?${params}`
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10_000)
     try {
-      const res = await fetch(url)
+      const res = await fetch(url, { signal: controller.signal })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const prezzo = data?.latestQuote?.raw
@@ -53,6 +55,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
       setSyncStato('error')
       setTimeout(() => setSyncStato('idle'), 3000)
     } finally {
+      clearTimeout(timeoutId)
       lastSyncAt.current = Date.now()
       setCooldownAttivo(true)
       setTimeout(() => setCooldownAttivo(false), COOLDOWN_MS)

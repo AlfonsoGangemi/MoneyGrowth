@@ -30,7 +30,7 @@ function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
 
   function salvaRend() {
     const r = parseFloat(nuovoRend.replace(',', '.'))
-    if (!isNaN(r) && r > 0) onAggiorna(sc.id, { rendimentoAnnuo: r / 100 })
+    if (Number.isFinite(r) && r !== 0) onAggiorna(sc.id, { rendimentoAnnuo: r / 100 })
     setEditRend(false)
   }
 
@@ -45,7 +45,7 @@ function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
             <input
               type="number"
               step="0.1"
-              min="0"
+              min="-100"
               max="100"
               value={nuovoRend}
               onChange={e => setNuovoRend(e.target.value)}
