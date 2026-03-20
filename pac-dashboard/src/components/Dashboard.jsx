@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { usePortafoglio } from '../hooks/usePortafoglio'
 import { useLocale } from '../hooks/useLocale'
 import ETFCard from './ETFCard'
@@ -11,11 +11,50 @@ import LinguaToggle from './LinguaToggle'
 // ── Componenti base ────────────────────────────────────────────────
 
 function Modal({ titolo, onChiudi, children, wide }) {
+  const dialogRef = useRef(null)
+  const titleId = useId()
+
+  useEffect(() => {
+    const el = dialogRef.current
+    if (!el) return
+
+    const getFocusable = () => [...el.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )]
+
+    // Focus first element on open
+    const focusable = getFocusable()
+    if (focusable.length) focusable[0].focus()
+
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') { onChiudi(); return }
+      if (e.key !== 'Tab') return
+      const list = getFocusable()
+      if (!list.length) return
+      const first = list[0]
+      const last = list[list.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onChiudi])
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className={`bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full shadow-2xl ${wide ? 'max-w-lg' : 'max-w-md'}`}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className={`bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full shadow-2xl ${wide ? 'max-w-lg' : 'max-w-md'}`}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">{titolo}</h2>
+          <h2 id={titleId} className="text-lg font-bold text-white">{titolo}</h2>
           <button onClick={onChiudi} className="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
         </div>
         {children}
@@ -316,6 +355,23 @@ export default function Dashboard({ user, onSignOut }) {
   }, [dropdownAperto])
 
   useEffect(() => {
+    if (!dropdownAperto) return
+    const panel = dropdownRef.current?.querySelector('[role="menu"]')
+    if (!panel) return
+    const items = [...panel.querySelectorAll('[role="menuitem"]')]
+    if (items.length) items[0].focus()
+
+    function handleKeyDown(e) {
+      const idx = items.indexOf(document.activeElement)
+      if (e.key === 'ArrowDown') { e.preventDefault(); items[(idx + 1) % items.length]?.focus() }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); items[(idx - 1 + items.length) % items.length]?.focus() }
+      else if (e.key === 'Escape') { setDropdownAperto(false) }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [dropdownAperto])
+
+  useEffect(() => {
     if (globalCooldownSec <= 0) return
     const t = setTimeout(() => setGlobalCooldownSec(s => s - 1), 1000)
     return () => clearTimeout(t)
@@ -476,24 +532,27 @@ export default function Dashboard({ user, onSignOut }) {
                 </svg>
               </button>
               {dropdownAperto && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                <div role="menu" className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
                   <button
+                    role="menuitem"
                     onClick={() => { port.exportJSON(); setDropdownAperto(false) }}
                     className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
                   >
                     {t('export_dati')}
                   </button>
-                  <label className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors cursor-pointer block">
+                  <label role="menuitem" tabIndex={0} className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors cursor-pointer block">
                     {t('import_dati')}
                     <input type="file" accept=".json" onChange={e => { handleImport(e); setDropdownAperto(false) }} className="hidden" />
                   </label>
                   <button
+                    role="menuitem"
                     onClick={() => { setModalCrediti(true); setDropdownAperto(false) }}
                     className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
                   >
                     {t('info_prodotto')}
                   </button>
                   <button
+                    role="menuitem"
                     onClick={onSignOut}
                     className="w-full text-left text-xs text-red-400 hover:bg-slate-700 px-4 py-2.5 transition-colors border-t border-slate-700"
                   >
