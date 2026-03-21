@@ -1,4 +1,5 @@
 import { differenceInMonths, differenceInCalendarDays, parseISO, addMonths, format } from 'date-fns'
+import * as Sentry from '@sentry/react'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,7 @@ export function calcolaIRR(acquisti, prezzoCorrente) {
     r = rNew
   }
 
+  Sentry.captureMessage('calcolaIRR: non convergenza dopo 200 iterazioni', { level: 'warning', tags: { operation: 'calcola_irr' } })
   return null // non converge
 }
 
@@ -370,6 +372,10 @@ export function calcolaVolatilita(serie) {
   if (rendimenti.length < 2) return null
   const media = rendimenti.reduce((s, r) => s + r, 0) / rendimenti.length
   const varianza = rendimenti.reduce((s, r) => s + (r - media) ** 2, 0) / (rendimenti.length - 1)
+  if (varianza < 0) {
+    Sentry.captureMessage('calcolaVolatilita: varianza negativa per errore floating-point', { level: 'warning', tags: { operation: 'calcola_volatilita' }, extra: { varianza } })
+    return 0
+  }
   return Math.sqrt(varianza) * Math.sqrt(12) * 100
 }
 

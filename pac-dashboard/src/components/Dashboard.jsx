@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import * as Sentry from '@sentry/react'
 import { usePortafoglio } from '../hooks/usePortafoglio'
 import { useLocale } from '../hooks/useLocale'
 import ETFCard from './ETFCard'
@@ -404,7 +405,8 @@ export default function Dashboard({ user, onSignOut }) {
         const prezzo = data?.latestQuote?.raw
         if (!prezzo || isNaN(prezzo) || prezzo <= 0) throw new Error('prezzo non valido')
         handleAggiornaPrezzo(etf.id, prezzo)
-      } catch {
+      } catch (err) {
+        Sentry.captureException(err, { tags: { operation: 'aggiorna_tutti_prezzi', isin: etf.isin } })
         errori.push(etf.isin)
       }
       if (i < daAggiornare.length - 1) await new Promise(r => setTimeout(r, DELAY_MS))

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import * as Sentry from '@sentry/react'
 import { supabase } from '../utils/supabase'
 
 export function useAuth() {
@@ -6,13 +7,20 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) Sentry.captureException(error, { tags: { operation: 'get_session' } })
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+      const u = session?.user ?? null
+      setUser(u)
+      if (u) {
+        Sentry.setUser({ id: u.id })
+      } else {
+        Sentry.setUser(null)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -20,17 +28,18 @@ export function useAuth() {
 
   async function signIn(email, password) {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    if (error) { Sentry.captureException(error, { tags: { operation: 'sign_in' } }); throw error }
   }
 
   async function signUp(email, password) {
     const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) throw error
+    if (error) { Sentry.captureException(error, { tags: { operation: 'sign_up' } }); throw error }
     return data // data.session è null se la conferma email è richiesta
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
+    if (error) Sentry.captureException(error, { tags: { operation: 'sign_out' } })
   }
 
   return { user, loading, signIn, signUp, signOut }

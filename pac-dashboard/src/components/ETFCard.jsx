@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import * as Sentry from '@sentry/react'
 import { useLocale } from '../hooks/useLocale'
 import {
   totaleInvestito,
@@ -51,7 +52,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
       onAggiornaPrezzo(etf.id, prezzo)
       setSyncStato('idle')
     } catch (err) {
-      // errore silenzioso in prod — l'UI mostra già lo stato 'error'
+      Sentry.captureException(err, { tags: { operation: 'aggiorna_prezzo_api', isin: etf.isin } })
       setSyncStato('error')
       setTimeout(() => setSyncStato('idle'), 3000)
     } finally {

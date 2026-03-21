@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import * as Sentry from '@sentry/react'
 import { supabase } from '../utils/supabase'
 
 // ── Scenari di default inseriti al primo accesso ───────────────────
@@ -200,7 +201,10 @@ export function usePortafoglio(user) {
           const { error: backfillErr } = await supabase
             .from('portafoglio_storico_annuale')
             .upsert(nuovi.map(r => ({ user_id: user.id, anno: r.anno, broker_id: r.brokerId, valore: r.valore, totale_versato: r.totaleVersato })))
-          if (backfillErr) console.error('Errore backfill storico annuale:', backfillErr)
+          if (backfillErr) {
+            console.error('Errore backfill storico annuale:', backfillErr)
+            Sentry.captureException(new Error(backfillErr.message), { tags: { operation: 'backfill_storico_annuale' } })
+          }
         }
 
         const config = configRes.data
@@ -215,6 +219,7 @@ export function usePortafoglio(user) {
         })
       } catch (e) {
         console.error(e)
+        Sentry.captureException(e, { tags: { operation: 'carica_dati' } })
         setErrore('Errore nel caricamento dei dati.')
       } finally {
         setLoading(false)
@@ -241,7 +246,7 @@ export function usePortafoglio(user) {
       .select()
       .single()
 
-    if (error) { setErrore('Errore nell\'aggiunta dell\'ETF.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_etf' } }); setErrore('Errore nell\'aggiunta dell\'ETF.'); return }
 
     setStato(s => ({
       ...s,
@@ -259,7 +264,7 @@ export function usePortafoglio(user) {
       .update({ archiviato: nuovoValore })
       .eq('id', etfId)
 
-    if (error) { setErrore('Errore nell\'archiviazione dell\'ETF.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'archivia_etf' } }); setErrore('Errore nell\'archiviazione dell\'ETF.'); return }
 
     setStato(s => ({
       ...s,
@@ -279,7 +284,7 @@ export function usePortafoglio(user) {
     const { error } = await supabase
       .from('portafoglio_storico_annuale')
       .upsert(nuovi.map(r => ({ user_id: user.id, anno: r.anno, broker_id: r.brokerId, valore: r.valore, totale_versato: r.totaleVersato })))
-    if (error) { console.error('Errore salvataggio storico annuale:', error); return }
+    if (error) { console.error('Errore salvataggio storico annuale:', error); Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiorna_storico_annuale' } }); return }
 
     setStato(s => {
       const altri = s.storicoPerBroker.filter(r => r.anno !== anno)
@@ -294,7 +299,7 @@ export function usePortafoglio(user) {
     const { error } = await supabase
       .from('etf_prezzi_storici')
       .upsert({ isin, anno: annoCorrente, mese: oggi.getMonth() + 1, prezzo: Number(prezzo) })
-    if (error) console.error('Errore salvataggio storico prezzi:', error)
+    if (error) { console.error('Errore salvataggio storico prezzi:', error); Sentry.captureException(new Error(error.message), { tags: { operation: 'salva_prezzo_storico' } }) }
 
     // Backfill: per ogni anno passato che ha prezzi storici ma non ancora un record annuale
     const anniGiàSalvati = new Set(stato.storicoPerBroker.map(r => r.anno))
@@ -316,7 +321,7 @@ export function usePortafoglio(user) {
       .update(dbCampi)
       .eq('id', etfId)
 
-    if (error) { setErrore('Errore nell\'aggiornamento dell\'ETF.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiorna_etf' } }); setErrore('Errore nell\'aggiornamento dell\'ETF.'); return }
 
     if ('prezzoCorrente' in campi) {
       await salvaPrezzoStorico(isin, campi.prezzoCorrente)
@@ -350,7 +355,7 @@ export function usePortafoglio(user) {
       .insert(toInsert)
       .select()
 
-    if (error) { setErrore('Errore nell\'inserimento degli acquisti.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_acquisti' } }); setErrore('Errore nell\'inserimento degli acquisti.'); return }
 
     let storicoToUpsert = null
     setStato(s => {
@@ -390,7 +395,7 @@ export function usePortafoglio(user) {
           user_id: user.id, anno: r.anno, broker_id: r.brokerId,
           valore: r.valore, totale_versato: r.totaleVersato,
         })))
-      if (errStorico) setErrore('Errore nel salvataggio storico annuale.')
+      if (errStorico) { Sentry.captureException(new Error(errStorico.message), { tags: { operation: 'aggiungi_acquisti_storico' } }); setErrore('Errore nel salvataggio storico annuale.') }
     }
   }, [user])
 
@@ -400,7 +405,7 @@ export function usePortafoglio(user) {
       .delete()
       .eq('id', acquistoId)
 
-    if (error) { setErrore('Errore nella rimozione dell\'acquisto.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'rimuovi_acquisto' } }); setErrore('Errore nella rimozione dell\'acquisto.'); return }
 
     setStato(s => ({
       ...s,
@@ -418,7 +423,7 @@ export function usePortafoglio(user) {
       .select()
       .single()
 
-    if (error) { setErrore('Errore nell\'aggiunta dello scenario.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_scenario' } }); setErrore('Errore nell\'aggiunta dello scenario.'); return }
 
     setStato(s => ({ ...s, scenari: [...s.scenari, mapScenario(data)] }))
   }, [user])
@@ -426,7 +431,7 @@ export function usePortafoglio(user) {
   const rimuoviScenario = useCallback(async (id) => {
     const { error } = await supabase.from('scenari').delete().eq('id', id)
 
-    if (error) { setErrore('Errore nella rimozione dello scenario.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'rimuovi_scenario' } }); setErrore('Errore nella rimozione dello scenario.'); return }
 
     setStato(s => ({ ...s, scenari: s.scenari.filter(sc => sc.id !== id) }))
   }, [user])
@@ -439,7 +444,7 @@ export function usePortafoglio(user) {
 
     const { error } = await supabase.from('scenari').update(dbCampi).eq('id', id)
 
-    if (error) { setErrore('Errore nell\'aggiornamento dello scenario.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiorna_scenario' } }); setErrore('Errore nell\'aggiornamento dello scenario.'); return }
 
     setStato(s => ({
       ...s,
@@ -464,7 +469,7 @@ export function usePortafoglio(user) {
       .select()
       .single()
 
-    if (error) { setErrore('Errore nell\'aggiunta del broker.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_broker' } }); setErrore('Errore nell\'aggiunta del broker.'); return }
 
     setStato(s => ({ ...s, broker: [...s.broker, mapBroker(data)] }))
   }, [user])
@@ -477,7 +482,7 @@ export function usePortafoglio(user) {
 
     const { error } = await supabase.from('broker').update(dbCampi).eq('id', id)
 
-    if (error) { setErrore('Errore nell\'aggiornamento del broker.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiorna_broker' } }); setErrore('Errore nell\'aggiornamento del broker.'); return }
 
     setStato(s => ({
       ...s,
@@ -488,7 +493,7 @@ export function usePortafoglio(user) {
   const eliminaBroker = useCallback(async (id) => {
     const { error } = await supabase.from('broker').delete().eq('id', id)
 
-    if (error) { setErrore('Impossibile eliminare il broker: ha acquisti associati.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'elimina_broker' } }); setErrore('Impossibile eliminare il broker: ha acquisti associati.'); return }
 
     setStato(s => ({
       ...s,
@@ -644,6 +649,7 @@ export function usePortafoglio(user) {
           await caricaDati()
           resolve()
         } catch (err) {
+          Sentry.captureException(err, { tags: { operation: 'import_json' } })
           setLoading(false)
           reject(err instanceof SyntaxError ? new Error('File JSON non valido') : err)
         }
