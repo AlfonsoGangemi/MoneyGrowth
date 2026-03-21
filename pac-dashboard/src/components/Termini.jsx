@@ -6,11 +6,11 @@ function TerminiIT() {
     <div className="space-y-6 text-slate-300 text-sm leading-relaxed">
       <section>
         <h2 className="text-white font-semibold text-base mb-2">1. Accettazione dei termini</h2>
-        <p>Utilizzando PAC Dashboard accetti i presenti Termini di Servizio. Se non li accetti, non utilizzare il servizio.</p>
+        <p>Utilizzando ETF Lens accetti i presenti Termini di Servizio. Se non li accetti, non utilizzare il servizio.</p>
       </section>
       <section>
         <h2 className="text-white font-semibold text-base mb-2">2. Descrizione del servizio</h2>
-        <p>PAC Dashboard è uno strumento gratuito per il monitoraggio personale di piani di accumulo su ETF. Non fornisce consulenza finanziaria né raccomandazioni di investimento.</p>
+        <p>ETF Lens è uno strumento gratuito per il monitoraggio personale di piani di accumulo su ETF. Non fornisce consulenza finanziaria né raccomandazioni di investimento.</p>
       </section>
       <section>
         <h2 className="text-white font-semibold text-base mb-2">3. Limitazione di responsabilità</h2>
@@ -37,11 +37,11 @@ function TerminiEN() {
     <div className="space-y-6 text-slate-300 text-sm leading-relaxed">
       <section>
         <h2 className="text-white font-semibold text-base mb-2">1. Acceptance of Terms</h2>
-        <p>By using PAC Dashboard you accept these Terms of Service. If you do not agree, do not use the service.</p>
+        <p>By using ETF Lens you accept these Terms of Service. If you do not agree, do not use the service.</p>
       </section>
       <section>
         <h2 className="text-white font-semibold text-base mb-2">2. Description of Service</h2>
-        <p>PAC Dashboard is a free tool for personal monitoring of ETF accumulation plans. It does not provide financial advice or investment recommendations.</p>
+        <p>ETF Lens is a free tool for personal monitoring of ETF accumulation plans. It does not provide financial advice or investment recommendations.</p>
       </section>
       <section>
         <h2 className="text-white font-semibold text-base mb-2">3. Limitation of Liability</h2>
@@ -69,7 +69,7 @@ export default function Termini() {
     <div className="min-h-screen bg-slate-900 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <a href="/" className="text-sm text-slate-400 hover:text-white transition-colors">← PAC Dashboard</a>
+          <a href="/" className="text-sm text-slate-400 hover:text-white transition-colors">← ETF Lens</a>
           <LinguaToggle />
         </div>
       </header>

@@ -113,7 +113,7 @@ function WordArt() {
           filter: 'drop-shadow(0 0 32px rgba(96,165,250,0.35)) drop-shadow(0 0 12px rgba(52,211,153,0.2))',
         }}
       >
-        PAC Dashboard
+        ETF Lens
       </span>
     </div>
   )
@@ -282,7 +282,7 @@ export default function LandingPage({ onCTA }) {
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-white text-sm tracking-tight">PAC Dashboard</span>
+            <span className="font-semibold text-white text-sm tracking-tight">ETF Lens</span>
             <LinguaToggle />
           </div>
           <div className="flex items-center gap-3">
@@ -379,7 +379,7 @@ export default function LandingPage({ onCTA }) {
       {/* ── Footer ────────────────────────────────────────────── */}
       <footer className="border-t border-slate-800 py-6 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-          <span>PAC Dashboard</span>
+          <span>ETF Lens</span>
           <div className="flex items-center gap-4">
             <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">{t('footer_privacy')}</a>
             <a href="/termini" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">{t('footer_termini')}</a>

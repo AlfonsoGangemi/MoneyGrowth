@@ -22,7 +22,7 @@ export default {
 
   // --- AuthForm ---
   auth_back: '← Back to home',
-  auth_subtitle: 'Capital Accumulation Plan',
+  auth_subtitle: 'Multi-broker ETF management',
   auth_tab_login: 'Sign in',
   auth_tab_register: 'Register',
   auth_submit_login: 'Sign in',
@@ -40,7 +40,7 @@ export default {
   // --- LandingPage ---
   accedi: 'Sign in',
   inizia_gratis: 'Start for free',
-  hero_title: 'Your Investment Plan, always under control',
+  hero_title: 'Your ETF portfolio, always under control',
   hero_sub: 'Track ETF purchases, measure real returns and project the future of your portfolio.',
   badge_gratuito: 'Free',
   badge_open_source: 'Open source',
@@ -81,7 +81,7 @@ export default {
   footer_github: 'GitHub',
 
   // --- Dashboard ---
-  nav_title: 'PAC Dashboard',
+  nav_title: 'ETF Lens',
   nav_mostra_importi: 'Show amounts',
   nav_nascondi_importi: 'Hide amounts',
   export_dati: 'Export data',
@@ -119,7 +119,7 @@ export default {
   label_isin: 'ISIN',
   label_nome_etf: 'ETF Name',
   label_emittente: 'Issuer',
-  label_importo_pac: 'Monthly PAC amount (€)',
+  label_importo_pac: 'Monthly amount (€)',
   label_prezzo_corrente_eur: 'Current price (€)',
   label_nome_scenario: 'Scenario name',
   label_rendimento_annuo: 'Annual return (%)',
@@ -127,7 +127,7 @@ export default {
 
   // --- ETFCard ---
   prezzo_corrente: 'Current price',
-  pac_mensile: 'Monthly PAC',
+  pac_mensile: 'Monthly',
   investito: 'Invested',
   valore: 'Value',
   quote: 'Shares',
@@ -174,7 +174,7 @@ export default {
   modifica_rendimento: 'Edit return',
 
   // --- AcquistoForm ---
-  nuovo_acquisto: 'New PAC purchase',
+  nuovo_acquisto: 'New purchase',
   broker: 'Broker',
   data_acquisto: 'Purchase date',
   seleziona_etf: 'Select ETFs to purchase',

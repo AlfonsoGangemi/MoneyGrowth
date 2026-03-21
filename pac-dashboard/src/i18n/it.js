@@ -22,7 +22,7 @@ export default {
 
   // --- AuthForm ---
   auth_back: '← Torna alla home',
-  auth_subtitle: 'Piano di Accumulo Capitale',
+  auth_subtitle: 'Gestione ETF multi-broker',
   auth_tab_login: 'Accedi',
   auth_tab_register: 'Registrati',
   auth_submit_login: 'Accedi',
@@ -40,7 +40,7 @@ export default {
   // --- LandingPage ---
   accedi: 'Accedi',
   inizia_gratis: 'Inizia gratis',
-  hero_title: 'Il tuo Piano di Accumulo, sempre sotto controllo',
+  hero_title: 'I tuoi ETF, sempre sotto controllo',
   hero_sub: 'Traccia acquisti ETF, misura i rendimenti reali e proietta il futuro del tuo portafoglio.',
   badge_gratuito: 'Gratuito',
   badge_open_source: 'Open source',
@@ -81,7 +81,7 @@ export default {
   footer_github: 'GitHub',
 
   // --- Dashboard ---
-  nav_title: 'PAC Dashboard',
+  nav_title: 'ETF Lens',
   nav_mostra_importi: 'Mostra importi',
   nav_nascondi_importi: 'Nascondi importi',
   export_dati: 'Esporta dati',
@@ -119,7 +119,7 @@ export default {
   label_isin: 'ISIN',
   label_nome_etf: 'Nome ETF',
   label_emittente: 'Emittente',
-  label_importo_pac: 'Importo PAC mensile (€)',
+  label_importo_pac: 'Rata mensile (€)',
   label_prezzo_corrente_eur: 'Prezzo corrente (€)',
   label_nome_scenario: 'Nome scenario',
   label_rendimento_annuo: 'Rendimento annuo (%)',
@@ -127,7 +127,7 @@ export default {
 
   // --- ETFCard ---
   prezzo_corrente: 'Prezzo corrente',
-  pac_mensile: 'PAC mensile',
+  pac_mensile: 'Rata mensile',
   investito: 'Investito',
   valore: 'Valore',
   quote: 'Quote',
@@ -174,7 +174,7 @@ export default {
   modifica_rendimento: 'Modifica rendimento',
 
   // --- AcquistoForm ---
-  nuovo_acquisto: 'Nuovo acquisto PAC',
+  nuovo_acquisto: 'Nuovo acquisto',
   broker: 'Broker',
   data_acquisto: 'Data acquisto',
   seleziona_etf: 'Seleziona gli ETF da acquistare',

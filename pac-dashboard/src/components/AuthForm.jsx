@@ -78,7 +78,7 @@ export default function AuthForm({ onSignIn, onSignUp, defaultTab = 'login', onB
               {t('auth_back')}
             </button>
           )}
-          <h1 className="text-2xl font-bold text-white tracking-tight">PAC Dashboard</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">ETF Lens</h1>
           <p className="text-sm text-slate-500 mt-1">{t('auth_subtitle')}</p>
         </div>
 

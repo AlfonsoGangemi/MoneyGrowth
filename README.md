@@ -1,10 +1,10 @@
-# MoneyGrowth — PAC Dashboard
+# MoneyGrowth — ETF Lens
 
 ![version](https://img.shields.io/badge/version-1.0.0-blue)
 
-Web dashboard for managing and monitoring a **Capital Accumulation Plan (PAC)** across multiple ETFs.
+**Live:** [etflens.app](https://etflens.app)
 
-Track purchases, compute performance indicators, and project future portfolio growth across customisable scenarios.
+Web dashboard for managing and monitoring a **multi-broker ETF portfolio**: purchases, performance indicators, and future projections across customisable scenarios.
 
 ---
 
