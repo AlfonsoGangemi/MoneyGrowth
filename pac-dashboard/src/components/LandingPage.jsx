@@ -257,6 +257,7 @@ const FEATURE_CARDS = [
 export default function LandingPage({ onCTA }) {
   const { t } = useLocale()
   const [aperta, setAperta] = useState(null)
+  const [faqAperta, setFaqAperta] = useState(null)
 
   const kpiCards = [
     { label: 'ROI',               valore: '+18,4%',  sub: t('kpi_roi_sub'),   color: '#4ade80' },
@@ -274,6 +275,16 @@ export default function LandingPage({ onCTA }) {
   function toggleCard(id) {
     setAperta(prev => prev === id ? null : id)
   }
+
+  const faqs = [
+    { q: t('faq_1_q'), a: t('faq_1_a') },
+    { q: t('faq_2_q'), a: t('faq_2_a') },
+    { q: t('faq_3_q'), a: t('faq_3_a') },
+    { q: t('faq_4_q'), a: t('faq_4_a') },
+    { q: t('faq_5_q'), a: t('faq_5_a') },
+    { q: t('faq_6_q'), a: t('faq_6_a') },
+    { q: t('faq_7_q'), a: t('faq_7_a') },
+  ]
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-300">
@@ -371,6 +382,36 @@ export default function LandingPage({ onCTA }) {
                 <p className="text-sm text-slate-400">{card.sub(t)}</p>
                 {isOpen && card.dettaglio(t)}
               </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* ── FAQ ───────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16" itemScope itemType="https://schema.org/FAQPage">
+        <h2 className="text-xl font-bold text-white mb-6">{t('faq_titolo')}</h2>
+        <div className="space-y-2">
+          {faqs.map((faq, i) => {
+            const isOpen = faqAperta === i
+            return (
+              <div key={i} itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                <button
+                  type="button"
+                  onClick={() => setFaqAperta(prev => prev === i ? null : i)}
+                  className={`w-full bg-slate-800 border rounded-xl px-5 py-4 text-left flex items-center justify-between gap-3 transition-colors ${isOpen ? 'border-blue-500/60 rounded-b-none' : 'border-slate-700 hover:border-slate-600'}`}
+                >
+                  <span className="text-sm font-medium text-white" itemProp="name">{faq.q}</span>
+                  <IconChevron open={isOpen} />
+                </button>
+                {isOpen && (
+                  <div
+                    className="bg-slate-800/50 border border-t-0 border-blue-500/60 rounded-b-xl px-5 py-4"
+                    itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"
+                  >
+                    <p className="text-sm text-slate-400 leading-relaxed" itemProp="text">{faq.a}</p>
+                  </div>
+                )}
+              </div>
             )
           })}
         </div>

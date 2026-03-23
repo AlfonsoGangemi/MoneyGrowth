@@ -192,4 +192,21 @@ export default {
   // --- Termini / Privacy ---
   termini_title: 'Terms of Service',
   privacy_title: 'Privacy Policy',
+
+  // --- FAQ Landing ---
+  faq_titolo: 'Frequently asked questions',
+  faq_1_q: 'What is an ETF?',
+  faq_1_a: 'An ETF (Exchange Traded Fund) is an investment fund traded on a stock exchange that tracks the performance of an index (e.g. MSCI World, S&P 500). It allows portfolio diversification at very low management costs compared to traditional funds.',
+  faq_2_q: 'What is a PAC (savings accumulation plan)?',
+  faq_2_a: 'A PAC is an investment strategy that involves periodic contributions — monthly or quarterly — into one or more ETFs, regardless of market price. It reduces the impact of volatility through cost averaging.',
+  faq_3_q: 'Is ETF Lens free?',
+  faq_3_a: 'Yes, ETF Lens is completely free and open source. There are no paid plans, ads, or data sales. You can sign up and start tracking your portfolio right away.',
+  faq_4_q: 'Is my data secure?',
+  faq_4_a: 'Data is stored on Supabase with secure authentication and Row Level Security (RLS): no other user can read your data. You can export or delete it at any time from the dashboard.',
+  faq_5_q: 'Why is it important to analyse your ETF portfolio?',
+  faq_5_a: "Monitoring your portfolio helps you understand whether you are truly on track to meet your financial goals. Without accurate data it is hard to assess whether the real return justifies the risk, whether diversification is adequate, or whether it is time to rebalance. Regular analysis helps you make informed decisions rather than emotional ones.",
+  faq_6_q: 'Can I use ETF Lens with multiple brokers?',
+  faq_6_a: 'Yes. You can record purchases from different brokers — Directa, Fineco, DEGIRO, Scalable Capital, Trading 212 and others — and view the portfolio both aggregated and broken down by broker.',
+  faq_7_q: 'Can I upload my data?',
+  faq_7_a: 'Yes. From the dashboard you can import a previously exported JSON file to restore all your ETFs and purchases. You can also export your entire portfolio at any time as a backup.',
 }

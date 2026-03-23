@@ -192,4 +192,21 @@ export default {
   // --- Termini / Privacy ---
   termini_title: 'Termini di Servizio',
   privacy_title: 'Privacy Policy',
+
+  // --- FAQ Landing ---
+  faq_titolo: 'Domande frequenti',
+  faq_1_q: "Cos'è un ETF?",
+  faq_1_a: "Un ETF (Exchange Traded Fund) è un fondo di investimento quotato in borsa che replica l'andamento di un indice (es. MSCI World, S&P 500). Permette di diversificare il portafoglio con costi di gestione molto ridotti rispetto ai fondi tradizionali.",
+  faq_2_q: "Cos'è un PAC (Piano di Accumulo Capitale)?",
+  faq_2_a: "Un PAC è una strategia di investimento che prevede versamenti periodici — mensili o trimestrali — in uno o più ETF, indipendentemente dal prezzo di mercato. Riduce l'impatto della volatilità grazie al cost averaging.",
+  faq_3_q: "Perché è importante analizzare il proprio portafoglio ETF?",
+  faq_3_a: "Monitorare il portafoglio permette di capire se stai davvero raggiungendo i tuoi obiettivi finanziari. Senza dati precisi è difficile valutare se il rendimento reale giustifica il rischio, se la diversificazione è adeguata o se è il momento di ribilanciare. Un'analisi regolare aiuta a prendere decisioni consapevoli anziché emotive.",
+  faq_4_q: 'ETF Lens è gratuito?',
+  faq_4_a: 'Sì, ETF Lens è completamente gratuito e open source. Non esistono piani a pagamento, pubblicità o vendita di dati. Puoi registrarti e iniziare a tracciare il tuo portafoglio subito.',
+  faq_5_q: 'Posso usare ETF Lens con più broker?',
+  faq_5_a: 'Sì. Puoi registrare acquisti da broker diversi — Directa, Fineco, DEGIRO, Scalable Capital, Trading 212 e altri — e visualizzare il portafoglio sia aggregato che separato per broker.',
+  faq_6_q: 'I miei dati sono al sicuro?',
+  faq_6_a: "I dati sono archiviati su Supabase con autenticazione sicura e Row Level Security (RLS): nessun altro utente può leggere i tuoi dati. Puoi esportarli o cancellarli in qualsiasi momento dalla dashboard.",
+  faq_7_q: 'Posso caricare i miei dati?',
+  faq_7_a: "Sì. Dalla dashboard puoi importare un file JSON precedentemente esportato per ripristinare tutti gli ETF e gli acquisti. Puoi anche esportare l'intero portafoglio in qualsiasi momento come backup.",
 }
