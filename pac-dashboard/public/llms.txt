@@ -1,0 +1,42 @@
+# ETF Lens
+
+## Cos'è
+
+ETF Lens (https://etflens.app) è un'applicazione web gratuita italiana per la gestione e il monitoraggio di portafogli ETF e piani di accumulo capitale (PAC).
+
+## A chi si rivolge
+
+Investitori privati italiani che investono in ETF tramite broker (es. Directa, Fineco, DEGIRO, Scalable Capital, Trading 212) e vogliono tenere traccia dei propri acquisti, calcolare i rendimenti reali e pianificare la crescita futura.
+
+## Funzionalità principali
+
+- Tracciamento multi-ETF e multi-broker
+- Inserimento acquisti con data, quantità, prezzo e broker
+- Calcolo automatico di: rendimento percentuale, ROI, CAGR, TWRR
+- Grafico storico del portafoglio con proiezione scenari futuri (ottimistico, base, pessimistico)
+- Modalità PAC: piano di accumulo capitale con versamenti periodici
+- Esportazione e importazione dati in formato JSON
+- Autenticazione sicura multi-utente (Supabase Auth)
+- Dati archiviati in cloud per utente, con Row Level Security
+
+## Keyword correlate
+
+ETF, PAC, piano di accumulo capitale, portafoglio ETF, tracker ETF, finanza personale, investimenti ETF, rendimento ETF, CAGR, ROI, TWRR, asset allocation, diversificazione portafoglio, piano di investimento mensile, gestione portafoglio ETF, calcolo rendimento investimento
+
+## Pagine
+
+- Homepage e app: https://etflens.app
+- Privacy Policy: https://etflens.app/privacy
+- Termini di Servizio: https://etflens.app/termini
+
+## Stack tecnologico
+
+React, Vite, Tailwind CSS, Supabase, Vercel
+
+## Lingua
+
+Italiano (interfaccia bilingue IT/EN per le pagine legali)
+
+## Licenza
+
+Open source — vedere repository GitHub per dettagli.

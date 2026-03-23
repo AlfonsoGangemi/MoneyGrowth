@@ -1,6 +1,28 @@
 User-agent: *
 Allow: /
-
-# Non indicizzare la dashboard autenticata
 Disallow: /dashboard
 Disallow: /app
+
+# Bot AI — permesso esplicito al crawling
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://etflens.app/sitemap.xml
