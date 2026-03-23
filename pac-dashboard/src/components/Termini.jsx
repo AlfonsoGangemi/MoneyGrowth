@@ -10,7 +10,7 @@ function TerminiIT() {
       </section>
       <section>
         <h2 className="text-white font-semibold text-base mb-2">2. Descrizione del servizio</h2>
-        <p>ETF Lens è uno strumento gratuito per il monitoraggio personale di piani di accumulo su ETF. Non fornisce consulenza finanziaria né raccomandazioni di investimento.</p>
+        <p>ETF Lens è uno strumento gratuito per la gestione e il monitoraggio di un portafoglio ETF multi-broker. Non fornisce consulenza finanziaria né raccomandazioni di investimento.</p>
       </section>
       <section>
         <h2 className="text-white font-semibold text-base mb-2">3. Limitazione di responsabilità</h2>
@@ -41,7 +41,7 @@ function TerminiEN() {
       </section>
       <section>
         <h2 className="text-white font-semibold text-base mb-2">2. Description of Service</h2>
-        <p>ETF Lens is a free tool for personal monitoring of ETF accumulation plans. It does not provide financial advice or investment recommendations.</p>
+        <p>ETF Lens is a free tool for managing and monitoring a multi-broker ETF portfolio. It does not provide financial advice or investment recommendations.</p>
       </section>
       <section>
         <h2 className="text-white font-semibold text-base mb-2">3. Limitation of Liability</h2>
