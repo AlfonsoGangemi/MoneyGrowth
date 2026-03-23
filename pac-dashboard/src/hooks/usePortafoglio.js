@@ -298,7 +298,7 @@ export function usePortafoglio(user) {
     const annoCorrente = oggi.getFullYear()
     const { error } = await supabase
       .from('etf_prezzi_storici')
-      .upsert({ isin, anno: annoCorrente, mese: oggi.getMonth() + 1, prezzo: Number(prezzo) })
+      .upsert({ isin, anno: annoCorrente, mese: oggi.getMonth() + 1, prezzo: Number(prezzo) }, { onConflict: 'isin,anno,mese' })
     if (error) { console.error('Errore salvataggio storico prezzi:', error); Sentry.captureException(new Error(error.message), { tags: { operation: 'salva_prezzo_storico' } }) }
 
     // Backfill: per ogni anno passato che ha prezzi storici ma non ancora un record annuale
