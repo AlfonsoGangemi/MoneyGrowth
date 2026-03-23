@@ -117,6 +117,8 @@ export default {
   info_licenza: 'License',
   info_dati_mercato: 'Market data',
   label_isin: 'ISIN',
+  isin_non_trovato: 'ISIN not found on JustETF',
+  isin_verifica_errore: 'Unable to verify ISIN (network error), proceeding anyway',
   label_nome_etf: 'ETF Name',
   label_emittente: 'Issuer',
   label_importo_pac: 'Monthly amount (€)',

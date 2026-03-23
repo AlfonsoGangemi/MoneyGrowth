@@ -15,18 +15,18 @@ function Modal({ titolo, onChiudi, children, wide }) {
   const dialogRef = useRef(null)
   const titleId = useId()
 
+  const getFocusable = () => [...(dialogRef.current?.querySelectorAll(
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  ) ?? [])]
+
+  // Focus first element only on open
   useEffect(() => {
-    const el = dialogRef.current
-    if (!el) return
-
-    const getFocusable = () => [...el.querySelectorAll(
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )]
-
-    // Focus first element on open
     const focusable = getFocusable()
     if (focusable.length) focusable[0].focus()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Keydown: Escape + Tab trap
+  useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape') { onChiudi(); return }
       if (e.key !== 'Tab') return
@@ -40,7 +40,6 @@ function Modal({ titolo, onChiudi, children, wide }) {
         if (document.activeElement === last) { e.preventDefault(); first.focus() }
       }
     }
-
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onChiudi])
@@ -421,6 +420,7 @@ export default function Dashboard({ user, onSignOut }) {
   const [isinETF, setIsinETF] = useState('')
   const [emittenteETF, setEmittenteETF] = useState('')
   const [importoETF, setImportoETF] = useState('')
+  const [isinValidazione, setIsinValidazione] = useState('idle') // 'idle' | 'loading' | 'not_found' | 'network_error'
 
   // Form nuovo scenario
   const [nomeScen, setNomeScen] = useState('')
@@ -462,11 +462,30 @@ export default function Dashboard({ user, onSignOut }) {
     ])
   )
 
-  function handleAggiungiETF(e) {
+  async function handleAggiungiETF(e) {
     e.preventDefault()
     if (!nomeETF.trim()) return
-    port.aggiungiETF(nomeETF.trim(), isinETF.trim().toUpperCase(), emittenteETF.trim(), importoETF || 0)
+    const isin = isinETF.trim().toUpperCase()
+    if (isin) {
+      setIsinValidazione('loading')
+      try {
+        const params = new URLSearchParams({ proxyPath: `api/etfs/${isin}/quote`, locale: 'it', currency: 'EUR', isin })
+        const res = await fetch(`/api/justetf-proxy?${params}`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        if (data.latestQuote === null) {
+          setIsinValidazione('not_found')
+          return
+        }
+        setIsinValidazione('idle')
+      } catch {
+        setIsinValidazione('network_error')
+        // errore di rete: non bloccante, si procede comunque
+      }
+    }
+    port.aggiungiETF(nomeETF.trim(), isin, emittenteETF.trim(), importoETF || 0)
     setNomeETF(''); setIsinETF(''); setEmittenteETF(''); setImportoETF('')
+    setIsinValidazione('idle')
     setModalNuovoETF(false)
   }
 
@@ -776,15 +795,38 @@ export default function Dashboard({ user, onSignOut }) {
 
       {/* Modal: nuovo ETF */}
       {modalNuovoETF && (
-        <Modal titolo={t('modal_nuovo_etf')} onChiudi={() => setModalNuovoETF(false)}>
+        <Modal titolo={t('modal_nuovo_etf')} onChiudi={() => { setModalNuovoETF(false); setIsinValidazione('idle') }}>
           <form onSubmit={handleAggiungiETF} className="space-y-4">
-            <Input label={t('label_isin')} value={isinETF} onChange={e => setIsinETF(e.target.value)} placeholder="IE00B4L5Y983" />
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">{t('label_isin')}</label>
+              <div className="relative">
+                <input
+                  className={`w-full bg-slate-700 border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400 ${isinValidazione === 'not_found' ? 'border-red-500' : 'border-slate-600'}`}
+                  value={isinETF}
+                  onChange={e => { setIsinETF(e.target.value); setIsinValidazione('idle') }}
+                  placeholder="IE00B4L5Y983"
+                />
+                {isinValidazione === 'loading' && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <svg className="w-4 h-4 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              {isinValidazione === 'not_found' && (
+                <p className="text-xs text-red-400 mt-1">{t('isin_non_trovato')}</p>
+              )}
+              {isinValidazione === 'network_error' && (
+                <p className="text-xs text-amber-400 mt-1">{t('isin_verifica_errore')}</p>
+              )}
+            </div>
             <Input label={t('label_nome_etf')} value={nomeETF} onChange={e => setNomeETF(e.target.value)} placeholder="iShares Core MSCI World" required />
             <Input label={t('label_emittente')} value={emittenteETF} onChange={e => setEmittenteETF(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
             <Input label={t('label_importo_pac')} type="number" step="0.01" min="0" value={importoETF} onChange={e => setImportoETF(e.target.value)} placeholder="200" />
             <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setModalNuovoETF(false)} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
-              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('aggiungi')}</button>
+              <button type="button" onClick={() => { setModalNuovoETF(false); setIsinValidazione('idle') }} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
+              <button type="submit" disabled={isinValidazione === 'loading'} className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('aggiungi')}</button>
             </div>
           </form>
         </Modal>
