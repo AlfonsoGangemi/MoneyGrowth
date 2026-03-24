@@ -45,6 +45,7 @@ export default {
   badge_gratuito: 'Gratuito',
   badge_open_source: 'Open source',
   badge_dati: 'I tuoi dati restano tuoi',
+  feat_section_title: 'Portafoglio ETF e PAC: come funziona',
   analisi_title: 'Analisi realtime del portafoglio',
   analisi_sub: 'Indicatori di performance calcolati automaticamente sui tuoi dati effettivi.',
   e_ancora: 'e ancora:',

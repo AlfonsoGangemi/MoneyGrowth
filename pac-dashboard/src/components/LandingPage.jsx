@@ -334,6 +334,7 @@ export default function LandingPage({ onCTA }) {
 
       {/* ── Feature cards ─────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-4">
+        <h2 className="text-xl font-bold text-white mb-2">{t('feat_section_title')}</h2>
 
         {/* Card featured: Analisi realtime */}
         <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">

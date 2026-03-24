@@ -45,6 +45,7 @@ export default {
   badge_gratuito: 'Free',
   badge_open_source: 'Open source',
   badge_dati: 'Your data stays yours',
+  feat_section_title: 'ETF portfolio and investment plan: how it works',
   analisi_title: 'Real-time portfolio analysis',
   analisi_sub: 'Performance indicators automatically calculated on your actual data.',
   e_ancora: 'and also:',

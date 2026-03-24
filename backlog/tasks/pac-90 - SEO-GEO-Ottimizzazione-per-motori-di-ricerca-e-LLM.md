@@ -1,9 +1,10 @@
 ---
 id: PAC-90
 title: SEO & GEO - Ottimizzazione per motori di ricerca e LLM
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 15:28'
+updated_date: '2026-03-24 10:07'
 labels:
   - seo
   - geo
@@ -78,11 +79,17 @@ Migliorare la visibilità di ETF Lens sui motori di ricerca tradizionali (Google
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Meta tag title e description ottimizzati su tutte le pagine (index, privacy, termini)
-- [ ] #2 Open Graph e Twitter Card configurati
-- [ ] #3 JSON-LD WebApplication presente in index.html
-- [ ] #4 File llms.txt creato e accessibile su /llms.txt
-- [ ] #5 sitemap.xml creato e referenziato in robots.txt
-- [ ] #6 robots.txt permette i principali bot AI
-- [ ] #7 Landing page usa le keyword primarie nei tag semantici h1/h2
+- [x] #1 Meta tag title e description ottimizzati su tutte le pagine (index, privacy, termini)
+- [x] #2 Open Graph e Twitter Card configurati
+- [x] #3 JSON-LD WebApplication presente in index.html
+- [x] #4 File llms.txt creato e accessibile su /llms.txt
+- [x] #5 sitemap.xml creato e referenziato in robots.txt
+- [x] #6 robots.txt permette i principali bot AI
+- [x] #7 Landing page usa le keyword primarie nei tag semantici h1/h2
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Tutti i requisiti SEO/GEO erano già stati implementati nei commit precedenti (feat: enhance SEO, feat: add FAQ section). L'unico gap rimasto era AC#7: mancava un h2 con keyword nella sezione features della landing page. Aggiunto h2 con chiave `feat_section_title` in entrambe le lingue (IT: "Portafoglio ETF e PAC: come funziona", EN: "ETF portfolio and investment plan: how it works") in LandingPage.jsx, it.js e en.js.
+<!-- SECTION:FINAL_SUMMARY:END -->
