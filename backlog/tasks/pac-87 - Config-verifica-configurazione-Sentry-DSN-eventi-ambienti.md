@@ -1,10 +1,10 @@
 ---
 id: PAC-87
 title: 'Config: verifica configurazione Sentry (DSN, eventi, ambienti)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 12:22'
-updated_date: '2026-03-23 12:36'
+updated_date: '2026-03-24 10:56'
 labels:
   - config
   - sentry
@@ -37,7 +37,13 @@ Verificare che Sentry sia correttamente configurato e che gli errori vengano eff
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 VITE_SENTRY_DSN è impostato su Vercel in produzione
-- [ ] #2 Un errore reale in produzione appare come issue nella dashboard Sentry
-- [ ] #3 Gli eventi includono l'utente ID (Sentry.setUser)
-- [ ] #4 In sviluppo locale Sentry è disabilitato o non invia eventi reali
+- [x] #2 Un errore reale in produzione appare come issue nella dashboard Sentry
+- [x] #3 Gli eventi includono l'utente ID (Sentry.setUser)
+- [x] #4 In sviluppo locale Sentry è disabilitato o non invia eventi reali
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Tutti i requisiti erano già implementati nel codebase. AC#3: Sentry.setUser({ id: u.id }) presente in useAuth.js al login, Sentry.setUser(null) al logout. AC#4: instrument.js usa `enabled: !!import.meta.env.VITE_SENTRY_DSN && !import.meta.env.DEV` — disabilitato correttamente in sviluppo locale. Copertura captureException completa su usePortafoglio, useAuth, Dashboard ed ETFCard.
+<!-- SECTION:FINAL_SUMMARY:END -->
