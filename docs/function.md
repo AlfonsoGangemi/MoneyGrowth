@@ -66,4 +66,16 @@ Gli indicatori considerano solo gli ETF **non archiviati**.
 - **Export JSON**: scarica tutti i dati in un file `.json`
 - **Import JSON**: ripristina i dati da file (sovrascrive i dati su Supabase)
 
+## Landing Page
+- Mostrata agli utenti non autenticati che non hanno mai effettuato il login (flag `pac_returning` assente in localStorage)
+- Contiene sezione hero, KPI animati, feature highlights, FAQ e footer
+- CTA "Accedi" e "Inizia gratis" aprono l'`AuthForm` rispettivamente in modalità login e registrazione
+- Gli utenti returning (hanno già fatto login in passato) vengono inviati direttamente all'`AuthForm`
+- Dall'`AuthForm`, un link "Torna alla home" consente agli utenti returning di tornare alla landing (rimuove il flag `pac_returning`)
+
+## Internazionalizzazione
+- Interfaccia disponibile in **Italiano** e **Inglese**
+- Toggle lingua visibile nell'header della Dashboard e nella LandingPage
+- Preferenza persistita in `localStorage('lingua')`
+
 ---

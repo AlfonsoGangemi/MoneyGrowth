@@ -10,12 +10,14 @@ Web dashboard for managing and monitoring a **multi-broker ETF portfolio**: purc
 
 ## Features
 
-- **ETF management** — add up to 5 ETFs, update current price via JustETF API, archive inactive ones
+- **ETF management** — add up to 9 ETFs, update current price via JustETF API, archive inactive ones
 - **Multi-broker** — associate each purchase with a broker (Degiro, Trade Republic, FINECO…); filter indicators and chart by broker
 - **Purchase entry** — multi-ETF form with a single date and broker for all instruments; fractional shares calculated automatically
 - **Historical chart** — real portfolio value over time, per ETF and aggregated
-- **Future scenarios** — projection up to 20 years with monthly compound interest; customisable name, return rate and colour
+- **Future scenarios** — projection up to 10 years with monthly compound interest; customisable name, return rate and colour
 - **Indicators** — ROI, net return, months active, CAGR, TWRR, ATWRR
+- **Authentication** — email/password + Google OAuth via Supabase; returning users land directly on the login form
+- **i18n** — Italian and English interface, persisted in localStorage
 
 ---
 

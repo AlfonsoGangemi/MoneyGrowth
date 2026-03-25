@@ -3,25 +3,51 @@
 ## Autenticazione
 
 ### Flusso
-- All'avvio l'app controlla la sessione Supabase (`supabase.auth.getSession`)
-- Se non autenticato → mostra `AuthForm` (login + registrazione con email/password)
-- Se autenticato → mostra `Dashboard`
-- Pulsante **Logout** in header, chiama `supabase.auth.signOut`
-- La sessione è persistita automaticamente da Supabase (JWT in localStorage)
+
+L'app (`App.jsx`) gestisce tre percorsi distinti:
+
+| Condizione | Vista mostrata |
+|---|---|
+| Caricamento sessione | Spinner |
+| Non autenticato, prima visita (`pac_returning` assente) | `LandingPage` |
+| Non autenticato, utente returning (`pac_returning=1`) | `AuthForm` (senza pulsante "indietro") |
+| Non autenticato, ha cliccato CTA dalla landing | `AuthForm` (con pulsante "indietro") |
+| Autenticato | `Dashboard` |
+
+Al login riuscito, `App.jsx` imposta `localStorage.pac_returning = '1'` tramite `useEffect` su `user`.
+
+### Flag `pac_returning`
+
+- Chiave localStorage: `pac_returning`, valore: `'1'`
+- Impostato automaticamente alla prima autenticazione
+- Serve a inviare gli utenti returning direttamente al form di login invece della landing
+- **"Torna alla home"**: link in fondo ad `AuthForm` (visibile solo per utenti returning); al click rimuove `pac_returning` e torna alla landing
 
 ### Componente `AuthForm.jsx`
-- Tab **Accedi** / **Registrati**
-- Campi: email, password
+
+Props:
+
+| Prop | Descrizione |
+|---|---|
+| `onSignIn(email, pw)` | Login email/password |
+| `onSignUp(email, pw)` | Registrazione |
+| `onSignInGoogle()` | Login con Google OAuth |
+| `onBack` | Se definita, mostra pulsante "← Torna alla home" in cima |
+| `onTornaAllaLanding` | Se definita, mostra link "Torna alla home" in fondo (per utenti returning) |
+| `defaultTab` | `'login'` \| `'register'` |
+
 - Messaggi di errore inline (es. "Email o password errati", "Email già registrata")
-- Nessun flusso di recupero password nella V1 (può essere aggiunto in seguito)
+- Blocca indirizzi email temporanei (via `utils/tempmail.js`)
 
 ### Hook `useAuth.js`
 ```js
 // Espone:
-{ user, session, loading, signIn, signUp, signOut }
+{ user, loading, signIn, signUp, signOut, signInWithGoogle }
 ```
 - Sottoscrive `supabase.auth.onAuthStateChange` per aggiornamenti in tempo reale
 - `loading: true` durante il primo controllo di sessione (mostra spinner)
+- `signInWithGoogle()` usa `supabase.auth.signInWithOAuth({ provider: 'google' })` con redirect a `window.location.origin`
+- Integrazione Sentry: cattura le eccezioni auth e imposta `Sentry.setUser` al login/logout
 
 ---
 
@@ -58,5 +84,27 @@ Stato globale aggiunto:
 ### Scenari di default
 
 Alla prima registrazione, i tre scenari di default (Pessimistico, Moderato, Ottimistico) vengono inseriti in Supabase automaticamente (`signUp` → inserimento scenari di default).
+
+---
+
+## Internazionalizzazione (i18n)
+
+### Hook `useLocale.jsx` / `LocaleProvider`
+
+- Lingue supportate: **Italiano** (`it`) e **Inglese** (`en`)
+- Preferenza persistita in `localStorage('lingua')`
+- Default: `'it'`
+- Espone `{ t, lingua, setLingua }` via context
+- `t(key)` restituisce la stringa nella lingua corrente, con fallback su `it` se la chiave manca
+
+### Dizionari
+
+- `src/i18n/it.js` — stringhe italiane
+- `src/i18n/en.js` — stringhe inglesi
+
+### Toggle lingua
+
+- Componente `LinguaToggle.jsx`: pulsante visibile nell'header della Dashboard e nella LandingPage
+- Chiama `setLingua('it' | 'en')` da `useLocale()`
 
 ---
