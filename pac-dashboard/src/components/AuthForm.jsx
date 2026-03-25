@@ -140,9 +140,9 @@ export default function AuthForm({ onSignIn, onSignUp, defaultTab = 'login', onB
             {tab === 'register' && (
               <p className="text-xs text-slate-500 text-center">
                 {t('auth_terms_prefix')}{' '}
-                <a href="/termini" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300 transition-colors">{t('auth_terms_link')}</a>
+                <a href="/termini" onClick={(e) => { e.preventDefault(); window.open('/termini', '_blank') }} className="underline hover:text-slate-300 transition-colors cursor-pointer">{t('auth_terms_link')}</a>
                 {' '}{t('auth_terms_mid')}{' '}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300 transition-colors">{t('auth_privacy_link')}</a>.
+                <a href="/privacy" onClick={(e) => { e.preventDefault(); window.open('/privacy', '_blank') }} className="underline hover:text-slate-300 transition-colors cursor-pointer">{t('auth_privacy_link')}</a>.
               </p>
             )}
           </form>

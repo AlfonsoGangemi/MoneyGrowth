@@ -313,8 +313,8 @@ function InfoModal({ onChiudi }) {
         </div>
 
         <div className="border-t border-slate-700 pt-4 flex gap-4">
-          <a href="/privacy" target="_blank" rel="noopener noreferrer" className={link}>{t('footer_privacy')}</a>
-          <a href="/termini" target="_blank" rel="noopener noreferrer" className={link}>{t('footer_termini')}</a>
+          <a href="/privacy" onClick={(e) => { e.preventDefault(); window.open('/privacy', '_blank') }} className={link}>{t('footer_privacy')}</a>
+          <a href="/termini" onClick={(e) => { e.preventDefault(); window.open('/termini', '_blank') }} className={link}>{t('footer_termini')}</a>
         </div>
       </div>
     </Modal>
