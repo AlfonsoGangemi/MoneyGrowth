@@ -20,6 +20,70 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Cos'è un ETF?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Un ETF (Exchange Traded Fund) è un fondo di investimento quotato in borsa che replica l'andamento di un indice (es. MSCI World, S&P 500). Permette di diversificare il portafoglio con costi di gestione molto ridotti rispetto ai fondi tradizionali."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Cos'è un PAC (Piano di Accumulo Capitale)?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Un PAC è una strategia di investimento che prevede versamenti periodici — mensili o trimestrali — in uno o più ETF, indipendentemente dal prezzo di mercato. Riduce l'impatto della volatilità grazie al cost averaging."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Perché è importante analizzare il proprio portafoglio ETF?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Monitorare il portafoglio permette di capire se stai davvero raggiungendo i tuoi obiettivi finanziari. Senza dati precisi è difficile valutare se il rendimento reale giustifica il rischio, se la diversificazione è adeguata o se è il momento di ribilanciare. Un'analisi regolare aiuta a prendere decisioni consapevoli anziché emotive."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "ETF Lens è gratuito?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sì, ETF Lens è completamente gratuito e open source. Non esistono piani a pagamento, pubblicità o vendita di dati. Puoi registrarti e iniziare a tracciare il tuo portafoglio subito."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Posso usare ETF Lens con più broker?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sì. Puoi registrare acquisti da broker diversi — Directa, Fineco, DEGIRO, Scalable Capital, Trading 212 e altri — e visualizzare il portafoglio sia aggregato che separato per broker."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "I miei dati sono al sicuro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "I dati sono archiviati su Supabase con autenticazione sicura e Row Level Security (RLS): nessun altro utente può leggere i tuoi dati. Puoi esportarli o cancellarli in qualsiasi momento dalla dashboard."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Posso caricare i miei dati?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sì. Dalla dashboard puoi importare un file JSON precedentemente esportato per ripristinare tutti gli ETF e gli acquisti. Puoi anche esportare l'intero portafoglio in qualsiasi momento come backup."
+          }
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "ETF Lens",
       "url": "https://etflens.app",

@@ -226,6 +226,6 @@ export default {
   faq_5_a: "Monitoring your portfolio helps you understand whether you are truly on track to meet your financial goals. Without accurate data it is hard to assess whether the real return justifies the risk, whether diversification is adequate, or whether it is time to rebalance. Regular analysis helps you make informed decisions rather than emotional ones.",
   faq_6_q: 'Can I use ETF Lens with multiple brokers?',
   faq_6_a: 'Yes. You can record purchases from different brokers — Directa, Fineco, DEGIRO, Scalable Capital, Trading 212 and others — and view the portfolio both aggregated and broken down by broker.',
-  faq_7_q: 'Can I upload my data?',
-  faq_7_a: 'Yes. From the dashboard you can import a previously exported JSON file to restore all your ETFs and purchases. You can also export your entire portfolio at any time as a backup.',
+  faq_7_q: 'Can I import my data from a CSV or another tool?',
+  faq_7_a: 'Yes. If you already have a JSON file exported from ETF Lens, you can re-import it directly from the dashboard to restore all your ETFs and purchases. If your data is in CSV format (broker export, Excel, Google Sheets), you can use the "Import from CSV with AI" feature: it generates a ready-made prompt to paste into ChatGPT or Claude, which will convert your CSV into the correct format. You can also export your entire portfolio at any time as a JSON backup.',
 }

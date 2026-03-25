@@ -2,10 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [react(), tailwindcss()],
   test: {
     environment: 'node',
+  },
+  build: {
+    outDir: isSsrBuild ? 'dist-server' : 'dist',
+    chunkSizeWarningLimit: 2000,
   },
   server: {
     proxy: {
@@ -35,8 +39,4 @@ export default defineConfig({
       },
     },
   },
-  build: {
-    // Aumenta il limite del chunk warning da 500 KB a 2000 KB (2 MB)
-    chunkSizeWarningLimit: 2000
-  }
-})
+}))

@@ -7,8 +7,6 @@
     }
   },
   "rewrites": [
-    { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/termini", "destination": "/termini.html" },
     { "source": "/((?!privacy|termini).*)", "destination": "/index.html" }
   ],
   "headers": [

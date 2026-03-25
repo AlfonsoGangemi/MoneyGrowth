@@ -4,7 +4,7 @@ import { supabase } from '../utils/supabase'
 
 export function useAuth() {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(typeof window !== 'undefined')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {

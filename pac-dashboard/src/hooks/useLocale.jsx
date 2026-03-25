@@ -7,7 +7,7 @@ const dizionari = { it, en }
 const LocaleContext = createContext(null)
 
 export function LocaleProvider({ children }) {
-  const [lingua, setLingua] = useState(() => localStorage.getItem('lingua') ?? 'it')
+  const [lingua, setLingua] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('lingua') : null) ?? 'it')
 
   useEffect(() => {
     localStorage.setItem('lingua', lingua)

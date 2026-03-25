@@ -7,9 +7,8 @@ import LandingPage from './components/LandingPage'
 import Termini from './components/Termini'
 import Privacy from './components/Privacy'
 
-const path = window.location.pathname
-
-export default function App() {
+export default function App({ url }) {
+  const path = url ?? (typeof window !== 'undefined' ? window.location.pathname : '/')
   if (path === '/termini') return <LocaleProvider><Termini /></LocaleProvider>
   if (path === '/privacy') return <LocaleProvider><Privacy /></LocaleProvider>
 
@@ -38,7 +37,7 @@ function AppInner() {
   }
 
   if (!user) {
-    const isReturning = !!localStorage.getItem('pac_returning')
+    const isReturning = typeof window !== 'undefined' && !!localStorage.getItem('pac_returning')
     if (mostraAuth || isReturning) {
       return (
         <AuthForm

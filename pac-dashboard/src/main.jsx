@@ -1,17 +1,21 @@
 import './instrument.js'
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.jsx'
 
-createRoot(document.getElementById('root'), {
+const container = document.getElementById('root')
+const sentryOptions = {
   onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
     console.warn('Uncaught error', error, errorInfo)
   }),
   onCaughtError: Sentry.reactErrorHandler(),
-}).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+}
+const app = <StrictMode><App /></StrictMode>
+
+if (container.innerHTML) {
+  hydrateRoot(container, app, sentryOptions)
+} else {
+  createRoot(container, sentryOptions).render(app)
+}

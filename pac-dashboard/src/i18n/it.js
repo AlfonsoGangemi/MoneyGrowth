@@ -226,6 +226,6 @@ export default {
   faq_5_a: 'Sì. Puoi registrare acquisti da broker diversi — Directa, Fineco, DEGIRO, Scalable Capital, Trading 212 e altri — e visualizzare il portafoglio sia aggregato che separato per broker.',
   faq_6_q: 'I miei dati sono al sicuro?',
   faq_6_a: "I dati sono archiviati su Supabase con autenticazione sicura e Row Level Security (RLS): nessun altro utente può leggere i tuoi dati. Puoi esportarli o cancellarli in qualsiasi momento dalla dashboard.",
-  faq_7_q: 'Posso caricare i miei dati?',
-  faq_7_a: "Sì. Dalla dashboard puoi importare un file JSON precedentemente esportato per ripristinare tutti gli ETF e gli acquisti. Puoi anche esportare l'intero portafoglio in qualsiasi momento come backup.",
+  faq_7_q: 'Posso importare i miei dati da un CSV o da un altro strumento?',
+  faq_7_a: "Sì. Se hai già un file JSON esportato da ETF Lens, puoi reimportarlo direttamente dalla dashboard per ripristinare tutti gli ETF e gli acquisti. Se i tuoi dati sono in formato CSV (export da broker, Excel, Google Sheets), puoi usare la funzione \"Importa da CSV con AI\": genera un prompt pronto da incollare in ChatGPT o Claude, che convertirà il tuo CSV nel formato corretto. Puoi anche esportare l'intero portafoglio in qualsiasi momento come backup JSON.",
 }
