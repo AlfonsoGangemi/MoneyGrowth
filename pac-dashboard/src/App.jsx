@@ -47,6 +47,10 @@ function AppInner() {
           onSignUp={signUp}
           onSignInGoogle={signInWithGoogle}
           onBack={isReturning ? undefined : () => setMostraAuth(false)}
+          onTornaAllaLanding={isReturning ? () => {
+            localStorage.removeItem('pac_returning')
+            setMostraAuth(false)
+          } : undefined}
         />
       )
     }

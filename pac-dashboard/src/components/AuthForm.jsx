@@ -22,7 +22,7 @@ function tradErrore(msg, t) {
   return 'Errore: ' + msg
 }
 
-export default function AuthForm({ onSignIn, onSignUp, onSignInGoogle, defaultTab = 'login', onBack }) {
+export default function AuthForm({ onSignIn, onSignUp, onSignInGoogle, defaultTab = 'login', onBack, onTornaAllaLanding }) {
   const { t } = useLocale()
   const [tab, setTab] = useState(defaultTab)
   const [email, setEmail] = useState('')
@@ -188,6 +188,19 @@ export default function AuthForm({ onSignIn, onSignUp, onSignInGoogle, defaultTa
           )}
 
         </div>
+
+        {onTornaAllaLanding && (
+          <div className="mt-5 text-center">
+            <button
+              type="button"
+              onClick={onTornaAllaLanding}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              {t('torna_alla_landing')}
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   )

@@ -108,6 +108,7 @@ export default {
   csv_ai_importa: 'Import JSON',
   csv_ai_successo: 'Import completed.',
   info_prodotto: 'Product Info',
+  torna_alla_landing: 'Back to home',
   broker_label: 'Broker:',
   broker_tutti: 'All',
   broker_arch: '(arch.)',
