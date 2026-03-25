@@ -1,10 +1,10 @@
 ---
 id: PAC-65
 title: 'Feature: landing page pubblica per utenti non autenticati'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-15 09:47'
-updated_date: '2026-03-15 10:02'
+updated_date: '2026-03-24 10:44'
 labels:
   - feature
   - ux
@@ -35,10 +35,10 @@ Attualmente chi arriva sul sito non autenticato vede direttamente il form di log
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Landing page visibile a utenti non autenticati
-- [ ] #2 Utenti autenticati bypassano la landing e vanno direttamente alla dashboard
-- [ ] #3 CTA funzionante che porta al form di registrazione/login
-- [ ] #4 Link a Privacy Policy e Termini di Servizio presenti
+- [x] #1 Landing page visibile a utenti non autenticati
+- [x] #2 Utenti autenticati bypassano la landing e vanno direttamente alla dashboard
+- [x] #3 CTA funzionante che porta al form di registrazione/login
+- [x] #4 Link a Privacy Policy e Termini di Servizio presenti
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -136,3 +136,9 @@ if (!user) {
 
 Tutti e 3 gli step sono autonomi — nessun asset esterno richiesto, nessun placeholder da compilare.
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implementazione già completata nel codebase. LandingPage.jsx esiste ed è completo (hero, feature cards animate, FAQ con Schema.org, grafico decorativo, badge). App.jsx gestisce lo stato mostraAuth/defaultTab con redirect automatico per utenti autenticati. AuthForm.jsx riceve defaultTab e onBack. Tutti gli AC soddisfatti.
+<!-- SECTION:FINAL_SUMMARY:END -->

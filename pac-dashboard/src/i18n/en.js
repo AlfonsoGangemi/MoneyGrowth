@@ -36,6 +36,8 @@ export default {
   auth_err_password: 'Password must be at least 6 characters.',
   auth_err_tempmail: 'Temporary emails are not accepted. Use a real address.',
   auth_registered_ok: "Registration complete. Check your email to confirm your account.",
+  auth_or: 'or',
+  auth_google: 'Continue with Google',
 
   // --- LandingPage ---
   accedi: 'Sign in',

@@ -20,7 +20,7 @@ export default function App({ url }) {
 }
 
 function AppInner() {
-  const { user, loading, signIn, signUp, signOut } = useAuth()
+  const { user, loading, signIn, signUp, signOut, signInWithGoogle } = useAuth()
   const [mostraAuth, setMostraAuth] = useState(false)
   const [defaultTab, setDefaultTab] = useState('login')
 
@@ -45,6 +45,7 @@ function AppInner() {
           defaultTab={defaultTab}
           onSignIn={signIn}
           onSignUp={signUp}
+          onSignInGoogle={signInWithGoogle}
           onBack={isReturning ? undefined : () => setMostraAuth(false)}
         />
       )

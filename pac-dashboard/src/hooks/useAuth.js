@@ -42,5 +42,13 @@ export function useAuth() {
     if (error) Sentry.captureException(error, { tags: { operation: 'sign_out' } })
   }
 
-  return { user, loading, signIn, signUp, signOut }
+  async function signInWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+    if (error) { Sentry.captureException(error, { tags: { operation: 'sign_in_google' } }); throw error }
+  }
+
+  return { user, loading, signIn, signUp, signOut, signInWithGoogle }
 }

@@ -1,10 +1,10 @@
 ---
 id: PAC-51
 title: 'Feature: visualizza schema JSON e prompt LLM per importazione da CSV'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-13 20:00'
-updated_date: '2026-03-24 10:25'
+updated_date: '2026-03-25 11:27'
 labels:
   - feature
   - ux
@@ -80,3 +80,14 @@ Questo semplifica l'onboarding per utenti che hanno i propri dati in formato CSV
 - [ ] #7 #7 È presente un bottone 'Importa JSON' che avvia il flusso importJSON esistente
 - [ ] #8 #8 Vengono mostrati gli eventuali errori di parsing o validazione del JSON incollato
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implementata la funzionalità "Importa da CSV con AI" nella tab Importa di ImportExportModal.
+
+**File modificati:**
+- `src/components/CsvAiModal.jsx` (nuovo) — modale con prompt hardcodato IT/EN, copia negli appunti, textarea per incollare il JSON generato dal LLM, gestione errori/successo inline, focus trap + Escape
+- `src/components/ImportExportModal.jsx` — aggiunto bottone "Importa da CSV con AI" nella tab Importa, stato interno `csvAiOpen`, rendering di `CsvAiModal` come sibling con Fragment
+- `src/i18n/it.js` + `en.js` — aggiunte 9 chiavi `csv_ai_*`, aggiornata FAQ 7 per menzionare la nuova funzionalità
+<!-- SECTION:FINAL_SUMMARY:END -->
