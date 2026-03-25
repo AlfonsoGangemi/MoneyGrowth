@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "etf": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nome":           { "type": "string" },
+          "isin":           { "type": "string" },
+          "emittente":      { "type": "string" },
+          "importoFisso":   { "type": "number" },
+          "prezzoCorrente": { "type": "number" },
+          "archiviato":     { "type": "boolean" },
+          "acquisti": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "data":              { "type": "string", "format": "date" },
+                "importoInvestito":  { "type": "number" },
+                "prezzoUnitario":    { "type": "number" },
+                "quoteFrazionate":   { "type": "number" },
+                "fee":               { "type": "number" },
+                "brokerNome":        { "type": "string" }
+              },
+              "required": ["data", "importoInvestito", "prezzoUnitario", "quoteFrazionate", "fee", "brokerNome"]
+            }
+          }
+        },
+        "required": ["nome", "isin", "emittente", "importoFisso", "prezzoCorrente", "archiviato", "acquisti"]
+      }
+    },
+    "broker": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nome":       { "type": "string" },
+          "colore":     { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+          "archiviato": { "type": "boolean" }
+        },
+        "required": ["nome", "colore", "archiviato"]
+      }
+    },
+    "orizzonteAnni": { "type": "integer" }
+  },
+  "required": ["etf", "broker", "orizzonteAnni"]
+}

@@ -528,7 +528,7 @@ export function usePortafoglio(user) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `pac-dashboard-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `etflens-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
   }, [stato])

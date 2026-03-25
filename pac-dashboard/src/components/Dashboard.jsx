@@ -8,6 +8,7 @@ import GraficoPortafoglio from './GraficoPortafoglio'
 import Indicatori from './Indicatori'
 import TabellaProiezione from './TabellaProiezione'
 import LinguaToggle from './LinguaToggle'
+import ImportExportModal from './ImportExportModal'
 
 // ── Componenti base ────────────────────────────────────────────────
 
@@ -332,7 +333,8 @@ export default function Dashboard({ user, onSignOut }) {
   const [modalAcquisto, setModalAcquisto] = useState(false)
   const [modalScenario, setModalScenario] = useState(false)
   const [mostraArchiviati, setMostraArchiviati] = useState(false)
-  const [errImport, setErrImport] = useState('')
+  const [modalImportExport, setModalImportExport] = useState(false)
+  const [importExportTab, setImportExportTab] = useState('export')
   const [modalGestoreBroker, setModalGestoreBroker] = useState(false)
   const [privacyMode, setPrivacyMode] = useState(() => localStorage.getItem('privacyMode') === 'true')
   const [modalCrediti, setModalCrediti] = useState(false)
@@ -498,17 +500,6 @@ export default function Dashboard({ user, onSignOut }) {
     setModalScenario(false)
   }
 
-  async function handleImport(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setErrImport('')
-    try {
-      await port.importJSON(file)
-    } catch {
-      setErrImport(t('import_errore'))
-    }
-    e.target.value = ''
-  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
@@ -556,15 +547,11 @@ export default function Dashboard({ user, onSignOut }) {
                 <div role="menu" className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
                   <button
                     role="menuitem"
-                    onClick={() => { port.exportJSON(); setDropdownAperto(false) }}
+                    onClick={() => { setImportExportTab('export'); setModalImportExport(true); setDropdownAperto(false) }}
                     className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
                   >
-                    {t('export_dati')}
+                    {t('dropdown_import_export')}
                   </button>
-                  <label role="menuitem" tabIndex={0} className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors cursor-pointer block">
-                    {t('import_dati')}
-                    <input type="file" accept=".json" onChange={e => { handleImport(e); setDropdownAperto(false) }} className="hidden" />
-                  </label>
                   <button
                     role="menuitem"
                     onClick={() => { setModalCrediti(true); setDropdownAperto(false) }}
@@ -585,11 +572,11 @@ export default function Dashboard({ user, onSignOut }) {
 
           </div>
         </div>
-        {(errImport || port.errore) && (
+        {port.errore && (
           <div className="max-w-7xl mx-auto px-4 pb-2 flex items-center justify-between">
-            <p className="text-xs text-red-400">{errImport || port.errore}</p>
+            <p className="text-xs text-red-400">{port.errore}</p>
             <button
-              onClick={() => { setErrImport(''); port.setErrore('') }}
+              onClick={() => port.setErrore('')}
               className="text-slate-500 hover:text-white text-xs ml-4"
             >✕</button>
           </div>
@@ -702,12 +689,20 @@ export default function Dashboard({ user, onSignOut }) {
             <div className="text-center py-16 text-slate-500">
               <p className="text-3xl mb-3">📈</p>
               <p className="text-sm">{t('etf_nessuno')}</p>
-              <button
-                onClick={() => setModalNuovoETF(true)}
-                className="mt-4 text-sm bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl transition-colors"
-              >
-                {t('etf_aggiungi_primo')}
-              </button>
+              <div className="flex items-center justify-center gap-3 mt-4 flex-wrap">
+                <button
+                  onClick={() => setModalNuovoETF(true)}
+                  className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl transition-colors"
+                >
+                  {t('etf_aggiungi_primo')}
+                </button>
+                <button
+                  onClick={() => { setImportExportTab('import'); setModalImportExport(true) }}
+                  className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-xl transition-colors"
+                >
+                  {t('etf_importa_portafoglio')}
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -861,6 +856,16 @@ export default function Dashboard({ user, onSignOut }) {
           onChiudi={() => setModalGestoreBroker(false)}
         />
       )}
+
+      {/* Modal: import/export */}
+      <ImportExportModal
+        isOpen={modalImportExport}
+        defaultTab={importExportTab}
+        onClose={() => setModalImportExport(false)}
+        onExport={port.exportJSON}
+        onImport={port.importJSON}
+        hasData={port.etf.length > 0}
+      />
 
       {/* Modal: informazioni */}
       {modalCrediti && <InfoModal onChiudi={() => setModalCrediti(false)} />}
