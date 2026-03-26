@@ -17,7 +17,7 @@ function fmt(n, dec = 2) {
 function Badge({ val }) {
   const pos = val >= 0
   return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${pos ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${pos ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400'}`}>
       {pos ? '+' : ''}{fmt(val)}%
     </span>
   )
@@ -73,13 +73,13 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
   const justEtfUrl = `https://www.justetf.com/it/etf-profile.html?isin=${etf.isin}#panoramica`
 
   return (
-    <div className={`border rounded-2xl p-5 flex flex-col gap-4 ${attenuata ? 'bg-slate-800/40 border-slate-800' : 'bg-slate-800 border-slate-700'}`}>
+    <div className={`border rounded-2xl p-5 flex flex-col gap-4 ${attenuata ? 'bg-slate-100/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-lg text-white leading-tight truncate">{etf.nome}</p>
+          <p className="font-bold text-lg text-slate-900 dark:text-white leading-tight truncate">{etf.nome}</p>
           {etf.emittente && (
-            <p className="text-xs text-slate-400 mt-0.5">{etf.emittente}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{etf.emittente}</p>
           )}
           <a
             href={justEtfUrl}
@@ -98,7 +98,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
           <div className="flex items-center gap-1">
             <button
               onClick={() => onModifica(etf.id)}
-              className="text-slate-500 hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-slate-700"
+              className="text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
               title={t('etf_modifica_title')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -108,7 +108,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
             <button
               onClick={() => !archivaDisabilitato && onArchivia(etf.id)}
               disabled={archivaDisabilitato}
-              className={`transition-colors p-1.5 rounded-lg ${archivaDisabilitato ? 'text-slate-700 cursor-not-allowed' : 'text-slate-500 hover:text-amber-400 hover:bg-slate-700'}`}
+              className={`transition-colors p-1.5 rounded-lg ${archivaDisabilitato ? 'text-slate-300 dark:text-slate-700 cursor-not-allowed' : 'text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
               title={archivaDisabilitato ? t('etf_archivia_limite_title') : t('etf_archivia_title')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -134,9 +134,9 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
       {/* Prezzo + PAC */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-slate-400">{t('prezzo_corrente')}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t('prezzo_corrente')}</p>
           <div className="flex items-center gap-1.5">
-            <p className="text-xl font-semibold text-white">{pv(`€${fmt(etf.prezzoCorrente)}`)}</p>
+            <p className="text-xl font-semibold text-slate-900 dark:text-white">{pv(`€${fmt(etf.prezzoCorrente)}`)}</p>
             <button
               onClick={aggiornaPrezzoAPI}
               disabled={syncStato === 'loading' || !etf.isin || cooldownAttivo}
@@ -151,10 +151,10 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
               }
               className={`p-1 rounded-md transition-colors disabled:cursor-not-allowed ${
                 syncStato === 'error'
-                  ? 'text-red-400'
+                  ? 'text-red-500 dark:text-red-400'
                   : syncStato === 'loading'
-                    ? 'text-blue-400'
-                    : 'text-slate-500 hover:text-blue-400 hover:bg-slate-700'
+                    ? 'text-blue-500 dark:text-blue-400'
+                    : 'text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
             >
               <svg
@@ -170,41 +170,41 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xs text-slate-400">{t('pac_mensile')}</p>
-          <p className="text-lg font-semibold text-white">{pv(`€${fmt(etf.importoFisso, 0)}`)}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t('pac_mensile')}</p>
+          <p className="text-lg font-semibold text-slate-900 dark:text-white">{pv(`€${fmt(etf.importoFisso, 0)}`)}</p>
         </div>
       </div>
 
       {/* KPI */}
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-slate-900/50 rounded-xl p-3">
-          <p className="text-xs text-slate-400">{t('investito')}</p>
-          <p className="font-semibold text-white">{pv(`€${fmt(inv, 0)}`)}</p>
+        <div className="bg-slate-100 dark:bg-slate-900/50 rounded-xl p-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t('investito')}</p>
+          <p className="font-semibold text-slate-900 dark:text-white">{pv(`€${fmt(inv, 0)}`)}</p>
         </div>
-        <div className="bg-slate-900/50 rounded-xl p-3">
-          <p className="text-xs text-slate-400">{t('valore')}</p>
-          <p className="font-semibold text-white">{pv(`€${fmt(val, 0)}`)}</p>
+        <div className="bg-slate-100 dark:bg-slate-900/50 rounded-xl p-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t('valore')}</p>
+          <p className="font-semibold text-slate-900 dark:text-white">{pv(`€${fmt(val, 0)}`)}</p>
         </div>
-        <div className="bg-slate-900/50 rounded-xl p-3">
-          <p className="text-xs text-slate-400">{t('quote')}</p>
-          <p className="font-semibold text-white">{pv(fmt(etf.acquisti.reduce((s, a) => s + a.quoteFrazionate, 0), 4))}</p>
+        <div className="bg-slate-100 dark:bg-slate-900/50 rounded-xl p-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t('quote')}</p>
+          <p className="font-semibold text-slate-900 dark:text-white">{pv(fmt(etf.acquisti.reduce((s, a) => s + a.quoteFrazionate, 0), 4))}</p>
         </div>
       </div>
 
       {/* Badge ROI + CAGR */}
       <div className="flex items-center gap-2 flex-wrap">
         <Badge val={roi} />
-        <span className="text-xs text-slate-400">ROI</span>
-        <span className="text-xs text-slate-500">|</span>
-        <span className="text-xs text-slate-300">
-          {t('netto')}: <span className={netto >= 0 ? 'text-green-400' : 'text-red-400'}>
+        <span className="text-xs text-slate-500 dark:text-slate-400">ROI</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500">|</span>
+        <span className="text-xs text-slate-700 dark:text-slate-300">
+          {t('netto')}: <span className={netto >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>
             {pv(`${netto >= 0 ? '+' : ''}€${fmt(netto, 0)}`)}
           </span>
         </span>
         {durataM >= 1 && (
           <>
-            <span className="text-xs text-slate-500">|</span>
-            <span className="text-xs text-slate-300">CAGR: <span className="text-blue-300">{`${fmt(cagr)}%`}</span></span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">|</span>
+            <span className="text-xs text-slate-700 dark:text-slate-300">CAGR: <span className="text-blue-600 dark:text-blue-300">{`${fmt(cagr)}%`}</span></span>
           </>
         )}
       </div>
@@ -213,7 +213,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
       <div>
         <button
           onClick={() => setEspanso(e => !e)}
-          className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+          className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1"
         >
           {espanso ? '▲' : '▼'} {etf.acquisti.length} {etf.acquisti.length === 1 ? t('acq_s') : t('acq_p')} · {durataM} {durataM === 1 ? t('dur_mese_s') : t('dur_mese_p')}
         </button>
@@ -221,17 +221,17 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
         {espanso && (
           <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
             {[...etf.acquisti].sort((a, b) => b.data.localeCompare(a.data)).map(acq => (
-              <div key={acq.id} className="flex items-center justify-between text-xs bg-slate-900/50 rounded-lg px-3 py-2">
-                <span className="text-slate-400">{acq.data}</span>
-                <span className="text-white">{pv(`€${fmt(acq.importoInvestito, 0)}`)}</span>
+              <div key={acq.id} className="flex items-center justify-between text-xs bg-slate-100 dark:bg-slate-900/50 rounded-lg px-3 py-2">
+                <span className="text-slate-500 dark:text-slate-400">{acq.data}</span>
+                <span className="text-slate-900 dark:text-white">{pv(`€${fmt(acq.importoInvestito, 0)}`)}</span>
                 {acq.fee > 0 && (
                   <span className="text-amber-400">{pv(`+€${fmt(acq.fee, 2)} fee`)}</span>
                 )}
-                <span className="text-slate-400">{`@ €${fmt(acq.prezzoUnitario)}`}</span>
-                <span className="text-blue-300">{pv(`${fmt(acq.quoteFrazionate, 4)} q.`)}</span>
+                <span className="text-slate-500 dark:text-slate-400">{`@ €${fmt(acq.prezzoUnitario)}`}</span>
+                <span className="text-blue-600 dark:text-blue-300">{pv(`${fmt(acq.quoteFrazionate, 4)} q.`)}</span>
                 <button
                   onClick={() => onRimuoviAcquisto(etf.id, acq.id)}
-                  className="text-slate-600 hover:text-red-400 transition-colors ml-2"
+                  className="text-slate-400 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition-colors ml-2"
                 >✕</button>
               </div>
             ))}

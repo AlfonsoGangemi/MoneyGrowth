@@ -7,16 +7,16 @@ function fmt(n, dec = 2) {
 
 function Kpi({ label, valore, sub, positivo, neutro }) {
   const color = neutro
-    ? 'text-white'
+    ? 'text-slate-900 dark:text-white'
     : positivo == null
-      ? 'text-white'
+      ? 'text-slate-900 dark:text-white'
       : positivo
-        ? 'text-green-400'
-        : 'text-red-400'
+        ? 'text-green-600 dark:text-green-400'
+        : 'text-red-500 dark:text-red-400'
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-4 flex flex-col gap-1">
-      <p className="text-xs text-slate-400">{label}</p>
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-1">
+      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
       <p className={`text-xl font-bold ${color}`}>{valore}</p>
       {sub && <p className="text-xs text-slate-500">{sub}</p>}
     </div>
@@ -64,7 +64,7 @@ export default function Indicatori({ etfList, prezziStorici = [], privacyMode = 
 
   return (
     <div>
-      <h2 className="text-base font-bold text-white mb-3">{t('indicatori_titolo')}</h2>
+      <h2 className="text-base font-bold text-slate-900 dark:text-white mb-3">{t('indicatori_titolo')}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {/* Rendimento */}
         <Kpi

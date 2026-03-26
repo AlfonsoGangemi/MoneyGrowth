@@ -76,26 +76,26 @@ export default function ImportExportModal({ isOpen, defaultTab = 'export', onClo
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 id={titleId} className="text-lg font-bold text-white">{t('import_export_title')}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+          <h2 id={titleId} className="text-lg font-bold text-slate-900 dark:text-white">{t('import_export_title')}</h2>
+          <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-xl">✕</button>
         </div>
 
         {/* Tab */}
-        <div className="flex bg-slate-900/60 rounded-xl p-1 mb-6">
+        <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 mb-6">
           <button
             type="button"
             onClick={() => { setTab('export'); setErrore(''); setSuccesso(false) }}
-            className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'export' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'export' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}
           >
             {t('import_export_tab_export')}
           </button>
           <button
             type="button"
             onClick={() => { setTab('import'); setErrore(''); setSuccesso(false) }}
-            className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'import' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'import' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}
           >
             {t('import_export_tab_import')}
           </button>
@@ -103,7 +103,7 @@ export default function ImportExportModal({ isOpen, defaultTab = 'export', onClo
 
         {tab === 'export' && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               {hasData
                 ? 'Scarica una copia JSON di tutti i tuoi ETF e acquisti.'
                 : t('import_export_nessun_dato')}
@@ -121,7 +121,7 @@ export default function ImportExportModal({ isOpen, defaultTab = 'export', onClo
 
         {tab === 'import' && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Seleziona un file JSON precedentemente esportato da ETF Lens.
             </p>
             {errore && (
@@ -137,7 +137,7 @@ export default function ImportExportModal({ isOpen, defaultTab = 'export', onClo
             <button
               type="button"
               onClick={() => setCsvAiOpen(true)}
-              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl py-2.5 text-sm font-medium transition-colors"
+              className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl py-2.5 text-sm font-medium transition-colors"
             >
               {t('csv_ai_btn')}
             </button>

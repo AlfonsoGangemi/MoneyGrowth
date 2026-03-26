@@ -49,7 +49,7 @@ export default function LinguaToggle() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setAperto(v => !v)}
-        className="flex items-center gap-1 text-slate-300 hover:text-white transition-colors"
+        className="flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
         title={corrente.label}
       >
         <corrente.Flag size={20} />
@@ -59,13 +59,13 @@ export default function LinguaToggle() {
       </button>
 
       {aperto && (
-        <div className="absolute right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden min-w-[120px]">
+        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden min-w-[120px]">
           {LINGUE.map(l => (
             <button
               key={l.code}
               onClick={() => { setLingua(l.code); setAperto(false) }}
               className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs transition-colors
-                ${lingua === l.code ? 'text-white bg-slate-700' : 'text-slate-300 hover:bg-slate-700'}`}
+                ${lingua === l.code ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
             >
               <l.Flag size={18} />
               {l.label}

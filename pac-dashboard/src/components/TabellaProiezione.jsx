@@ -53,17 +53,17 @@ function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
                 if (e.key === 'Enter') salvaRend()
                 if (e.key === 'Escape') setEditRend(false)
               }}
-              className="w-14 bg-slate-700 border border-slate-500 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none focus:border-blue-400"
+              className="w-14 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-500 rounded px-1.5 py-0.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-400"
               autoFocus
             />
-            <span className="text-xs text-slate-400">%</span>
-            <button onClick={salvaRend} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">✓</button>
-            <button onClick={() => setEditRend(false)} className="text-xs text-slate-500 hover:text-white transition-colors">✕</button>
+            <span className="text-xs text-slate-500 dark:text-slate-400">%</span>
+            <button onClick={salvaRend} className="text-xs text-blue-500 dark:text-blue-400 hover:text-blue-400 dark:hover:text-blue-300 transition-colors">✓</button>
+            <button onClick={() => setEditRend(false)} className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">✕</button>
           </div>
         ) : (
           <button
             onClick={apriEdit}
-            className="text-slate-500 font-normal text-xs hover:text-white transition-colors underline decoration-dotted underline-offset-2"
+            className="text-slate-500 font-normal text-xs hover:text-slate-900 dark:hover:text-white transition-colors underline decoration-dotted underline-offset-2"
             title={t('modifica_rendimento')}
           >
             {(sc.rendimentoAnnuo * 100).toFixed(1)}%/a
@@ -78,7 +78,7 @@ function ScenarioTh({ sc, idx, scenarioIdx, onAggiorna, onRimuovi }) {
             >{t('elimina')}</button>
             <button
               onClick={() => setConferma(false)}
-              className="text-xs text-slate-500 hover:text-white transition-colors"
+              className="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
             >✕</button>
           </div>
         ) : (
@@ -229,14 +229,14 @@ export default function TabellaProiezione({
       {/* ── Sezione storica ─────────────────────────────────────────── */}
       {righeReali.length > 0 && (
         <div>
-          <h3 className="text-base font-bold text-white mb-3">{t('storico')}</h3>
-          <div className="overflow-x-auto rounded-xl border border-slate-700">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">{t('storico')}</h3>
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-800 border-b border-slate-700">
-                  <th className="px-4 py-3 text-left text-slate-400 font-medium whitespace-nowrap w-20">{t('col_anno')}</th>
-                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap w-36">{t('totale_versato')}</th>
-                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap">{t('valore_reale')}</th>
+                <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                  <th className="px-4 py-3 text-left text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap w-20">{t('col_anno')}</th>
+                  <th className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap w-36">{t('totale_versato')}</th>
+                  <th className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">{t('valore_reale')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -245,26 +245,26 @@ export default function TabellaProiezione({
                   return (
                   <tr
                     key={riga.key}
-                    className="border-b border-slate-800 transition-colors hover:bg-slate-800/60"
+                    className="border-b border-slate-200 dark:border-slate-800 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
                   >
-                    <td className="px-4 py-3 text-slate-300 font-semibold">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">
                       <div className="flex items-center gap-1.5">
                         {riga.label}
                         {riga.parziale && (
                           <span
                             title={t('storico_parziale_tooltip')}
-                            className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-slate-600 text-slate-300 text-[9px] font-bold cursor-default leading-none flex-shrink-0"
+                            className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-300 text-[9px] font-bold cursor-default leading-none flex-shrink-0"
                           >~</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">
+                    <td className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 tabular-nums">
                       <div>{pv(fmt(riga.totaleVersato))}</div>
-                      <div className="text-xs text-slate-500">{pv(`(${fmt(delta)})`)}</div>
+                      <div className="text-xs text-slate-400 dark:text-slate-500">{pv(`(${fmt(delta)})`)}</div>
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      <div className="text-white font-medium">{pv(fmt(riga.valore))}</div>
-                      <div className={`text-xs ${riga.rendimentoEur >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <div className="text-slate-900 dark:text-white font-medium">{pv(fmt(riga.valore))}</div>
+                      <div className={`text-xs ${riga.rendimentoEur >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
                         {pv(`${riga.rendimentoEur >= 0 ? '+' : ''}${fmt(riga.rendimentoEur)} (${fmtPct(riga.rendimentoPct)})`)}
                       </div>
                     </td>
@@ -279,8 +279,8 @@ export default function TabellaProiezione({
       {/* ── Sezione previsionale ────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-white">{t('proiezione')}</h2>
-          <div className="flex items-center gap-2 text-sm text-slate-300">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">{t('proiezione')}</h2>
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <span>{t('orizzonte')}</span>
             <input
               type="number"
@@ -289,7 +289,7 @@ export default function TabellaProiezione({
               max="20"
               value={orizzonteAnni}
               onChange={e => onSetOrizzonteAnni(e.target.value)}
-              className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:border-blue-400"
+              className="w-16 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-400"
             />
             <span>{t('anni_label')}</span>
           </div>
@@ -297,7 +297,7 @@ export default function TabellaProiezione({
         {scenari.length < 3 && (
           <button
             onClick={onNuovoScenario}
-            className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-xl transition-colors"
+            className="text-sm bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white px-3 py-1.5 rounded-xl transition-colors"
           >
             {t('aggiungi_scenario')}
           </button>
@@ -311,31 +311,31 @@ export default function TabellaProiezione({
             <button
               onClick={() => setScenarioIdx(i => Math.max(0, i - 1))}
               disabled={scenarioIdx === 0}
-              className="p-1.5 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
             >
               ←
             </button>
             <div className="flex items-center gap-2 text-sm">
               <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: scAttivo.colore }} />
               <span style={{ color: scAttivo.colore }}>{scAttivo.nome}</span>
-              <span className="text-slate-500">({(scAttivo.rendimentoAnnuo * 100).toFixed(1)}%/a)</span>
-              <span className="text-slate-600 text-xs">{scenarioIdx + 1} / {dati.scenari.length}</span>
+              <span className="text-slate-500 dark:text-slate-500">({(scAttivo.rendimentoAnnuo * 100).toFixed(1)}%/a)</span>
+              <span className="text-slate-400 dark:text-slate-600 text-xs">{scenarioIdx + 1} / {dati.scenari.length}</span>
             </div>
             <button
               onClick={() => setScenarioIdx(i => Math.min(dati.scenari.length - 1, i + 1))}
               disabled={scenarioIdx === dati.scenari.length - 1}
-              className="p-1.5 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
             >
               →
             </button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-700">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-800 border-b border-slate-700">
-                  <th className="px-4 py-3 text-left text-slate-400 font-medium whitespace-nowrap w-20">{t('col_anno')}</th>
-                  <th className="px-4 py-3 text-right text-slate-400 font-medium whitespace-nowrap w-36">{t('totale_versato')}</th>
+                <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                  <th className="px-4 py-3 text-left text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap w-20">{t('col_anno')}</th>
+                  <th className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap w-36">{t('totale_versato')}</th>
                   {dati.scenari.map((sc, idx) => (
                     <ScenarioTh
                       key={sc.id}
@@ -352,19 +352,19 @@ export default function TabellaProiezione({
                 {righeProiezione.map((riga) => (
                   <tr
                     key={riga.key}
-                    className="border-b border-slate-800 transition-colors hover:bg-slate-800/60"
+                    className="border-b border-slate-200 dark:border-slate-800 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
                   >
-                    <td className="px-4 py-3 text-slate-300 font-semibold">{riga.label}</td>
-                    <td className="px-4 py-3 text-right text-slate-400 tabular-nums">{pv(fmt(riga.totaleVersato))}</td>
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">{riga.label}</td>
+                    <td className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 tabular-nums">{pv(fmt(riga.totaleVersato))}</td>
                     {riga.valoriScenari.map((vs, idx) => (
                       <td
                         key={vs.scenarioId}
                         className={`px-4 py-3 text-right ${idx !== scenarioIdx ? 'hidden sm:table-cell' : ''}`}
                       >
-                        <div className="font-medium tabular-nums text-white">
+                        <div className="font-medium tabular-nums text-slate-900 dark:text-white">
                           {pv(fmt(vs.valore))}
                         </div>
-                        <div className={`text-xs tabular-nums ${vs.guadagno >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <div className={`text-xs tabular-nums ${vs.guadagno >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                           {pv(`${vs.guadagno >= 0 ? '+' : ''}${fmt(vs.guadagno)}`)}
                         </div>
                       </td>

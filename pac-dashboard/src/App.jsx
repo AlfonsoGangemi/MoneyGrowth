@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { LocaleProvider } from './hooks/useLocale'
+import { ThemeProvider } from './hooks/useTheme'
 import AuthForm from './components/AuthForm'
 import Dashboard from './components/Dashboard'
 import LandingPage from './components/LandingPage'
@@ -13,9 +14,11 @@ export default function App({ url }) {
   if (path === '/privacy') return <LocaleProvider><Privacy /></LocaleProvider>
 
   return (
-    <LocaleProvider>
-      <AppInner />
-    </LocaleProvider>
+    <ThemeProvider>
+      <LocaleProvider>
+        <AppInner />
+      </LocaleProvider>
+    </ThemeProvider>
   )
 }
 
@@ -30,7 +33,7 @@ function AppInner() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )

@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { isTempmail } from '../utils/tempmail'
 import { useLocale } from '../hooks/useLocale'
+import ThemeToggle from './ThemeToggle'
 
 function Input({ label, ...props }) {
   return (
     <div>
-      <label className="block text-xs text-slate-400 mb-1">{label}</label>
+      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{label}</label>
       <input
-        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+        className="w-full bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
         {...props}
       />
     </div>
@@ -78,38 +79,42 @@ export default function AuthForm({ onSignIn, onSignUp, onSignInGoogle, defaultTa
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
+
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
 
         <div className="text-center mb-8">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="text-xs text-slate-500 hover:text-slate-300 transition-colors mb-4 flex items-center gap-1 mx-auto"
+              className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors mb-4 flex items-center gap-1 mx-auto"
             >
               {t('auth_back')}
             </button>
           )}
-          <h1 className="text-2xl font-bold text-white tracking-tight">ETF Lens</h1>
-          <p className="text-sm text-slate-500 mt-1">{t('auth_subtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">ETF Lens</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">{t('auth_subtitle')}</p>
         </div>
 
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-2xl">
 
           {/* Tab login / registrati */}
-          <div className="flex bg-slate-900/60 rounded-xl p-1 mb-6">
+          <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 mb-6">
             <button
               type="button"
               onClick={() => cambiaTab('login')}
-              className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'login' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'login' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}
             >
               {t('auth_tab_login')}
             </button>
             <button
               type="button"
               onClick={() => cambiaTab('register')}
-              className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'register' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`flex-1 text-sm py-2 rounded-lg transition-colors font-medium ${tab === 'register' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'}`}
             >
               {t('auth_tab_register')}
             </button>
@@ -151,7 +156,7 @@ export default function AuthForm({ onSignIn, onSignUp, onSignInGoogle, defaultTa
             </button>
 
             {tab === 'register' && (
-              <p className="text-xs text-slate-500 text-center">
+              <p className="text-xs text-slate-500 dark:text-slate-500 text-center">
                 {t('auth_terms_prefix')}{' '}
                 <a href="/termini" onClick={(e) => { e.preventDefault(); window.open('/termini', '_blank') }} className="underline hover:text-slate-300 transition-colors cursor-pointer">{t('auth_terms_link')}</a>
                 {' '}{t('auth_terms_mid')}{' '}
@@ -163,15 +168,15 @@ export default function AuthForm({ onSignIn, onSignUp, onSignInGoogle, defaultTa
           {onSignInGoogle && (
             <div className="mt-4">
               <div className="flex items-center gap-2 mb-4">
-                <div className="flex-1 h-px bg-slate-700" />
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
                 <span className="text-xs text-slate-500">{t('auth_or')}</span>
-                <div className="flex-1 h-px bg-slate-700" />
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
               </div>
               <button
                 type="button"
                 onClick={handleGoogle}
                 disabled={loadingGoogle || loading}
-                className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-medium transition-colors border border-slate-600"
+                className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 dark:text-white rounded-xl py-2.5 text-sm font-medium transition-colors border border-slate-300 dark:border-slate-600"
               >
                 {!loadingGoogle && (
                   <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
@@ -194,7 +199,7 @@ export default function AuthForm({ onSignIn, onSignUp, onSignInGoogle, defaultTa
             <button
               type="button"
               onClick={onTornaAllaLanding}
-              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+              className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
             >
               {t('torna_alla_landing')}
             </button>

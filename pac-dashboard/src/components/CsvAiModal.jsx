@@ -183,41 +183,41 @@ export default function CsvAiModal({ isOpen, onClose, onImport }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between">
-          <h2 id={titleId} className="text-lg font-bold text-white">{t('csv_ai_title')}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+          <h2 id={titleId} className="text-lg font-bold text-slate-900 dark:text-white">{t('csv_ai_title')}</h2>
+          <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-xl">✕</button>
         </div>
 
-        <p className="text-sm text-slate-400">{t('csv_ai_desc')}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t('csv_ai_desc')}</p>
 
         {/* Prompt area */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-300">{t('csv_ai_prompt_label')}</span>
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{t('csv_ai_prompt_label')}</span>
             <button
               type="button"
               onClick={handleCopiaPrompt}
-              className="text-xs px-3 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
+              className="text-xs px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors"
             >
               {copiato ? t('csv_ai_copiato') : t('csv_ai_copia')}
             </button>
           </div>
-          <pre className="text-xs text-slate-400 bg-slate-900/60 rounded-xl p-3 overflow-auto max-h-36 whitespace-pre-wrap font-mono leading-relaxed">
+          <pre className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-900/60 rounded-xl p-3 overflow-auto max-h-36 whitespace-pre-wrap font-mono leading-relaxed">
             {prompt}
           </pre>
         </div>
 
         {/* Textarea */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-slate-300">{t('csv_ai_incolla_label')}</label>
+          <label className="text-xs font-medium text-slate-700 dark:text-slate-300">{t('csv_ai_incolla_label')}</label>
           <textarea
             value={testo}
             onChange={e => { setTesto(e.target.value); setErrore(''); setSuccesso(false) }}
             rows={6}
             placeholder='{ "etf": [...], "broker": [...], "orizzonteAnni": 10 }'
-            className="w-full bg-slate-900/60 border border-slate-600 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 font-mono resize-y focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 font-mono resize-y focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 

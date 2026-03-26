@@ -8,6 +8,7 @@ import GraficoPortafoglio from './GraficoPortafoglio'
 import Indicatori from './Indicatori'
 import TabellaProiezione from './TabellaProiezione'
 import LinguaToggle from './LinguaToggle'
+import ThemeToggle from './ThemeToggle'
 import ImportExportModal from './ImportExportModal'
 
 // ── Componenti base ────────────────────────────────────────────────
@@ -52,11 +53,11 @@ function Modal({ titolo, onChiudi, children, wide }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full shadow-2xl ${wide ? 'max-w-lg' : 'max-w-md'}`}
+        className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 w-full shadow-2xl ${wide ? 'max-w-lg' : 'max-w-md'}`}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 id={titleId} className="text-lg font-bold text-white">{titolo}</h2>
-          <button onClick={onChiudi} className="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+          <h2 id={titleId} className="text-lg font-bold text-slate-900 dark:text-white">{titolo}</h2>
+          <button onClick={onChiudi} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-xl">✕</button>
         </div>
         {children}
       </div>
@@ -67,9 +68,9 @@ function Modal({ titolo, onChiudi, children, wide }) {
 function Input({ label, ...props }) {
   return (
     <div>
-      <label className="block text-xs text-slate-400 mb-1">{label}</label>
+      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{label}</label>
       <input
-        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+        className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
         {...props}
       />
     </div>
@@ -103,15 +104,15 @@ function ModificaETFModal({ etf, onSalva, onChiudi }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* ISIN in sola lettura */}
         <div>
-          <p className="text-xs text-slate-400 mb-1">{t('label_isin')}</p>
-          <p className="text-sm font-mono text-slate-300 bg-slate-900/50 rounded-lg px-3 py-2">{etf.isin}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('label_isin')}</p>
+          <p className="text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/50 rounded-lg px-3 py-2">{etf.isin}</p>
         </div>
         <Input label={t('label_nome_etf')} value={nome} onChange={e => setNome(e.target.value)} required />
         <Input label={t('label_emittente')} value={emittente} onChange={e => setEmittente(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
         <Input label={t('label_importo_pac')} type="number" step="0.01" min="0" value={importoFisso} onChange={e => setImportoFisso(e.target.value)} />
         <Input label={t('label_prezzo_corrente_eur')} type="number" step="0.0001" min="0" value={prezzoCorrente} onChange={e => setPrezzoCorrente(e.target.value)} />
         <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onChiudi} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
+          <button type="button" onClick={onChiudi} className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
           <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('salva')}</button>
         </div>
       </form>
@@ -168,13 +169,13 @@ function BrokerRow({ broker: b, onAggiorna, onElimina }) {
             if (e.key === 'Enter') salva()
             if (e.key === 'Escape') annulla()
           }}
-          className="flex-1 bg-slate-700 border border-slate-500 rounded px-2 py-0.5 text-sm text-white focus:outline-none focus:border-blue-400"
+          className="flex-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-500 rounded px-2 py-0.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-400"
           autoFocus
         />
       ) : (
         <span
           onClick={iniziaEdit}
-          className={`flex-1 text-sm cursor-pointer hover:text-blue-300 transition-colors ${b.archiviato ? 'text-white/50' : 'text-white'}`}
+          className={`flex-1 text-sm cursor-pointer hover:text-blue-500 dark:hover:text-blue-300 transition-colors ${b.archiviato ? 'text-slate-400 dark:text-white/50' : 'text-slate-900 dark:text-white'}`}
           title={t('broker_rinomina')}
         >
           {b.nome}
@@ -184,7 +185,7 @@ function BrokerRow({ broker: b, onAggiorna, onElimina }) {
 
       <button
         onClick={() => onAggiorna(b.id, { archiviato: !b.archiviato })}
-        className="text-xs text-slate-400 hover:text-white transition-colors flex-shrink-0"
+        className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex-shrink-0"
       >
         {b.archiviato ? t('ripristina') : t('archivia')}
       </button>
@@ -226,20 +227,20 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
             />
           ))}
         </div>
-        <form onSubmit={handleAggiungi} className="border-t border-slate-700 pt-4 space-y-3">
-          <p className="text-xs text-slate-400 font-medium">{t('broker_nuovo')}</p>
+        <form onSubmit={handleAggiungi} className="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('broker_nuovo')}</p>
           <div className="flex gap-2">
             <input
               value={nomeBroker}
               onChange={e => setNomeBroker(e.target.value)}
               placeholder="Degiro, Trade Republic…"
-              className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+              className="flex-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
             />
             <input
               type="color"
               value={coloreBroker}
               onChange={e => setColoreBroker(e.target.value)}
-              className="h-9 w-12 rounded-lg border border-slate-600 bg-slate-700 cursor-pointer"
+              className="h-9 w-12 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 cursor-pointer"
             />
           </div>
           <button
@@ -267,10 +268,10 @@ const GITHUB_URL = 'https://github.com/AlfonsoGangemi/MoneyGrowth'
 
 function InfoModal({ onChiudi }) {
   const { t } = useLocale()
-  const link = 'text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors'
+  const link = 'text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 underline underline-offset-2 transition-colors'
   return (
     <Modal titolo={t('modal_info')} onChiudi={onChiudi}>
-      <div className="space-y-4 text-sm text-slate-300">
+      <div className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
         <div className="flex items-start gap-3">
           <span className="text-slate-500 mt-0.5 flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -278,7 +279,7 @@ function InfoModal({ onChiudi }) {
             </svg>
           </span>
           <div>
-            <p className="text-white font-medium mb-0.5">{t('info_open_source')}</p>
+            <p className="text-slate-900 dark:text-white font-medium mb-0.5">{t('info_open_source')}</p>
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className={link}>
               Github
             </a>
@@ -292,7 +293,7 @@ function InfoModal({ onChiudi }) {
             </svg>
           </span>
           <div>
-            <p className="text-white font-medium mb-0.5">{t('info_licenza')}</p>
+            <p className="text-slate-900 dark:text-white font-medium mb-0.5">{t('info_licenza')}</p>
             <a href={`${GITHUB_URL}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer" className={link}>
               MIT License
             </a>
@@ -306,14 +307,14 @@ function InfoModal({ onChiudi }) {
             </svg>
           </span>
           <div>
-            <p className="text-white font-medium mb-0.5">{t('info_dati_mercato')}</p>
+            <p className="text-slate-900 dark:text-white font-medium mb-0.5">{t('info_dati_mercato')}</p>
             <a href="https://www.justetf.com" target="_blank" rel="noopener noreferrer" className={link}>
               JustETF
             </a>
           </div>
         </div>
 
-        <div className="border-t border-slate-700 pt-4 flex gap-4">
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-4 flex gap-4">
           <a href="/privacy" onClick={(e) => { e.preventDefault(); window.open('/privacy', '_blank') }} className={link}>{t('footer_privacy')}</a>
           <a href="/termini" onClick={(e) => { e.preventDefault(); window.open('/termini', '_blank') }} className={link}>{t('footer_termini')}</a>
         </div>
@@ -431,7 +432,7 @@ export default function Dashboard({ user, onSignOut }) {
 
   if (port.loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -502,22 +503,25 @@ export default function Dashboard({ user, onSignOut }) {
 
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
       {/* Navbar */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-white tracking-tight">{t('nav_title')}</h1>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{t('nav_title')}</h1>
             <LinguaToggle />
           </div>
 
           {/* Colonna destra */}
           <div className="flex items-center gap-3">
 
+            {/* Theme toggle */}
+            <ThemeToggle />
+
             {/* Privacy toggle */}
             <button
               onClick={() => setPrivacyMode(v => { const next = !v; localStorage.setItem('privacyMode', next); return next })}
-              className={`transition-colors ${privacyMode ? 'text-amber-400' : 'text-slate-400 hover:text-white'}`}
+              className={`transition-colors ${privacyMode ? 'text-amber-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
               title={privacyMode ? t('nav_mostra_importi') : t('nav_nascondi_importi')}
             >
               {privacyMode ? (
@@ -536,7 +540,7 @@ export default function Dashboard({ user, onSignOut }) {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownAperto(v => !v)}
-                className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+                className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1"
               >
                 {user.email}
                 <svg className={`w-3 h-3 transition-transform ${dropdownAperto ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -544,25 +548,25 @@ export default function Dashboard({ user, onSignOut }) {
                 </svg>
               </button>
               {dropdownAperto && (
-                <div role="menu" className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                <div role="menu" className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
                   <button
                     role="menuitem"
                     onClick={() => { setImportExportTab('export'); setModalImportExport(true); setDropdownAperto(false) }}
-                    className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
+                    className="w-full text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2.5 transition-colors"
                   >
                     {t('dropdown_import_export')}
                   </button>
                   <button
                     role="menuitem"
                     onClick={() => { setModalCrediti(true); setDropdownAperto(false) }}
-                    className="w-full text-left text-xs text-slate-200 hover:bg-slate-700 px-4 py-2.5 transition-colors"
+                    className="w-full text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2.5 transition-colors"
                   >
                     {t('info_prodotto')}
                   </button>
                   <button
                     role="menuitem"
                     onClick={onSignOut}
-                    className="w-full text-left text-xs text-red-400 hover:bg-slate-700 px-4 py-2.5 transition-colors border-t border-slate-700"
+                    className="w-full text-left text-xs text-red-500 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2.5 transition-colors border-t border-slate-200 dark:border-slate-700"
                   >
                     {t('logout')}
                   </button>
@@ -577,7 +581,7 @@ export default function Dashboard({ user, onSignOut }) {
             <p className="text-xs text-red-400">{port.errore}</p>
             <button
               onClick={() => port.setErrore('')}
-              className="text-slate-500 hover:text-white text-xs ml-4"
+              className="text-slate-500 hover:text-slate-900 dark:hover:text-white text-xs ml-4"
             >✕</button>
           </div>
         )}
@@ -590,13 +594,13 @@ export default function Dashboard({ user, onSignOut }) {
           <div className="flex items-center gap-2 flex-wrap">
             {port.broker.length > 1 && (
               <>
-                <span className="text-xs text-slate-400">{t('broker_label')}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('broker_label')}</span>
                 <button
                   onClick={() => port.setBrokerFiltro([])}
                   className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                     port.brokerFiltro.length === 0
                       ? 'bg-blue-600 border-blue-500 text-white'
-                      : 'border-slate-600 text-slate-400 hover:text-white'
+                      : 'border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >{t('broker_tutti')}</button>
                 {port.broker.map(b => (
@@ -611,7 +615,7 @@ export default function Dashboard({ user, onSignOut }) {
                     className={`text-xs px-3 py-1 rounded-full border transition-colors flex items-center gap-1.5 ${
                       port.brokerFiltro.includes(b.id)
                         ? 'border-transparent text-white'
-                        : 'border-slate-600 text-slate-400 hover:text-white'
+                        : 'border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     } ${b.archiviato ? 'opacity-50' : ''}`}
                     style={port.brokerFiltro.includes(b.id) ? { backgroundColor: b.colore } : {}}
                   >
@@ -624,7 +628,7 @@ export default function Dashboard({ user, onSignOut }) {
             )}
             <button
               onClick={() => setModalGestoreBroker(true)}
-              className="text-slate-500 hover:text-slate-300 transition-colors"
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               title={t('broker_gestisci')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -654,7 +658,7 @@ export default function Dashboard({ user, onSignOut }) {
         <div>
           <div className="mb-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-white">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 ETF ({etfAttivi.length} {t('etf_sezione_attivi')}{etfArchiviati.length > 0 ? ` · ${etfArchiviati.length} ${t('etf_sezione_archiviati_info')}` : ''})
               </h2>
               <div className="flex gap-2 items-center">
@@ -662,7 +666,7 @@ export default function Dashboard({ user, onSignOut }) {
                   <button
                     onClick={aggiornaTuttiIPrezzi}
                     disabled={aggStato === 'running' || globalCooldownSec > 0}
-                    className="flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-200 px-3 py-1.5 rounded-xl transition-colors"
+                    className="flex items-center gap-1.5 text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-xl transition-colors"
                   >
                     <svg className={`w-3.5 h-3.5 ${aggStato === 'running' ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -698,7 +702,7 @@ export default function Dashboard({ user, onSignOut }) {
                 </button>
                 <button
                   onClick={() => { setImportExportTab('import'); setModalImportExport(true) }}
-                  className="text-sm bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-xl transition-colors"
+                  className="text-sm bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white px-5 py-2 rounded-xl transition-colors"
                 >
                   {t('etf_importa_portafoglio')}
                 </button>
@@ -726,7 +730,7 @@ export default function Dashboard({ user, onSignOut }) {
               {!limitRaggiunto ? (
                 <button
                   onClick={() => setModalNuovoETF(true)}
-                  className="mt-4 w-full text-sm border-2 border-dashed border-slate-700 hover:border-blue-500 text-slate-500 hover:text-blue-400 py-3 rounded-2xl transition-colors"
+                  className="mt-4 w-full text-sm border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 py-3 rounded-2xl transition-colors"
                 >
                   {t('etf_aggiungi')}
                 </button>
@@ -741,7 +745,7 @@ export default function Dashboard({ user, onSignOut }) {
                 <div className="mt-6">
                   <button
                     onClick={() => setMostraArchiviati(v => !v)}
-                    className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1 mb-3"
+                    className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center gap-1 mb-3"
                   >
                     {mostraArchiviati ? '▲' : '▼'} {t('etf_archiviati_btn')} ({etfArchiviati.length})
                   </button>
@@ -793,10 +797,10 @@ export default function Dashboard({ user, onSignOut }) {
         <Modal titolo={t('modal_nuovo_etf')} onChiudi={() => { setModalNuovoETF(false); setIsinValidazione('idle') }}>
           <form onSubmit={handleAggiungiETF} className="space-y-4">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">{t('label_isin')}</label>
+              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('label_isin')}</label>
               <div className="relative">
                 <input
-                  className={`w-full bg-slate-700 border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400 ${isinValidazione === 'not_found' ? 'border-red-500' : 'border-slate-600'}`}
+                  className={`w-full bg-slate-100 dark:bg-slate-700 border rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400 ${isinValidazione === 'not_found' ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}`}
                   value={isinETF}
                   onChange={e => { setIsinETF(e.target.value); setIsinValidazione('idle') }}
                   placeholder="IE00B4L5Y983"
@@ -820,7 +824,7 @@ export default function Dashboard({ user, onSignOut }) {
             <Input label={t('label_emittente')} value={emittenteETF} onChange={e => setEmittenteETF(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
             <Input label={t('label_importo_pac')} type="number" step="0.01" min="0" value={importoETF} onChange={e => setImportoETF(e.target.value)} placeholder="200" />
             <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => { setModalNuovoETF(false); setIsinValidazione('idle') }} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
+              <button type="button" onClick={() => { setModalNuovoETF(false); setIsinValidazione('idle') }} className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
               <button type="submit" disabled={isinValidazione === 'loading'} className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('aggiungi')}</button>
             </div>
           </form>
@@ -877,11 +881,11 @@ export default function Dashboard({ user, onSignOut }) {
             <Input label={t('label_nome_scenario')} value={nomeScen} onChange={e => setNomeScen(e.target.value)} placeholder="Ottimistico" required />
             <Input label={t('label_rendimento_annuo')} type="number" step="0.1" min="0" max="100" value={rendScen} onChange={e => setRendScen(e.target.value)} placeholder="10" required />
             <div>
-              <label className="block text-xs text-slate-400 mb-1">{t('label_colore_linea')}</label>
-              <input type="color" value={coloreScen} onChange={e => setColoreScen(e.target.value)} className="h-9 w-full rounded-lg border border-slate-600 bg-slate-700 cursor-pointer" />
+              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('label_colore_linea')}</label>
+              <input type="color" value={coloreScen} onChange={e => setColoreScen(e.target.value)} className="h-9 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 cursor-pointer" />
             </div>
             <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setModalScenario(false)} className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
+              <button type="button" onClick={() => setModalScenario(false)} className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
               <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('aggiungi')}</button>
             </div>
           </form>

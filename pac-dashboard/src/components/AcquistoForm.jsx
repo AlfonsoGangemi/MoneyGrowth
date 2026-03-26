@@ -65,21 +65,21 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">{t('nuovo_acquisto')}</h2>
-          <button onClick={onChiudi} className="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('nuovo_acquisto')}</h2>
+          <button onClick={onChiudi} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-xl">✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 min-h-0">
           {/* Broker */}
           {brokerList.length >= 1 && (
             <div>
-              <label className="block text-xs text-slate-400 mb-1">{t('broker')}</label>
+              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('broker')}</label>
               <select
                 value={brokerId}
                 onChange={e => setBrokerId(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+                className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
               >
                 {brokerList.map(b => (
                   <option key={b.id} value={b.id}>{b.nome}</option>
@@ -90,25 +90,25 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
 
           {/* Data unica */}
           <div>
-            <label className="block text-xs text-slate-400 mb-1">{t('data_acquisto')}</label>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('data_acquisto')}</label>
             <input
               type="date"
               value={data}
               onChange={e => setData(e.target.value)}
               max={oggi}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+              className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
             />
           </div>
 
           {/* Lista ETF con checkbox */}
           <div className="flex-1 min-h-0 overflow-y-auto space-y-2">
-            <p className="text-xs text-slate-400 sticky top-0 bg-slate-800 pb-1">{t('seleziona_etf')}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 sticky top-0 bg-white dark:bg-slate-800 pb-1">{t('seleziona_etf')}</p>
             {righe.map(riga => {
               const etf = etfList.find(e => e.id === riga.etfId)
               return (
                 <div
                   key={riga.etfId}
-                  className={`rounded-xl border transition-colors ${riga.selezionato ? 'border-blue-500 bg-blue-950/30' : 'border-slate-700 bg-slate-900/30'}`}
+                  className={`rounded-xl border transition-colors ${riga.selezionato ? 'border-blue-500 bg-blue-950/30' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30'}`}
                 >
                   {/* Riga checkbox */}
                   <div
@@ -123,8 +123,8 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                       className="w-4 h-4 accent-blue-500 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{etf.nome}</p>
-                      {etf.emittente && <p className="text-xs text-slate-500">{etf.emittente}</p>}
+                      <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{etf.nome}</p>
+                      {etf.emittente && <p className="text-xs text-slate-500 dark:text-slate-500">{etf.emittente}</p>}
                     </div>
                     <span className="text-xs text-slate-500 font-mono flex-shrink-0">{etf.isin}</span>
                   </div>
@@ -133,7 +133,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                   {riga.selezionato && (
                     <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1">{t('importo_eur')}</label>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('importo_eur')}</label>
                         <input
                           type="number"
                           step="0.01"
@@ -141,11 +141,11 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                           value={riga.importo}
                           onChange={e => setRigaVal(riga.etfId, 'importo', e.target.value)}
                           onClick={e => e.stopPropagation()}
-                          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none focus:border-blue-400"
+                          className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1">{t('fee_eur')}</label>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('fee_eur')}</label>
                         <input
                           type="number"
                           step="0.01"
@@ -153,11 +153,11 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                           value={riga.fee}
                           onChange={e => setRigaVal(riga.etfId, 'fee', e.target.value)}
                           onClick={e => e.stopPropagation()}
-                          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none focus:border-blue-400"
+                          className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1">{t('prezzo_eur')}</label>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('prezzo_eur')}</label>
                         <input
                           type="number"
                           step="0.0001"
@@ -165,12 +165,12 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                           value={riga.prezzo}
                           onChange={e => setRigaVal(riga.etfId, 'prezzo', e.target.value)}
                           onClick={e => e.stopPropagation()}
-                          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none focus:border-blue-400"
+                          className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
                         />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400 mb-1">{t('quote')}</p>
-                        <p className="text-sm font-semibold text-blue-300 py-1.5 px-2 bg-slate-900/50 rounded-lg">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('quote')}</p>
+                        <p className="text-sm font-semibold text-blue-600 dark:text-blue-300 py-1.5 px-2 bg-slate-100 dark:bg-slate-900/50 rounded-lg">
                           {calcolaQuote(riga)}
                         </p>
                       </div>
@@ -185,14 +185,14 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
             <button
               type="button"
               onClick={onChiudi}
-              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+              className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
             >
               {t('annulla')}
             </button>
             <button
               type="submit"
               disabled={!almenaUna}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
             >
               {t('aggiungi')} {almenaUna ? `(${righe.filter(r => r.selezionato).length})` : ''}
             </button>
