@@ -535,42 +535,45 @@ export function usePortafoglio(user) {
 
   // ── Import (sovrascrive ETF e acquisti su Supabase) ───────────────
   const importJSON = useCallback((file) => {
+    // Errore atteso (input utente) — marcato con _handled per il catch
+    function errAtteso(msg) { const e = new Error(msg); e._handled = true; return e }
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = async (e) => {
         setLoading(true)
         try {
           if (e.target.result.length > 1024 * 1024) {
-            throw new Error('File troppo grande (max 1 MB)')
+            throw errAtteso('File troppo grande (max 1 MB)')
           }
           const data = JSON.parse(e.target.result)
           if (!Array.isArray(data.etf) || !Array.isArray(data.broker)) {
-            throw new Error('File JSON non valido: struttura non riconosciuta')
+            throw errAtteso('File JSON non valido: struttura non riconosciuta')
           }
 
           // Validazione schema: campi obbligatori, formati, valori numerici positivi
           const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
           for (const etf of data.etf) {
             if (typeof etf.nome !== 'string' || !etf.nome.trim())
-              throw new Error('ETF con nome mancante o non valido')
+              throw errAtteso('ETF con nome mancante o non valido')
             if (!Number.isFinite(Number(etf.importoFisso)) || Number(etf.importoFisso) < 0)
-              throw new Error(`ETF "${etf.nome}": importoFisso non valido`)
+              throw errAtteso(`ETF "${etf.nome}": importoFisso non valido`)
             if (!Number.isFinite(Number(etf.prezzoCorrente)) || Number(etf.prezzoCorrente) < 0)
-              throw new Error(`ETF "${etf.nome}": prezzoCorrente non valido`)
+              throw errAtteso(`ETF "${etf.nome}": prezzoCorrente non valido`)
             for (const a of (etf.acquisti || [])) {
               if (typeof a.data !== 'string' || !DATE_RE.test(a.data))
-                throw new Error(`ETF "${etf.nome}": data acquisto non valida "${a.data}"`)
+                throw errAtteso(`ETF "${etf.nome}": data acquisto non valida "${a.data}"`)
               if (!Number.isFinite(Number(a.importoInvestito)) || Number(a.importoInvestito) <= 0)
-                throw new Error(`ETF "${etf.nome}": importoInvestito non valido`)
+                throw errAtteso(`ETF "${etf.nome}": importoInvestito non valido`)
               if (!Number.isFinite(Number(a.prezzoUnitario)) || Number(a.prezzoUnitario) <= 0)
-                throw new Error(`ETF "${etf.nome}": prezzoUnitario non valido`)
+                throw errAtteso(`ETF "${etf.nome}": prezzoUnitario non valido`)
               if (!Number.isFinite(Number(a.quoteFrazionate)) || Number(a.quoteFrazionate) < 0)
-                throw new Error(`ETF "${etf.nome}": quoteFrazionate non valido`)
+                throw errAtteso(`ETF "${etf.nome}": quoteFrazionate non valido`)
             }
           }
           for (const b of data.broker) {
             if (typeof b.nome !== 'string' || !b.nome.trim())
-              throw new Error('Broker con nome mancante o non valido')
+              throw errAtteso('Broker con nome mancante o non valido')
           }
 
           // Carica broker esistenti nel DB e inserisce quelli mancanti dal JSON
@@ -649,7 +652,12 @@ export function usePortafoglio(user) {
           await caricaDati()
           resolve()
         } catch (err) {
-          Sentry.captureException(err, { tags: { operation: 'import_json' } })
+          const atteso = err instanceof SyntaxError || err._handled === true
+          Sentry.captureException(err, {
+            level: atteso ? 'warning' : 'error',
+            mechanism: { type: 'generic', handled: atteso },
+            tags: { operation: 'import_json' },
+          })
           setLoading(false)
           reject(err instanceof SyntaxError ? new Error('File JSON non valido') : err)
         }

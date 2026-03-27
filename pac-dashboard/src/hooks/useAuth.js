@@ -28,12 +28,26 @@ export function useAuth() {
 
   async function signIn(email, password) {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) { Sentry.captureException(error, { tags: { operation: 'sign_in' } }); throw error }
+    if (error) {
+      Sentry.captureException(error, {
+        level: 'warning',
+        mechanism: { type: 'generic', handled: true },
+        tags: { operation: 'sign_in' },
+      })
+      throw error
+    }
   }
 
   async function signUp(email, password) {
     const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) { Sentry.captureException(error, { tags: { operation: 'sign_up' } }); throw error }
+    if (error) {
+      Sentry.captureException(error, {
+        level: 'warning',
+        mechanism: { type: 'generic', handled: true },
+        tags: { operation: 'sign_up' },
+      })
+      throw error
+    }
     return data // data.session è null se la conferma email è richiesta
   }
 
