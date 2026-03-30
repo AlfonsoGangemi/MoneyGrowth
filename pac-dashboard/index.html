@@ -72,10 +72,10 @@
         },
         {
           "@type": "Question",
-          "name": "Posso caricare i miei dati?",
+          "name": "Posso importare i miei dati da un CSV o da un altro strumento?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Sì. Dalla dashboard puoi importare un file JSON precedentemente esportato per ripristinare tutti gli ETF e gli acquisti. Puoi anche esportare l'intero portafoglio in qualsiasi momento come backup."
+            "text": "Sì. Se hai già un file JSON esportato da ETF Lens, puoi reimportarlo direttamente dalla dashboard per ripristinare tutti gli ETF e gli acquisti. Se i tuoi dati sono in formato CSV (export da broker, Excel, Google Sheets), puoi usare la funzione \"Importa da CSV con AI\": genera un prompt pronto da incollare in ChatGPT o Claude, che convertirà il tuo CSV nel formato corretto. Puoi anche esportare l'intero portafoglio in qualsiasi momento come backup JSON."
           }
         }
       ]
@@ -109,6 +109,7 @@
     </script>
   </head>
   <body>
+    <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;">I tuoi ETF, sempre sotto controllo</h1>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

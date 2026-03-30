@@ -393,29 +393,27 @@ export default function LandingPage({ onCTA }) {
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16" itemScope itemType="https://schema.org/FAQPage">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('faq_titolo')}</h2>
         <div className="space-y-2">
           {faqs.map((faq, i) => {
             const isOpen = faqAperta === i
             return (
-              <div key={i} itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+              <div key={i}>
                 <button
                   type="button"
                   onClick={() => setFaqAperta(prev => prev === i ? null : i)}
                   className={`w-full bg-white dark:bg-slate-800 border rounded-xl px-5 py-4 text-left flex items-center justify-between gap-3 transition-colors ${isOpen ? 'border-blue-500/60 rounded-b-none' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
                 >
-                  <span className="text-sm font-medium text-slate-900 dark:text-white" itemProp="name">{faq.q}</span>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white">{faq.q}</span>
                   <IconChevron open={isOpen} />
                 </button>
-                {isOpen && (
-                  <div
-                    className="bg-slate-100/50 dark:bg-slate-800/50 border border-t-0 border-blue-500/60 rounded-b-xl px-5 py-4"
-                    itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"
-                  >
-                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed" itemProp="text">{faq.a}</p>
-                  </div>
-                )}
+                <div
+                  className="bg-slate-100/50 dark:bg-slate-800/50 border border-t-0 border-blue-500/60 rounded-b-xl px-5 overflow-hidden transition-all duration-200"
+                  style={{ maxHeight: isOpen ? '500px' : '0', paddingTop: isOpen ? '1rem' : '0', paddingBottom: isOpen ? '1rem' : '0' }}
+                >
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{faq.a}</p>
+                </div>
               </div>
             )
           })}

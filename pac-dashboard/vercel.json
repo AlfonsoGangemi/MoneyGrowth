@@ -6,6 +6,14 @@
       "main": true
     }
   },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.etflens.app" }],
+      "destination": "https://etflens.app/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/((?!privacy|termini).*)", "destination": "/index.html" }
   ],
