@@ -9,51 +9,105 @@
       <stop offset="55%" stop-color="#34d399"/>
       <stop offset="100%" stop-color="#4ade80"/>
     </linearGradient>
-    <linearGradient id="areaGreen" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.22"/>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a2744"/>
+      <stop offset="100%" stop-color="#111e35"/>
+    </linearGradient>
+    <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.25"/>
       <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="areaBlue" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.15"/>
-      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
-    </linearGradient>
+    <radialGradient id="glowRight" cx="100%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#1e40af" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#1e40af" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
   <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="600" y="0" width="600" height="630" fill="url(#glowRight)"/>
 
-  <!-- Decorative chart — right side -->
-  <path d="M 680,520 C 800,500 950,410 1200,270 L 1200,630 L 680,630 Z" fill="url(#areaGreen)"/>
-  <path d="M 680,520 C 800,510 950,450 1200,350 L 1200,630 L 680,630 Z" fill="url(#areaBlue)"/>
-  <path d="M 680,520 C 800,510 950,450 1200,350" stroke="#3b82f6" stroke-width="2.5" fill="none" opacity="0.7"/>
-  <path d="M 680,520 C 800,500 950,410 1200,270" stroke="#22c55e" stroke-width="2.5" fill="none" opacity="0.7"/>
-  <!-- Dashed baseline -->
-  <line x1="680" y1="520" x2="1200" y2="500" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="8,5"/>
+  <!-- Separator -->
+  <line x1="648" y1="50" x2="648" y2="580" stroke="#1e293b" stroke-width="1"/>
 
-  <!-- Accent bar top-left -->
-  <rect x="80" y="100" width="140" height="4" rx="2" fill="url(#brand)"/>
+  <!-- ── LEFT SIDE ── -->
+  <rect x="80" y="90" width="140" height="4" rx="2" fill="url(#brand)"/>
 
-  <!-- ETF Lens wordmark -->
   <text x="80" y="230" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="96" font-weight="900" letter-spacing="-3" fill="url(#brand)">ETF Lens</text>
 
-  <!-- Tagline -->
-  <text x="80" y="296" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="30" fill="#94a3b8" letter-spacing="-0.5">Tracker gratuito per portafoglio ETF e PAC</text>
+  <text x="80" y="286" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="26" fill="#94a3b8">Tracker gratuito per portafoglio ETF</text>
+  <text x="80" y="318" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="26" fill="#94a3b8">e piano di accumulo (PAC)</text>
 
-  <!-- Sub-tagline -->
-  <text x="80" y="344" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22" fill="#475569">Calcola ROI, CAGR, TWRR · Proietta la crescita futura</text>
+  <text x="80" y="360" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="19" fill="#475569">Calcola ROI · CAGR · TWRR · Proiezioni future</text>
 
-  <!-- Badge: Gratuito -->
-  <rect x="80" y="395" width="140" height="44" rx="22" fill="#0f2027" stroke="#1e3a2f" stroke-width="1"/>
-  <text x="150" y="423" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="18" fill="#4ade80" text-anchor="middle" font-weight="600">✓ Gratuito</text>
+  <!-- Badges -->
+  <rect x="80" y="400" width="140" height="42" rx="21" fill="#0f2027" stroke="#1e3a2f" stroke-width="1"/>
+  <text x="150" y="426" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="16" fill="#4ade80" text-anchor="middle" font-weight="600">&#x2713; Gratuito</text>
 
-  <!-- Badge: Open source -->
-  <rect x="238" y="395" width="168" height="44" rx="22" fill="#0f2027" stroke="#1e3a2f" stroke-width="1"/>
-  <text x="322" y="423" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="18" fill="#4ade80" text-anchor="middle" font-weight="600">✓ Open source</text>
+  <rect x="232" y="400" width="160" height="42" rx="21" fill="#0f2027" stroke="#1e3a2f" stroke-width="1"/>
+  <text x="312" y="426" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="16" fill="#4ade80" text-anchor="middle" font-weight="600">&#x2713; Open source</text>
 
-  <!-- Badge: Dati tuoi -->
-  <rect x="424" y="395" width="150" height="44" rx="22" fill="#0f2027" stroke="#1e3a2f" stroke-width="1"/>
-  <text x="499" y="423" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="18" fill="#4ade80" text-anchor="middle" font-weight="600">✓ Dati tuoi</text>
+  <rect x="404" y="400" width="140" height="42" rx="21" fill="#0f2027" stroke="#1e3a2f" stroke-width="1"/>
+  <text x="474" y="426" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="16" fill="#4ade80" text-anchor="middle" font-weight="600">&#x2713; Dati tuoi</text>
 
   <!-- URL -->
-  <text x="80" y="535" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22" fill="#334155" letter-spacing="0.5">etflens.app</text>
+  <text x="80" y="540" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22" fill="#334155" letter-spacing="0.5">etflens.app</text>
+
+  <!-- ── RIGHT SIDE: Dashboard cards ── -->
+
+  <!-- ROI card: x=668 y=58 w=232 h=118 -->
+  <rect x="668" y="58" width="232" height="118" rx="14" fill="url(#card)" stroke="#1e3a5f" stroke-width="1"/>
+  <text x="688" y="90" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="12" fill="#64748b" font-weight="600" letter-spacing="1">ROI TOTALE</text>
+  <text x="688" y="145" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="46" fill="#4ade80" font-weight="800" letter-spacing="-2">+18,4%</text>
+  <text x="862" y="156" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22" fill="#4ade80">&#x2191;</text>
+
+  <!-- CAGR card: x=912 y=58 w=232 h=118 -->
+  <rect x="912" y="58" width="232" height="118" rx="14" fill="url(#card)" stroke="#1e3a5f" stroke-width="1"/>
+  <text x="932" y="90" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="12" fill="#64748b" font-weight="600" letter-spacing="1">CAGR</text>
+  <text x="932" y="145" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="46" fill="#60a5fa" font-weight="800" letter-spacing="-2">12,3%</text>
+  <text x="1108" y="156" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22" fill="#60a5fa">&#x2191;</text>
+
+  <!-- Portfolio sparkline card: x=668 y=190 w=476 h=148 -->
+  <rect x="668" y="190" width="476" height="148" rx="14" fill="url(#card)" stroke="#1e3a5f" stroke-width="1"/>
+  <text x="688" y="222" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="12" fill="#64748b" font-weight="600" letter-spacing="1">VALORE PORTAFOGLIO</text>
+  <text x="688" y="268" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="36" fill="#f1f5f9" font-weight="700" letter-spacing="-1">&#x20AC; 28.416</text>
+  <text x="688" y="296" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" fill="#4ade80">+18,4% &#xB7; investito &#x20AC; 24.000</text>
+  <!-- Sparkline (right portion of card: x 916-1136, y 216-334) -->
+  <path d="M 916,325 C 942,320 962,310 986,298 S 1032,272 1068,254 S 1114,228 1136,216" stroke="#22c55e" stroke-width="2" fill="none" opacity="0.9"/>
+  <path d="M 916,325 C 942,320 962,310 986,298 S 1032,272 1068,254 S 1114,228 1136,216 L 1136,334 L 916,334 Z" fill="url(#sparkFill)"/>
+
+  <!-- ETF tickers card: x=668 y=352 w=476 h=98 -->
+  <rect x="668" y="352" width="476" height="98" rx="14" fill="url(#card)" stroke="#1e3a5f" stroke-width="1"/>
+  <text x="688" y="382" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="12" fill="#64748b" font-weight="600" letter-spacing="1">ETF TRACCIATI</text>
+
+  <rect x="688" y="393" width="126" height="32" rx="16" fill="#0d1f3c" stroke="#1e3a6e" stroke-width="1"/>
+  <text x="751" y="414" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" fill="#93c5fd" text-anchor="middle" font-weight="600">MSCI World</text>
+
+  <rect x="826" y="393" width="98" height="32" rx="16" fill="#0d1f3c" stroke="#1e3a6e" stroke-width="1"/>
+  <text x="875" y="414" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" fill="#93c5fd" text-anchor="middle" font-weight="600">S&amp;P 500</text>
+
+  <rect x="936" y="393" width="112" height="32" rx="16" fill="#0d1f3c" stroke="#1e3a6e" stroke-width="1"/>
+  <text x="992" y="414" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" fill="#93c5fd" text-anchor="middle" font-weight="600">Nasdaq 100</text>
+
+  <rect x="1060" y="393" width="72" height="32" rx="16" fill="#0d1f3c" stroke="#1e3a6e" stroke-width="1"/>
+  <text x="1096" y="414" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" fill="#93c5fd" text-anchor="middle" font-weight="600">+ altri</text>
+
+  <!-- Scenari di proiezione card: x=668 y=464 w=476 h=100 -->
+  <rect x="668" y="464" width="476" height="100" rx="14" fill="url(#card)" stroke="#1e3a5f" stroke-width="1"/>
+  <text x="688" y="492" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="12" fill="#64748b" font-weight="600" letter-spacing="1">SCENARI DI PROIEZIONE (10 anni)</text>
+  <!-- Column dividers -->
+  <line x1="838" y1="478" x2="838" y2="556" stroke="#1e293b" stroke-width="1"/>
+  <line x1="988" y1="478" x2="988" y2="556" stroke="#1e293b" stroke-width="1"/>
+  <!-- Col 1: Conservativo (center x=753) -->
+  <text x="753" y="516" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Conservativo</text>
+  <text x="753" y="536" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="15" fill="#94a3b8" text-anchor="middle" font-weight="700">+4%/anno</text>
+  <text x="753" y="554" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" fill="#f1f5f9" text-anchor="middle">&#x20AC; 35.520</text>
+  <!-- Col 2: Moderato (center x=913) -->
+  <text x="913" y="516" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="12" fill="#60a5fa" text-anchor="middle">Moderato</text>
+  <text x="913" y="536" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="15" fill="#60a5fa" text-anchor="middle" font-weight="700">+7%/anno</text>
+  <text x="913" y="554" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" fill="#f1f5f9" text-anchor="middle">&#x20AC; 47.220</text>
+  <!-- Col 3: Ottimista (center x=1063) -->
+  <text x="1063" y="516" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="12" fill="#4ade80" text-anchor="middle">Ottimista</text>
+  <text x="1063" y="536" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="15" fill="#4ade80" text-anchor="middle" font-weight="700">+12%/anno</text>
+  <text x="1063" y="554" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" fill="#f1f5f9" text-anchor="middle">&#x20AC; 74.520</text>
 </svg>
