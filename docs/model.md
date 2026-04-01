@@ -21,6 +21,22 @@ create policy "user own" on broker
   for all using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- Asset class (condivisa tra utenti, sola lettura per gli utenti normali)
+create table asset_class (
+  id       uuid    primary key default gen_random_uuid(),
+  nome     text    not null unique,
+  visibile boolean not null default true
+);
+
+insert into asset_class (nome, visibile) values
+  ('Azioni',             true),
+  ('Obbligazioni',       false),
+  ('Materie prime',      false),
+  ('Immobili',           false),
+  ('Mercato monetario',  false),
+  ('Portafogli di ETF',  false),
+  ('Criptovalute',       false);
+
 -- ETF
 create table etf (
   id              uuid primary key default gen_random_uuid(),
@@ -31,6 +47,7 @@ create table etf (
   importo_fisso   numeric not null default 0,
   prezzo_corrente numeric not null default 0,
   archiviato      boolean not null default false,
+  asset_class_id  uuid references asset_class(id) not null,
   created_at      timestamptz default now(),
   constraint etf_user_isin_unique unique (user_id, isin)
 );
@@ -122,6 +139,14 @@ create policy "utente vede i propri config"
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- asset_class: lettura per tutti gli autenticati, scrittura bloccata
+alter table asset_class enable row level security;
+
+create policy "asset_class_select_autenticati"
+  on asset_class for select
+  to authenticated
+  using (true);
+
 -- etf_prezzi_storici: lettura e scrittura per tutti gli utenti autenticati
 alter table etf_prezzi_storici enable row level security;
 
@@ -178,6 +203,28 @@ where b.user_id = p.user_id and b.nome = 'Default'
 ALTER TABLE config DROP COLUMN IF EXISTS mostra_proiezione;
 ```
 
+### Migrazione PAC-96 — aggiunta asset_class
+
+```sql
+-- 1. Crea tabella e seed (vedi Schema SQL sopra)
+
+-- 2. Aggiungi FK nullable, backfill, imposta NOT NULL e default
+ALTER TABLE etf ADD COLUMN asset_class_id uuid REFERENCES asset_class(id);
+
+DO $$
+DECLARE azioni_id uuid;
+BEGIN
+  SELECT id INTO azioni_id FROM asset_class WHERE nome = 'Azioni';
+  UPDATE etf SET asset_class_id = azioni_id WHERE asset_class_id IS NULL;
+  EXECUTE format(
+    'ALTER TABLE etf ALTER COLUMN asset_class_id SET DEFAULT %L::uuid',
+    azioni_id
+  );
+END $$;
+
+ALTER TABLE etf ALTER COLUMN asset_class_id SET NOT NULL;
+```
+
 ### Variabili d'ambiente
 
 ```env
@@ -201,9 +248,20 @@ Il modello rimane invariato rispetto alla struttura originale; il mapping da sna
   "importoFisso": 200,
   "prezzoCorrente": 95.40,
   "archiviato": false,
+  "assetClassId": "uuid",
   "acquisti": []
 }
 ```
+
+### Asset Class
+```json
+{
+  "id": "uuid",
+  "nome": "Azioni",
+  "visibile": true
+}
+```
+Caricata al mount tramite query `WHERE visibile = true`. Usata per popolare il select in fase di inserimento/modifica ETF.
 
 ### Acquisto
 ```json
