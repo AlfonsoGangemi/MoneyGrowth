@@ -1,4 +1,4 @@
-import { indicatoriPortafoglio, calcolaIRR, calcolaTWRR, calcolaATWRR, serieStoricaDaPrezziStorici, calcolaMaxDrawdown, calcolaVolatilita } from '../utils/calcoli'
+import { indicatoriPortafoglio, calcolaIRR, calcolaTWRR, calcolaATWRR, serieStoricaDaPrezziStorici, calcolaMaxDrawdown, calcolaVolatilita, distribuzioneAssetClass } from '../utils/calcoli'
 import { useLocale } from '../hooks/useLocale'
 
 function fmt(n, dec = 2) {
@@ -23,7 +23,7 @@ function Kpi({ label, valore, sub, positivo, neutro }) {
   )
 }
 
-export default function Indicatori({ etfList, prezziStorici = [], privacyMode = false }) {
+export default function Indicatori({ etfList, prezziStorici = [], privacyMode = false, brokerFiltro = [] }) {
   const { t } = useLocale()
   const pv = (f) => privacyMode ? '••••' : f
   if (etfList.length === 0) return null
@@ -127,6 +127,31 @@ export default function Indicatori({ etfList, prezziStorici = [], privacyMode = 
           />
         )}
       </div>
+
+      {/* Distribuzione per asset class */}
+      {(() => {
+        const dist = distribuzioneAssetClass(etfList, brokerFiltro)
+        if (dist.length === 0) return null
+        return (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{t('distribuzione_asset_class')}</h3>
+            <div className="space-y-2">
+              {dist.map(({ nome, percentuale }) => (
+                <div key={nome} className="flex items-center gap-3">
+                  <span className="text-xs text-slate-600 dark:text-slate-400 w-36 shrink-0">{nome}</span>
+                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full transition-all"
+                      style={{ width: `${percentuale}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 w-12 text-right shrink-0">{fmt(percentuale, 1)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

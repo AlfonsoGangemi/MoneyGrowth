@@ -1,10 +1,10 @@
 ---
 id: PAC-96
 title: 'Feature: aggiunta campo asset_class agli strumenti finanziari'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-31 15:07'
-updated_date: '2026-04-01 12:47'
+updated_date: '2026-04-01 22:58'
 labels: []
 milestone: m-1
 dependencies: []

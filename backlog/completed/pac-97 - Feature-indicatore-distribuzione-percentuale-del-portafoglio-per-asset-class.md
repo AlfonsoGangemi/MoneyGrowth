@@ -1,10 +1,10 @@
 ---
 id: PAC-97
 title: 'Feature: indicatore distribuzione percentuale del portafoglio per asset class'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-31 15:12'
-updated_date: '2026-04-01 12:41'
+updated_date: '2026-04-01 22:58'
 labels: []
 milestone: m-1
 dependencies:

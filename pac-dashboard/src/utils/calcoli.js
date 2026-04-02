@@ -438,3 +438,23 @@ export function indicatoriPortafoglio(etfList) {
 
   return { totInvestito, totValore, roi, netto, durataM, cagr, totFee }
 }
+
+export function distribuzioneAssetClass(etfList, brokerFiltro) {
+  const totalePerClasse = new Map()
+  let totale = 0
+  for (const etf of etfList) {
+    const acquistiFiltered = brokerFiltro.length > 0
+      ? etf.acquisti.filter(a => brokerFiltro.includes(a.brokerId))
+      : etf.acquisti
+    const quote = acquistiFiltered.reduce((s, a) => s + a.quoteFrazionate, 0)
+    if (quote === 0) continue
+    const valore = quote * etf.prezzoCorrente
+    const nome = etf.assetClassNome ?? 'Azioni'
+    totalePerClasse.set(nome, (totalePerClasse.get(nome) ?? 0) + valore)
+    totale += valore
+  }
+  if (totale === 0) return []
+  return [...totalePerClasse.entries()]
+    .map(([nome, valore]) => ({ nome, percentuale: Math.round((valore / totale) * 1000) / 10 }))
+    .sort((a, b) => b.percentuale - a.percentuale)
+}

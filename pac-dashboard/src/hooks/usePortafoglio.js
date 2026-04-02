@@ -17,6 +17,7 @@ const defaultState = {
   orizzonteAnni: 10,
   prezziStorici: [],
   storicoPerBroker: [],
+  assetClasses: [],
 }
 
 // ── Mapping DB (snake_case) → JS (camelCase) ──────────────────────
@@ -29,6 +30,7 @@ function mapETF(row) {
     importoFisso: Number(row.importo_fisso),
     prezzoCorrente: Number(row.prezzo_corrente),
     archiviato: row.archiviato,
+    assetClassId: row.asset_class_id ?? null,
     acquisti: (row.acquisti || [])
       .map(mapAcquisto)
       .sort((a, b) => a.data.localeCompare(b.data)),
@@ -106,7 +108,7 @@ export function usePortafoglio(user) {
     if (!user) return
       setLoading(true)
       try {
-        const [etfRes, scenariRes, configRes, brokerRes, storicoRes] = await Promise.all([
+        const [etfRes, scenariRes, configRes, brokerRes, storicoRes, assetClassRes] = await Promise.all([
           supabase
             .from('etf')
             .select('*, acquisti(*)')
@@ -132,12 +134,20 @@ export function usePortafoglio(user) {
             .select('anno, broker_id, valore, totale_versato')
             .eq('user_id', user.id)
             .order('anno'),
+          supabase
+            .from('asset_class')
+            .select('*')
+            .eq('visibile', true)
+            .order('nome'),
         ])
 
         if (etfRes.error) throw etfRes.error
         if (scenariRes.error) throw scenariRes.error
         if (configRes.error) throw configRes.error
         if (brokerRes.error) throw brokerRes.error
+
+        const assetClasses = (assetClassRes.data || []).map(r => ({ id: r.id, nome: r.nome })).sort((a, b) => a.id - b.id)
+        const acMap = new Map(assetClasses.map(ac => [ac.id, ac.nome]))
 
         let scenari = (scenariRes.data || []).map(mapScenario)
 
@@ -164,6 +174,11 @@ export function usePortafoglio(user) {
         }
 
         const etfData = etfRes.data || []
+        const etfMappatiRaw = etfData.map(mapETF)
+        const etfMappatiConAC = etfMappatiRaw.map(e => ({
+          ...e,
+          assetClassNome: e.assetClassId ? (acMap.get(e.assetClassId) ?? null) : null,
+        }))
         const isins = [...new Set(etfData.map(e => e.isin).filter(Boolean))]
         let prezziStorici = []
         if (isins.length > 0) {
@@ -183,7 +198,7 @@ export function usePortafoglio(user) {
         }))
 
         // Backfill: coppie (anno, brokerId) con acquisti ma senza record storico
-        const etfMappati = etfData.map(mapETF)
+        const etfMappati = etfMappatiConAC
         const annoCorrente = new Date().getFullYear()
         const chiaveSalvate = new Set(storicoRaw.map(r => `${r.anno}-${r.brokerId}`))
         const coppie = [...new Map(
@@ -216,6 +231,7 @@ export function usePortafoglio(user) {
           orizzonteAnni: config?.orizzonte_anni ?? 10,
           prezziStorici,
           storicoPerBroker: storicoTutti,
+          assetClasses,
         })
       } catch (e) {
         console.error(e)
@@ -229,7 +245,7 @@ export function usePortafoglio(user) {
   useEffect(() => { caricaDati() }, [caricaDati])
 
   // ── ETF ──────────────────────────────────────────────────────────
-  const aggiungiETF = useCallback(async (nome, isin, emittente, importoFisso) => {
+  const aggiungiETF = useCallback(async (nome, isin, emittente, importoFisso, assetClassId) => {
     if (stato.etf.filter(e => !e.archiviato).length >= 9) return
 
     const { data, error } = await supabase
@@ -242,16 +258,26 @@ export function usePortafoglio(user) {
         importo_fisso: Number(importoFisso),
         prezzo_corrente: 0,
         archiviato: false,
+        asset_class_id: assetClassId || null,
       })
       .select()
       .single()
 
-    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_etf' } }); setErrore('Errore nell\'aggiunta dell\'ETF.'); return }
+    if (error) {
+      Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_etf' } })
+      if (error.code === '23505') return 'ETF già presente nel portafoglio (ISIN duplicato).'
+      return 'Errore nell\'aggiunta dell\'ETF.'
+    }
 
     setStato(s => ({
       ...s,
-      etf: [...s.etf, { ...mapETF(data), acquisti: [] }],
+      etf: [...s.etf, {
+        ...mapETF(data),
+        acquisti: [],
+        assetClassNome: assetClassId ? (s.assetClasses.find(ac => ac.id === assetClassId)?.nome ?? null) : null,
+      }],
     }))
+    return true
   }, [stato.etf.length, user])
 
   const archiviaETF = useCallback(async (etfId) => {
@@ -315,22 +341,33 @@ export function usePortafoglio(user) {
     if ('emittente' in campi)      dbCampi.emittente       = campi.emittente
     if ('importoFisso' in campi)   dbCampi.importo_fisso   = campi.importoFisso
     if ('prezzoCorrente' in campi) dbCampi.prezzo_corrente = campi.prezzoCorrente
+    if ('assetClassId' in campi)   dbCampi.asset_class_id  = campi.assetClassId ?? null
 
     const { error } = await supabase
       .from('etf')
       .update(dbCampi)
       .eq('id', etfId)
 
-    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiorna_etf' } }); setErrore('Errore nell\'aggiornamento dell\'ETF.'); return }
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiorna_etf' } }); return 'Errore nell\'aggiornamento dell\'ETF.' }
 
     if ('prezzoCorrente' in campi) {
       await salvaPrezzoStorico(isin, campi.prezzoCorrente)
     }
 
-    setStato(s => ({
-      ...s,
-      etf: s.etf.map(e => e.id === etfId ? { ...e, ...campi } : e),
-    }))
+    setStato(s => {
+      // eslint-disable-next-line no-unused-vars
+      const { assetClassId: _acId, ...campiStato } = campi
+      const assetClassNome = 'assetClassId' in campi
+        ? (campi.assetClassId ? (s.assetClasses.find(ac => ac.id === campi.assetClassId)?.nome ?? null) : null)
+        : undefined
+      return {
+        ...s,
+        etf: s.etf.map(e => e.id === etfId
+          ? { ...e, ...campiStato, assetClassId: campi.assetClassId ?? e.assetClassId, ...(assetClassNome !== undefined ? { assetClassNome } : {}) }
+          : e),
+      }
+    })
+    return true
   }, [user, salvaPrezzoStorico])
 
   // ── Acquisti ─────────────────────────────────────────────────────
@@ -513,10 +550,12 @@ export function usePortafoglio(user) {
     // eslint-disable-next-line no-unused-vars
     const { prezziStorici, storicoPerBroker, brokerFiltro, mostraProiezione, scenari, ...daEsportare } = stato
 
-    // Aggiungi brokerNome in ogni acquisto per mapping portabile tra account
+    // Aggiungi brokerNome in ogni acquisto e assetClassNome in ogni ETF per mapping portabile
     const brokerMap = new Map(stato.broker.map(b => [b.id, b.nome]))
-    const etfConMeta = daEsportare.etf.map(({ id: _etfId, ...etf }) => ({
+    const acMap = new Map(stato.assetClasses.map(ac => [ac.id, ac.nome]))
+    const etfConMeta = daEsportare.etf.map(({ id: _etfId, assetClassId, ...etf }) => ({
       ...etf,
+      assetClassNome: assetClassId ? (acMap.get(assetClassId) ?? etf.assetClassNome ?? null) : (etf.assetClassNome ?? null),
       acquisti: (etf.acquisti || []).map(({ id: _aId, brokerId, ...a }) => ({
         ...a,
         brokerNome: brokerMap.get(brokerId) ?? null,
@@ -592,6 +631,11 @@ export function usePortafoglio(user) {
             }
           }
 
+          // Carica asset_class per risolvere assetClassNome → asset_class_id
+          const { data: acData } = await supabase
+            .from('asset_class').select('id, nome').eq('visibile', true)
+          const acNomeMap = new Map((acData || []).map(ac => [ac.nome, ac.id]))
+
           // Cancella ETF esistenti (cascade elimina automaticamente gli acquisti)
           const { error: delEtfErr } = await supabase.from('etf').delete().eq('user_id', user.id)
           if (delEtfErr) throw delEtfErr
@@ -603,6 +647,7 @@ export function usePortafoglio(user) {
             for (const etf of data.etf) {
               const archiviato = etf.archiviato || attiviCount >= 9
               if (!archiviato) attiviCount++
+              const assetClassId = etf.assetClassNome ? (acNomeMap.get(etf.assetClassNome) ?? null) : null
               const { data: row, error } = await supabase
                 .from('etf')
                 .insert({
@@ -613,6 +658,7 @@ export function usePortafoglio(user) {
                   importo_fisso:   etf.importoFisso,
                   prezzo_corrente: etf.prezzoCorrente,
                   archiviato,
+                  asset_class_id:  assetClassId,
                 })
                 .select('id, isin')
                 .single()
@@ -675,6 +721,7 @@ export function usePortafoglio(user) {
   return {
     ...stato,
     storicoAnnuale,
+    assetClasses: stato.assetClasses,
     loading,
     errore,
     setErrore,

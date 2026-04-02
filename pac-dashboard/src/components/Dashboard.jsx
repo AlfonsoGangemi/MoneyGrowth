@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import * as Sentry from '@sentry/react'
 import { usePortafoglio } from '../hooks/usePortafoglio'
+import { useETFQuotes } from '../hooks/useETFQuotes'
 import { useLocale } from '../hooks/useLocale'
 import ETFCard from './ETFCard'
 import AcquistoForm from './AcquistoForm'
@@ -79,38 +80,111 @@ function Input({ label, ...props }) {
 
 // ── Modal modifica ETF ─────────────────────────────────────────────
 
-function ModificaETFModal({ etf, onSalva, onChiudi }) {
+function ModificaETFModal({ etf, assetClasses = [], onSalva, onChiudi }) {
   const { t } = useLocale()
   const [nome, setNome] = useState(etf.nome)
   const [emittente, setEmittente] = useState(etf.emittente || '')
   const [importoFisso, setImportoFisso] = useState(String(etf.importoFisso))
   const [prezzoCorrente, setPrezzoCorrente] = useState(String(etf.prezzoCorrente))
+  const [assetClassId, setAssetClassId] = useState(etf.assetClassId || '')
+  const [fetchStato, setFetchStato] = useState('idle') // 'idle' | 'loading' | 'error'
+  const [fetchErrorMsg, setFetchErrorMsg] = useState('')
 
-  function handleSubmit(e) {
+  async function recuperaInfoISIN() {
+    if (!etf.isin) return
+    setFetchStato('loading')
+    setFetchErrorMsg('')
+    try {
+      const res = await fetch(`/api/extraetf-detail?isin=${etf.isin}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      if (data.nome) setNome(data.nome)
+      if (data.emittente) setEmittente(data.emittente)
+      if (data.assetClassNome) {
+        const ac = assetClasses.find(a => a.nome === data.assetClassNome)
+        if (ac) {
+          setAssetClassId(ac.id)
+        } else {
+          setAssetClassId('')
+          const nomi = assetClasses.map(a => a.nome).join(', ')
+          setFetchStato('error')
+          setFetchErrorMsg(`Asset class "${data.assetClassNome}" non presente. Scegli tra: ${nomi || '—'}.`)
+          return
+        }
+      }
+      setFetchStato('idle')
+    } catch (err) {
+      Sentry.captureException(err, { tags: { operation: 'recupera_info_isin', isin: etf.isin } })
+      setFetchStato('error')
+      setFetchErrorMsg(t('etf_fetch_error'))
+      setTimeout(() => setFetchStato('idle'), 3000)
+    }
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!nome.trim()) return
+    if (!assetClassId) {
+      const nomi = assetClasses.map(a => a.nome).join(', ')
+      setFetchErrorMsg(`Seleziona un'asset class. Disponibili: ${nomi || '—'}.`)
+      return
+    }
     const pc = parseFloat(prezzoCorrente.replace(',', '.'))
-    onSalva(etf.id, {
+    const ok = await onSalva(etf.id, {
       nome: nome.trim(),
       emittente: emittente.trim(),
       importoFisso: Number(importoFisso) || 0,
       prezzoCorrente: Number.isFinite(pc) && pc >= 0 ? pc : 0,
+      assetClassId: assetClassId || null,
     })
-    onChiudi()
+    if (ok) onChiudi()
   }
 
   return (
     <Modal titolo={t('modal_modifica_etf')} onChiudi={onChiudi}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* ISIN in sola lettura */}
+        {/* ISIN in sola lettura + CTA recupera info */}
         <div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('label_isin')}</p>
-          <p className="text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/50 rounded-lg px-3 py-2">{etf.isin}</p>
+          <div className="flex items-center gap-2">
+            <p className="flex-1 text-sm font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/50 rounded-lg px-3 py-2">{etf.isin}</p>
+            {etf.isin && (
+              <button
+                type="button"
+                onClick={recuperaInfoISIN}
+                disabled={fetchStato === 'loading'}
+                className="text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
+              >
+                {fetchStato === 'loading'
+                  ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  : t('etf_recupera_info')
+                }
+              </button>
+            )}
+          </div>
+          {fetchStato === 'error' && (
+            <p className="text-xs text-red-400 mt-1">{fetchErrorMsg}</p>
+          )}
         </div>
         <Input label={t('label_nome_etf')} value={nome} onChange={e => setNome(e.target.value)} required />
         <Input label={t('label_emittente')} value={emittente} onChange={e => setEmittente(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
         <Input label={t('label_importo_pac')} type="number" step="0.01" min="0" value={importoFisso} onChange={e => setImportoFisso(e.target.value)} />
         <Input label={t('label_prezzo_corrente_eur')} type="number" step="0.0001" min="0" value={prezzoCorrente} onChange={e => setPrezzoCorrente(e.target.value)} />
+        {assetClasses.length > 0 && (
+          <div>
+            <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('asset_class')}</label>
+            <select
+              value={assetClassId}
+              onChange={e => setAssetClassId(e.target.value)}
+              className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400"
+            >
+              <option value="">—</option>
+              {assetClasses.map(ac => (
+                <option key={ac.id} value={ac.id}>{ac.nome}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex gap-3 pt-2">
           <button type="button" onClick={onChiudi} className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
           <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('salva')}</button>
@@ -308,8 +382,8 @@ function InfoModal({ onChiudi }) {
           </span>
           <div>
             <p className="text-slate-900 dark:text-white font-medium mb-0.5">{t('info_dati_mercato')}</p>
-            <a href="https://www.justetf.com" target="_blank" rel="noopener noreferrer" className={link}>
-              JustETF
+            <a href="https://extraetf.com" target="_blank" rel="noopener noreferrer" className={link}>
+              ExtraETF
             </a>
           </div>
         </div>
@@ -345,6 +419,8 @@ export default function Dashboard({ user, onSignOut }) {
   const [aggErroriIsin, setAggErroriIsin] = useState([])
   const [globalCooldownSec, setGlobalCooldownSec] = useState(0)
   const lastSyncByEtf = useRef({})
+
+  const { liveMap, updateLivePrice } = useETFQuotes(port.etf, user?.id, (id, isin, campi) => port.aggiornaETF(id, isin, campi))
 
   useEffect(() => {
     if (!dropdownAperto) return
@@ -383,6 +459,7 @@ export default function Dashboard({ user, onSignOut }) {
   function handleAggiornaPrezzo(id, prezzo) {
     lastSyncByEtf.current[id] = Date.now()
     const etfItem = port.etf.find(e => e.id === id)
+    if (etfItem?.isin) updateLivePrice(etfItem.isin, prezzo)
     port.aggiornaETF(id, etfItem?.isin, { prezzoCorrente: prezzo })
   }
 
@@ -392,38 +469,35 @@ export default function Dashboard({ user, onSignOut }) {
     if (daAggiornare.length === 0) return
     setAggStato('running')
     setAggErroriIsin([])
-    const ora = Date.now()
-    const SKIP_MS = 30_000
-    const DELAY_MS = 1_500
-    const errori = []
-    for (let i = 0; i < daAggiornare.length; i++) {
-      const etf = daAggiornare[i]
-      if (ora - (lastSyncByEtf.current[etf.id] ?? 0) < SKIP_MS) continue
-      try {
-        const params = new URLSearchParams({ proxyPath: `api/etfs/${etf.isin}/quote`, locale: 'it', currency: 'EUR', isin: etf.isin })
-        const res = await fetch(`/api/justetf-proxy?${params}`)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-        const prezzo = data?.latestQuote?.raw
-        if (!prezzo || isNaN(prezzo) || prezzo <= 0) throw new Error('prezzo non valido')
-        handleAggiornaPrezzo(etf.id, prezzo)
-      } catch (err) {
-        Sentry.captureException(err, { tags: { operation: 'aggiorna_tutti_prezzi', isin: etf.isin } })
-        errori.push(etf.isin)
+    try {
+      const isins = daAggiornare.map(e => e.isin).join(',')
+      const res = await fetch(`/api/extraetf-quotes?isins=${isins}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      const prezzi = data?.prices ?? {}
+      const errori = []
+      for (const etf of daAggiornare) {
+        const prezzo = prezzi[etf.isin]
+        if (prezzo && !isNaN(prezzo) && prezzo > 0) {
+          handleAggiornaPrezzo(etf.id, prezzo)
+        } else {
+          errori.push(etf.isin)
+        }
       }
-      if (i < daAggiornare.length - 1) await new Promise(r => setTimeout(r, DELAY_MS))
+      setAggErroriIsin(errori)
+    } catch (err) {
+      Sentry.captureException(err, { tags: { operation: 'aggiorna_tutti_prezzi' } })
+      setAggErroriIsin(daAggiornare.map(e => e.isin))
     }
-    setAggErroriIsin(errori)
     setAggStato('idle')
     setGlobalCooldownSec(60)
   }
 
   // Form nuovo ETF
-  const [nomeETF, setNomeETF] = useState('')
   const [isinETF, setIsinETF] = useState('')
-  const [emittenteETF, setEmittenteETF] = useState('')
   const [importoETF, setImportoETF] = useState('')
-  const [isinValidazione, setIsinValidazione] = useState('idle') // 'idle' | 'loading' | 'not_found' | 'network_error'
+  const [nuovoETFStato, setNuovoETFStato] = useState('idle') // 'idle' | 'loading' | 'error'
+  const [nuovoETFErrore, setNuovoETFErrore] = useState('')
 
   // Form nuovo scenario
   const [nomeScen, setNomeScen] = useState('')
@@ -467,29 +541,35 @@ export default function Dashboard({ user, onSignOut }) {
 
   async function handleAggiungiETF(e) {
     e.preventDefault()
-    if (!nomeETF.trim()) return
     const isin = isinETF.trim().toUpperCase()
-    if (isin) {
-      setIsinValidazione('loading')
-      try {
-        const params = new URLSearchParams({ proxyPath: `api/etfs/${isin}/quote`, locale: 'it', currency: 'EUR', isin })
-        const res = await fetch(`/api/justetf-proxy?${params}`)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-        if (data.latestQuote === null) {
-          setIsinValidazione('not_found')
-          return
-        }
-        setIsinValidazione('idle')
-      } catch {
-        setIsinValidazione('network_error')
-        // errore di rete: non bloccante, si procede comunque
-      }
+    if (!isin) return
+    setNuovoETFStato('loading')
+    setNuovoETFErrore('')
+    let nome = '', emittente = '', assetClassId = null
+    try {
+      const res = await fetch(`/api/extraetf-detail?isin=${isin}`)
+      if (!res.ok) throw new Error('not_found')
+      const data = await res.json()
+      if (!data.nome) throw new Error('not_found')
+      nome = data.nome
+      emittente = data.emittente || ''
+      const ac = port.assetClasses.find(a => a.nome === data.assetClassNome)
+        ?? port.assetClasses.find(a => a.nome === 'Azioni')
+      if (ac) assetClassId = ac.id
+    } catch {
+      setNuovoETFStato('isin_not_found')
+      setNuovoETFErrore('')
+      return
     }
-    port.aggiungiETF(nomeETF.trim(), isin, emittenteETF.trim(), importoETF || 0)
-    setNomeETF(''); setIsinETF(''); setEmittenteETF(''); setImportoETF('')
-    setIsinValidazione('idle')
-    setModalNuovoETF(false)
+    const result = await port.aggiungiETF(nome, isin, emittente, importoETF || 0, assetClassId)
+    if (result === true) {
+      setIsinETF(''); setImportoETF('')
+      setNuovoETFStato('idle'); setNuovoETFErrore('')
+      setModalNuovoETF(false)
+    } else {
+      setNuovoETFStato('error')
+      setNuovoETFErrore(typeof result === 'string' ? result : t('etf_fetch_error'))
+    }
   }
 
   function handleAggiungiScenario(e) {
@@ -639,7 +719,7 @@ export default function Dashboard({ user, onSignOut }) {
         )}
 
         {/* Indicatori (tutti gli ETF, inclusi archiviati) */}
-        {etfFiltrate.length > 0 && <Indicatori etfList={etfFiltrate} prezziStorici={port.prezziStorici} privacyMode={privacyMode} />}
+        {etfFiltrate.length > 0 && <Indicatori etfList={etfFiltrate} prezziStorici={port.prezziStorici} privacyMode={privacyMode} brokerFiltro={port.brokerFiltro} />}
 
         {/* Grafico (solo ETF attivi) */}
         {etfAttivi.length > 0 && (
@@ -722,6 +802,7 @@ export default function Dashboard({ user, onSignOut }) {
                     brokerAcquisti={brokerPerETF[etf.id] ?? []}
                     attenuata={port.brokerFiltro.length > 0 && etf.acquisti.length === 0}
                     privacyMode={privacyMode}
+                    livePrezzo={liveMap[etf.isin]}
                   />
                 ))}
               </div>
@@ -794,38 +875,26 @@ export default function Dashboard({ user, onSignOut }) {
 
       {/* Modal: nuovo ETF */}
       {modalNuovoETF && (
-        <Modal titolo={t('modal_nuovo_etf')} onChiudi={() => { setModalNuovoETF(false); setIsinValidazione('idle') }}>
+        <Modal titolo={t('modal_nuovo_etf')} onChiudi={() => { setModalNuovoETF(false); setNuovoETFStato('idle'); setNuovoETFErrore('') }}>
           <form onSubmit={handleAggiungiETF} className="space-y-4">
-            <div>
-              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">{t('label_isin')}</label>
-              <div className="relative">
-                <input
-                  className={`w-full bg-slate-100 dark:bg-slate-700 border rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-400 ${isinValidazione === 'not_found' ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}`}
-                  value={isinETF}
-                  onChange={e => { setIsinETF(e.target.value); setIsinValidazione('idle') }}
-                  placeholder="IE00B4L5Y983"
-                />
-                {isinValidazione === 'loading' && (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <svg className="w-4 h-4 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              {isinValidazione === 'not_found' && (
-                <p className="text-xs text-red-400 mt-1">{t('isin_non_trovato')}</p>
-              )}
-              {isinValidazione === 'network_error' && (
-                <p className="text-xs text-amber-400 mt-1">{t('isin_verifica_errore')}</p>
-              )}
-            </div>
-            <Input label={t('label_nome_etf')} value={nomeETF} onChange={e => setNomeETF(e.target.value)} placeholder="iShares Core MSCI World" required />
-            <Input label={t('label_emittente')} value={emittenteETF} onChange={e => setEmittenteETF(e.target.value)} placeholder="iShares, Vanguard, Amundi…" />
+            <Input label={t('label_isin')} value={isinETF} onChange={e => { setIsinETF(e.target.value); setNuovoETFErrore('') }} placeholder="IE00B4L5Y983" />
             <Input label={t('label_importo_pac')} type="number" step="0.01" min="0" value={importoETF} onChange={e => setImportoETF(e.target.value)} placeholder="200" />
+            {nuovoETFStato === 'isin_not_found' && (
+              <p className="text-sm text-red-500 dark:text-red-400">
+                {t('isin_non_trovato')}.{' '}
+                <a href="https://extraetf.com/it/etf-search?product_type=etf" target="_blank" rel="noopener noreferrer" className="underline hover:text-red-400">
+                  Cerca su ExtraETF
+                </a>
+              </p>
+            )}
+            {nuovoETFErrore && nuovoETFStato === 'error' && (
+              <p className="text-sm text-red-500 dark:text-red-400">{nuovoETFErrore}</p>
+            )}
             <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => { setModalNuovoETF(false); setIsinValidazione('idle') }} className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
-              <button type="submit" disabled={isinValidazione === 'loading'} className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-2.5 text-sm font-medium transition-colors">{t('aggiungi')}</button>
+              <button type="button" onClick={() => { setModalNuovoETF(false); setNuovoETFStato('idle'); setNuovoETFErrore('') }} className="flex-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl py-2.5 text-sm transition-colors">{t('annulla')}</button>
+              <button type="submit" disabled={nuovoETFStato === 'loading'} className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">
+                {nuovoETFStato === 'loading' ? '…' : t('aggiungi')}
+              </button>
             </div>
           </form>
         </Modal>
@@ -835,7 +904,8 @@ export default function Dashboard({ user, onSignOut }) {
       {etfDaModificare && (
         <ModificaETFModal
           etf={etfDaModificare}
-          onSalva={(id, campi) => { const etf = port.etf.find(e => e.id === id); port.aggiornaETF(id, etf?.isin, campi) }}
+          assetClasses={port.assetClasses}
+          onSalva={(id, campi) => { const etf = port.etf.find(e => e.id === id); return port.aggiornaETF(id, etf?.isin, campi) }}
           onChiudi={() => setEtfDaModificare(null)}
         />
       )}

@@ -13,6 +13,7 @@
           "importoFisso":   { "type": "number" },
           "prezzoCorrente": { "type": "number" },
           "archiviato":     { "type": "boolean" },
+          "assetClassNome": { "type": "string" },
           "acquisti": {
             "type": "array",
             "items": {

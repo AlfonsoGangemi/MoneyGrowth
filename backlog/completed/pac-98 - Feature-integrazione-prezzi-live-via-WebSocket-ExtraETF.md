@@ -1,10 +1,10 @@
 ---
 id: PAC-98
 title: 'Feature: integrazione prezzi live via WebSocket ExtraETF'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-04-01 08:25'
-updated_date: '2026-04-01 12:41'
+updated_date: '2026-04-01 22:58'
 labels:
   - feature
   - infrastructure

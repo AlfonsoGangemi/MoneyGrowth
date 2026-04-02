@@ -26,7 +26,7 @@ function Badge({ val }) {
 
 const COOLDOWN_MS = 30_000
 
-export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto, archivaDisabilitato, brokerAcquisti = [], attenuata = false, privacyMode = false }) {
+export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo, onRimuoviAcquisto, archivaDisabilitato, brokerAcquisti = [], attenuata = false, privacyMode = false, livePrezzo }) {
   const { t } = useLocale()
   const pv = (f) => privacyMode ? '••••' : f
   const [espanso, setEspanso] = useState(false)
@@ -38,16 +38,14 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
     if (!etf.isin) return
     if (Date.now() - lastSyncAt.current < COOLDOWN_MS) return
     setSyncStato('loading')
-    const params = new URLSearchParams({ proxyPath: `api/etfs/${etf.isin}/quote`, locale: 'it', currency: 'EUR', isin: etf.isin })
-    const url = `/api/justetf-proxy?${params}`
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10_000)
     try {
-      const res = await fetch(url, { signal: controller.signal })
+      const res = await fetch(`/api/extraetf-quotes?isins=${etf.isin}`, { signal: controller.signal })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      const prezzo = data?.latestQuote?.raw
-      if (!prezzo) throw new Error('latestQuote.raw assente')
+      const prezzo = data?.prices?.[etf.isin]
+      if (!prezzo) throw new Error('prezzo assente')
       if (isNaN(prezzo) || prezzo <= 0) throw new Error(`prezzo non valido: ${prezzo}`)
       onAggiornaPrezzo(etf.id, prezzo)
       setSyncStato('idle')
@@ -63,14 +61,15 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
     }
   }
 
-  const inv = totaleInvestito(etf.acquisti)
-  const val = valoreAttuale(etf.acquisti, etf.prezzoCorrente)
-  const roi = calcolaROI(etf.acquisti, etf.prezzoCorrente)
-  const netto = calcolaRendimentoNetto(etf.acquisti, etf.prezzoCorrente)
-  const durataM = calcolaDurataM(etf.acquisti)
-  const cagr = calcolaCAGR(etf.acquisti, etf.prezzoCorrente)
+  const extraEtfUrl = `https://extraetf.com/it/etf-profile/${etf.isin}`
+  const prezzoDisplay = livePrezzo !== undefined ? livePrezzo : etf.prezzoCorrente
 
-  const justEtfUrl = `https://www.justetf.com/it/etf-profile.html?isin=${etf.isin}#panoramica`
+  const inv = totaleInvestito(etf.acquisti)
+  const val = valoreAttuale(etf.acquisti, prezzoDisplay)
+  const roi = calcolaROI(etf.acquisti, prezzoDisplay)
+  const netto = calcolaRendimentoNetto(etf.acquisti, prezzoDisplay)
+  const durataM = calcolaDurataM(etf.acquisti)
+  const cagr = calcolaCAGR(etf.acquisti, prezzoDisplay)
 
   return (
     <div className={`border rounded-2xl p-5 flex flex-col gap-4 ${attenuata ? 'bg-slate-100/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
@@ -81,8 +80,11 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
           {etf.emittente && (
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{etf.emittente}</p>
           )}
+          {etf.assetClassNome && (
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{etf.assetClassNome}</p>
+          )}
           <a
-            href={justEtfUrl}
+            href={extraEtfUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 font-mono transition-colors mt-0.5"
@@ -136,7 +138,10 @@ export default function ETFCard({ etf, onModifica, onArchivia, onAggiornaPrezzo,
         <div>
           <p className="text-xs text-slate-500 dark:text-slate-400">{t('prezzo_corrente')}</p>
           <div className="flex items-center gap-1.5">
-            <p className="text-xl font-semibold text-slate-900 dark:text-white">{pv(`€${fmt(etf.prezzoCorrente)}`)}</p>
+            <p className="text-xl font-semibold text-slate-900 dark:text-white">{pv(`€${fmt(prezzoDisplay)}`)}</p>
+            {livePrezzo !== undefined && (
+              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400">LIVE</span>
+            )}
             <button
               onClick={aggiornaPrezzoAPI}
               disabled={syncStato === 'loading' || !etf.isin || cooldownAttivo}

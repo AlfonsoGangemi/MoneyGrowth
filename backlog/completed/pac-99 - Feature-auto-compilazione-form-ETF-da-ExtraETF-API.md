@@ -1,10 +1,10 @@
 ---
 id: PAC-99
 title: 'Feature: auto-compilazione form ETF da ExtraETF API'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-04-01 09:37'
-updated_date: '2026-04-01 12:41'
+updated_date: '2026-04-01 22:58'
 labels:
   - feature
 milestone: m-1
