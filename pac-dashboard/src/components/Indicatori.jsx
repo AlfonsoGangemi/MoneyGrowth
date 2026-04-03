@@ -1,5 +1,21 @@
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { indicatoriPortafoglio, calcolaIRR, calcolaTWRR, calcolaATWRR, serieStoricaDaPrezziStorici, calcolaMaxDrawdown, calcolaVolatilita, distribuzioneAssetClass } from '../utils/calcoli'
 import { useLocale } from '../hooks/useLocale'
+
+const ETF_PALETTE = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899','#84cc16']
+
+const ASSET_CLASS_COLOR_MAP = {
+  'Azioni':            '#3b82f6',
+  'Obbligazioni':      '#10b981',
+  'Materie prime':     '#f59e0b',
+  'Mercato monetario': '#8b5cf6',
+  'Portafogli di ETF': '#06b6d4',
+  'Immobili':          '#ef4444',
+  'Criptovalute':      '#f97316',
+}
+function assetColor(nome) {
+  return ASSET_CLASS_COLOR_MAP[nome] ?? '#94a3b8'
+}
 
 function fmt(n, dec = 2) {
   return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec })
@@ -128,26 +144,108 @@ export default function Indicatori({ etfList, prezziStorici = [], privacyMode = 
         )}
       </div>
 
-      {/* Distribuzione per asset class */}
+      {/* Distribuzione */}
       {(() => {
-        const dist = distribuzioneAssetClass(etfList, brokerFiltro)
-        if (dist.length === 0) return null
+        const distAC = distribuzioneAssetClass(etfList, brokerFiltro)
+
+        // Distribuzione per ETF (rispetta filtro broker)
+        const totalePerETF = []
+        let totETF = 0
+        for (const etf of etfList) {
+          const acqFiltered = brokerFiltro.length > 0
+            ? etf.acquisti.filter(a => brokerFiltro.includes(a.brokerId))
+            : etf.acquisti
+          const quote = acqFiltered.reduce((s, a) => s + a.quoteFrazionate, 0)
+          if (quote === 0) continue
+          const valore = quote * etf.prezzoCorrente
+          totalePerETF.push({ nome: etf.nome, valore })
+          totETF += valore
+        }
+        const distETF = totETF > 0
+          ? totalePerETF
+              .map(e => ({ nome: e.nome, percentuale: (e.valore / totETF) * 100 }))
+              .sort((a, b) => b.percentuale - a.percentuale)
+          : []
+
+        if (distAC.length === 0 && distETF.length === 0) return null
+
+        const tooltipStyle = {
+          fontSize: '12px',
+          backgroundColor: 'var(--tooltip-bg, #1e293b)',
+          border: '1px solid #334155',
+          borderRadius: '8px',
+          color: '#f1f5f9',
+        }
+
+        function Donut({ data, colorFn }) {
+          return (
+            <div className="w-36 h-36 shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data}
+                    dataKey="percentuale"
+                    nameKey="nome"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={64}
+                    paddingAngle={2}
+                    startAngle={90}
+                    endAngle={-270}
+                  >
+                    {data.map((entry, i) => (
+                      <Cell key={entry.nome} fill={colorFn(entry.nome, i)} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value, name) => [`${fmt(value, 1)}%`, name]}
+                    contentStyle={tooltipStyle}
+                    itemStyle={{ color: '#f1f5f9' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )
+        }
+
         return (
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{t('distribuzione_asset_class')}</h3>
-            <div className="space-y-2">
-              {dist.map(({ nome, percentuale }) => (
-                <div key={nome} className="flex items-center gap-3">
-                  <span className="text-xs text-slate-600 dark:text-slate-400 w-36 shrink-0">{nome}</span>
-                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full transition-all"
-                      style={{ width: `${percentuale}%` }}
-                    />
+          <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-700">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              {distAC.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">{t('distribuzione_asset_class')}</h3>
+                  <div className="flex items-center gap-4">
+                    <Donut data={distAC} colorFn={(nome) => assetColor(nome)} />
+                    <div className="flex-1 space-y-2">
+                      {distAC.map(({ nome, percentuale }) => (
+                        <div key={nome} className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: assetColor(nome) }} />
+                          <span className="text-xs text-slate-600 dark:text-slate-400 flex-1">{nome}</span>
+                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{fmt(percentuale, 1)}%</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 w-12 text-right shrink-0">{fmt(percentuale, 1)}%</span>
                 </div>
-              ))}
+              )}
+              {distETF.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">{t('distribuzione_etf')}</h3>
+                  <div className="flex items-center gap-4">
+                    <Donut data={distETF} colorFn={(_, i) => ETF_PALETTE[i % ETF_PALETTE.length]} />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      {distETF.map(({ nome, percentuale }, i) => (
+                        <div key={nome} className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ETF_PALETTE[i % ETF_PALETTE.length] }} />
+                          <span className="text-xs text-slate-600 dark:text-slate-400 flex-1 min-w-0 truncate" title={nome}>{nome}</span>
+                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{fmt(percentuale, 1)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )

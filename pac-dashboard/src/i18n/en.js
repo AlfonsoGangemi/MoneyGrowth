@@ -172,6 +172,7 @@ export default {
   // --- Indicatori ---
   asset_class: 'Asset class',
   distribuzione_asset_class: 'Asset class breakdown',
+  distribuzione_etf: 'Weight by ETF',
   indicatori_titolo: 'Portfolio indicators',
   roi: 'ROI',
   rendimento_totale: 'Total return',
