@@ -280,6 +280,17 @@ export function usePortafoglio(user) {
     return true
   }, [stato.etf.length, user])
 
+  const eliminaETF = useCallback(async (etfId) => {
+    const etf = stato.etf.find(e => e.id === etfId)
+    if (!etf || !etf.archiviato || etf.acquisti.length > 0) return false
+
+    const { error } = await supabase.from('etf').delete().eq('id', etfId)
+    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'elimina_etf' } }); return false }
+
+    setStato(s => ({ ...s, etf: s.etf.filter(e => e.id !== etfId) }))
+    return true
+  }, [stato.etf, user])
+
   const archiviaETF = useCallback(async (etfId) => {
     const etf = stato.etf.find(e => e.id === etfId)
     if (!etf) return
@@ -726,6 +737,7 @@ export function usePortafoglio(user) {
     errore,
     setErrore,
     aggiungiETF,
+    eliminaETF,
     archiviaETF,
     aggiornaETF,
     aggiungiAcquistiMultipli,

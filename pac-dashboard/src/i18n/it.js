@@ -158,6 +158,8 @@ export default {
   netto: 'Netto',
   etf_modifica_title: 'Modifica ETF',
   etf_archivia_title: 'Archivia ETF',
+  etf_elimina_title: 'Elimina ETF',
+  etf_elimina_conferma: 'Eliminare definitivamente questo ETF? L\'operazione non è reversibile.',
   etf_archivia_limite_title: 'Limite di 9 ETF attivi raggiunto',
   etf_isin_mancante: 'ISIN non impostato',
   etf_cooldown: 'Aggiornato di recente, riprova tra poco',

@@ -420,7 +420,7 @@ export default function Dashboard({ user, onSignOut }) {
   const [globalCooldownSec, setGlobalCooldownSec] = useState(0)
   const lastSyncByEtf = useRef({})
 
-  const { liveMap, updateLivePrice } = useETFQuotes(port.etf, user?.id, (id, isin, campi) => port.aggiornaETF(id, isin, campi))
+  const { liveMap, updateLivePrice, persistPrezzi } = useETFQuotes(port.etf, user?.id, (id, isin, campi) => port.aggiornaETF(id, isin, campi))
 
   useEffect(() => {
     if (!dropdownAperto) return
@@ -456,10 +456,18 @@ export default function Dashboard({ user, onSignOut }) {
     return () => clearTimeout(t)
   }, [globalCooldownSec])
 
-  function handleAggiornaPrezzo(id, prezzo) {
+  function handleEliminaETF(id) {
+    if (!window.confirm(t('etf_elimina_conferma'))) return
+    port.eliminaETF(id)
+  }
+
+  async function handleAggiornaPrezzo(id, prezzo) {
     lastSyncByEtf.current[id] = Date.now()
     const etfItem = port.etf.find(e => e.id === id)
-    if (etfItem?.isin) updateLivePrice(etfItem.isin, prezzo)
+    if (etfItem?.isin) {
+      updateLivePrice(etfItem.isin, prezzo)
+      await persistPrezzi({ [etfItem.isin]: prezzo })
+    }
     port.aggiornaETF(id, etfItem?.isin, { prezzoCorrente: prezzo })
   }
 
@@ -485,6 +493,7 @@ export default function Dashboard({ user, onSignOut }) {
         }
       }
       setAggErroriIsin(errori)
+      await persistPrezzi(prezzi)
     } catch (err) {
       Sentry.captureException(err, { tags: { operation: 'aggiorna_tutti_prezzi' } })
       setAggErroriIsin(daAggiornare.map(e => e.isin))
@@ -797,6 +806,7 @@ export default function Dashboard({ user, onSignOut }) {
                     etf={etf}
                     onModifica={(id) => setEtfDaModificare(port.etf.find(e => e.id === id))}
                     onArchivia={port.archiviaETF}
+                    onElimina={handleEliminaETF}
                     onAggiornaPrezzo={handleAggiornaPrezzo}
                     onRimuoviAcquisto={port.rimuoviAcquisto}
                     brokerAcquisti={brokerPerETF[etf.id] ?? []}
@@ -838,6 +848,7 @@ export default function Dashboard({ user, onSignOut }) {
                             etf={etf}
                             onModifica={(id) => setEtfDaModificare(port.etf.find(e => e.id === id))}
                             onArchivia={port.archiviaETF}
+                            onElimina={handleEliminaETF}
                             onAggiornaPrezzo={handleAggiornaPrezzo}
                             onRimuoviAcquisto={port.rimuoviAcquisto}
                             archivaDisabilitato={limitRaggiunto}

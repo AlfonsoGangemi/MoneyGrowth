@@ -158,6 +158,8 @@ export default {
   netto: 'Net',
   etf_modifica_title: 'Edit ETF',
   etf_archivia_title: 'Archive ETF',
+  etf_elimina_title: 'Delete ETF',
+  etf_elimina_conferma: 'Permanently delete this ETF? This action cannot be undone.',
   etf_archivia_limite_title: 'Limit of 9 active ETFs reached',
   etf_isin_mancante: 'ISIN not set',
   etf_cooldown: 'Updated recently, try again soon',

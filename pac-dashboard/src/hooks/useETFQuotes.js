@@ -58,33 +58,29 @@ export function useETFQuotes(etfList, userId, aggiornaETF) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isinsKey])
 
+  async function persistPrezzi(map) {
+    if (!userId || Object.keys(map).length === 0) return
+    const oggi = new Date()
+    const anno = oggi.getFullYear()
+    const mese = oggi.getMonth() + 1
+    const upserts = Object.entries(map).map(([isin, prezzo]) => ({
+      isin, anno, mese, prezzo: Number(prezzo),
+    }))
+    await supabase
+      .from('etf_prezzi_storici')
+      .upsert(upserts, { onConflict: 'isin,anno,mese' })
+  }
+
   // Persiste prezzi live alla chiusura della sessione
   useEffect(() => {
     if (!userId) return
-
-    async function persistAll() {
-      const map = liveMapRef.current
-      if (Object.keys(map).length === 0) return
-      const oggi = new Date()
-      const anno = oggi.getFullYear()
-      const mese = oggi.getMonth() + 1
-      const upserts = Object.entries(map).map(([isin, prezzo]) => ({
-        isin, anno, mese, prezzo: Number(prezzo),
-      }))
-      if (upserts.length === 0) return
-      await supabase
-        .from('etf_prezzi_storici')
-        .upsert(upserts, { onConflict: 'isin,anno,mese' })
-    }
-
     function onVisibilityChange() {
-      if (document.visibilityState === 'hidden') persistAll()
+      if (document.visibilityState === 'hidden') persistPrezzi(liveMapRef.current)
     }
-
-    window.addEventListener('beforeunload', persistAll)
+    window.addEventListener('beforeunload', () => persistPrezzi(liveMapRef.current))
     document.addEventListener('visibilitychange', onVisibilityChange)
     return () => {
-      window.removeEventListener('beforeunload', persistAll)
+      window.removeEventListener('beforeunload', () => persistPrezzi(liveMapRef.current))
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [userId])
@@ -97,5 +93,5 @@ export function useETFQuotes(etfList, userId, aggiornaETF) {
     })
   }
 
-  return { liveMap, fetchingLive, refetchQuotes: () => fetchQuotes(isinsAttivi), updateLivePrice }
+  return { liveMap, fetchingLive, refetchQuotes: () => fetchQuotes(isinsAttivi), updateLivePrice, persistPrezzi }
 }
