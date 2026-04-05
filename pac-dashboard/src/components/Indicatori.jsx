@@ -21,6 +21,33 @@ function fmt(n, dec = 2) {
   return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec })
 }
 
+function KpiPortafoglio({ totInvestito, totValore, netto, pv, t }) {
+  const positivo = netto >= 0
+  const pctPrincipale = positivo
+    ? (totInvestito / totValore) * 100
+    : (totValore / totInvestito) * 100
+  const pctSecondaria = 100 - pctPrincipale
+
+  return (
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-2">
+      <p className="text-xs text-slate-500 dark:text-slate-400">{t('kpi_portafoglio_label')}</p>
+      <div className="flex items-baseline gap-1.5 flex-wrap">
+        <span className="text-xl font-bold text-slate-900 dark:text-white">{pv(`€${fmt(totValore, 0)}`)}</span>
+        <span className={`text-sm font-semibold ${positivo ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+          {pv(`(${positivo ? '+' : '-'}€${fmt(Math.abs(netto), 0)})`)}
+        </span>
+      </div>
+      <div className="flex h-2 rounded-full overflow-hidden">
+        <div className="bg-blue-500 dark:bg-blue-600 transition-all" style={{ width: `${pctPrincipale}%` }} />
+        <div
+          className={`transition-all ${positivo ? 'bg-green-500 dark:bg-green-400' : 'bg-red-500 dark:bg-red-400'}`}
+          style={{ width: `${pctSecondaria}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
 function Kpi({ label, valore, sub, positivo, neutro }) {
   const color = neutro
     ? 'text-slate-900 dark:text-white'
@@ -89,12 +116,7 @@ export default function Indicatori({ etfList, prezziStorici = [], privacyMode = 
           sub={t('rendimento_totale')}
           positivo={roi >= 0}
         />
-        <Kpi
-          label={t('rendimento_netto')}
-          valore={pv(`${netto >= 0 ? '+' : ''}€${fmt(netto, 0)}`)}
-          sub={pv(`${t('su')} €${fmt(totInvestito, 0)}`) + ` ${t('investiti')}`}
-          positivo={netto >= 0}
-        />
+        <KpiPortafoglio totInvestito={totInvestito} totValore={totValore} netto={netto} pv={pv} t={t} />
         <Kpi
           label="CAGR"
           valore={durataM >= 1 ? `${cagr >= 0 ? '+' : ''}${fmt(cagr)}%` : t('nd')}
@@ -108,11 +130,6 @@ export default function Indicatori({ etfList, prezziStorici = [], privacyMode = 
           positivo={irr != null ? irr >= 0 : null}
         />
         {/* Contesto */}
-        <Kpi
-          label={t('valore_portafoglio')}
-          valore={pv(`€${fmt(totValore, 0)}`)}
-          neutro
-        />
         <Kpi
           label={t('durata')}
           valore={durataStr}
