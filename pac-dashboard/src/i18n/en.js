@@ -41,10 +41,10 @@ export default {
 
   // --- LandingPage ---
   accedi: 'Sign in',
-  inizia_gratis: 'Start for free',
+  inizia_gratis: 'Get started',
   hero_title: 'Your ETF portfolio, always under control',
   hero_sub: 'Track ETF purchases, measure real returns and project the future of your portfolio.',
-  badge_gratuito: 'Free',
+  badge_gratuito: 'Free plan available',
   badge_open_source: 'Open source',
   badge_dati: 'Your data stays yours',
   feat_section_title: 'ETF portfolio and investment plan: how it works',
@@ -233,8 +233,8 @@ export default {
   faq_1_a: 'An ETF (Exchange Traded Fund) is an investment fund traded on a stock exchange that tracks the performance of an index (e.g. MSCI World, S&P 500). It allows portfolio diversification at very low management costs compared to traditional funds.',
   faq_2_q: 'What is a PAC (savings accumulation plan)?',
   faq_2_a: 'A PAC is an investment strategy that involves periodic contributions — monthly or quarterly — into one or more ETFs, regardless of market price. It reduces the impact of volatility through cost averaging.',
-  faq_3_q: 'Is ETF Lens free?',
-  faq_3_a: 'Yes, ETF Lens is completely free and open source. There are no paid plans, ads, or data sales. You can sign up and start tracking your portfolio right away.',
+  faq_3_q: 'Does ETF Lens have a cost?',
+  faq_3_a: 'ETF Lens offers a free plan that includes up to 9 ETFs, 4 brokers, and 100 recorded purchases. For those who want to remove these limits, the Plus plan is available. The source code is and will remain open source. There are no ads or data sales.',
   faq_4_q: 'Is my data secure?',
   faq_4_a: 'Data is stored on Supabase with secure authentication and Row Level Security (RLS): no other user can read your data. You can export or delete it at any time from the dashboard.',
   faq_5_q: 'Why is it important to analyse your ETF portfolio?',

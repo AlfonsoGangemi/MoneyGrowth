@@ -13,7 +13,7 @@ function TerminiIT() {
 
       <section>
         <h2 className="text-slate-900 dark:text-white font-semibold text-base mb-2">2. Descrizione del servizio</h2>
-        <p>ETF Lens è uno strumento gratuito per la gestione e il monitoraggio di un portafoglio ETF multi-broker. Il servizio consente di registrare acquisti, visualizzare rendimenti storici e proiezioni future basate su scenari personalizzabili.</p>
+        <p>ETF Lens è uno strumento per la gestione e il monitoraggio di un portafoglio ETF multi-broker. Il servizio consente di registrare acquisti, visualizzare rendimenti storici e proiezioni future basate su scenari personalizzabili. È disponibile un piano gratuito con alcune limitazioni e un piano Plus per rimuoverle; i dettagli aggiornati sono consultabili nella pagina dei prezzi.</p>
         <p className="mt-2"><strong className="text-slate-700 dark:text-slate-200">ETF Lens non è un servizio di investimento regolamentato.</strong> Non fornisce consulenza finanziaria, raccomandazioni di investimento, gestione patrimoniale né alcun altro servizio soggetto alle norme MiFID II o alla vigilanza di autorità finanziarie (Consob, Banca d'Italia, ESMA). Tutti i dati, i calcoli e le proiezioni hanno esclusivamente scopo informativo e non costituiscono in nessun caso consulenza finanziaria personalizzata.</p>
       </section>
 
@@ -82,7 +82,7 @@ function TerminiEN() {
 
       <section>
         <h2 className="text-slate-900 dark:text-white font-semibold text-base mb-2">2. Description of Service</h2>
-        <p>ETF Lens is a free tool for managing and monitoring a multi-broker ETF portfolio. The service allows you to record purchases, view historical returns, and explore future projections based on customizable scenarios.</p>
+        <p>ETF Lens is a tool for managing and monitoring a multi-broker ETF portfolio. The service allows you to record purchases, view historical returns, and explore future projections based on customizable scenarios. A free plan is available with certain limitations, and a Plus plan is available to remove them; up-to-date details can be found on the pricing page.</p>
         <p className="mt-2"><strong className="text-slate-700 dark:text-slate-200">ETF Lens is not a regulated investment service.</strong> It does not provide financial advice, investment recommendations, asset management, or any other service subject to MiFID II rules or oversight by financial authorities (Consob, Banca d'Italia, ESMA). All data, calculations and projections are for informational purposes only and do not constitute personalized financial advice under any circumstances.</p>
       </section>
 
@@ -158,7 +158,7 @@ export default function Termini() {
       </header>
       <main className="max-w-3xl mx-auto px-4 py-10">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{t('termini_title')}</h1>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mb-8">{lingua === 'it' ? 'Ultimo aggiornamento: 31 marzo 2026' : 'Last updated: March 31, 2026'}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mb-8">{lingua === 'it' ? 'Ultimo aggiornamento: 7 aprile 2026' : 'Last updated: April 7, 2026'}</p>
         {lingua === 'it' ? <TerminiIT /> : <TerminiEN />}
       </main>
     </div>

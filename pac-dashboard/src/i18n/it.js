@@ -41,10 +41,10 @@ export default {
 
   // --- LandingPage ---
   accedi: 'Accedi',
-  inizia_gratis: 'Inizia gratis',
+  inizia_gratis: 'Inizia ora',
   hero_title: 'I tuoi ETF, sempre sotto controllo',
   hero_sub: 'Traccia acquisti ETF, misura i rendimenti reali e proietta il futuro del tuo portafoglio.',
-  badge_gratuito: 'Gratuito',
+  badge_gratuito: 'Piano gratuito disponibile',
   badge_open_source: 'Open source',
   badge_dati: 'I tuoi dati restano tuoi',
   feat_section_title: 'Portafoglio ETF e PAC: come funziona',
@@ -235,8 +235,8 @@ export default {
   faq_2_a: "Un PAC è una strategia di investimento che prevede versamenti periodici — mensili o trimestrali — in uno o più ETF, indipendentemente dal prezzo di mercato. Riduce l'impatto della volatilità grazie al cost averaging.",
   faq_3_q: "Perché è importante analizzare il proprio portafoglio ETF?",
   faq_3_a: "Monitorare il portafoglio permette di capire se stai davvero raggiungendo i tuoi obiettivi finanziari. Senza dati precisi è difficile valutare se il rendimento reale giustifica il rischio, se la diversificazione è adeguata o se è il momento di ribilanciare. Un'analisi regolare aiuta a prendere decisioni consapevoli anziché emotive.",
-  faq_4_q: 'ETF Lens è gratuito?',
-  faq_4_a: 'Sì, ETF Lens è completamente gratuito e open source. Non esistono piani a pagamento, pubblicità o vendita di dati. Puoi registrarti e iniziare a tracciare il tuo portafoglio subito.',
+  faq_4_q: 'ETF Lens ha un costo?',
+  faq_4_a: 'ETF Lens offre un piano gratuito che include fino a 9 ETF, 4 broker e 100 acquisti registrati. Per chi vuole rimuovere questi limiti è disponibile il piano Plus. Il codice sorgente è e rimarrà open source. Non esistono pubblicità né vendita di dati.',
   faq_5_q: 'Posso usare ETF Lens con più broker?',
   faq_5_a: 'Sì. Puoi registrare acquisti da broker diversi — Directa, Fineco, DEGIRO, Scalable Capital, Trading 212 e altri — e visualizzare il portafoglio sia aggregato che separato per broker.',
   faq_6_q: 'I miei dati sono al sicuro?',
