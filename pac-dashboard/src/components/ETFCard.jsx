@@ -149,7 +149,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onElimina, onAggi
         <div>
           <p className="text-xs text-slate-500 dark:text-slate-400">{t('prezzo_corrente')}</p>
           <div className="flex items-center gap-1.5">
-            <p className="text-xl font-semibold text-slate-900 dark:text-white">{pv(`€${fmt(prezzoDisplay)}`)}</p>
+            <p className="text-xl font-semibold text-slate-900 dark:text-white">{`€${fmt(prezzoDisplay)}`}</p>
             {livePrezzo !== undefined && (
               <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400">LIVE</span>
             )}
