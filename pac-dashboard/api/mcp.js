@@ -18,30 +18,30 @@ const adminClient = createClient(
 
 // Lista statica delle funzioni esportate da calcoli.js
 const INDICI = [
-  { nome: 'totaleInvestito',            descrizione: 'Totale capitale investito (importoInvestito + fee)',                                          funzione: 'totaleInvestito(acquisti)' },
-  { nome: 'totaleQuote',                descrizione: 'Totale quote accumulate',                                                                     funzione: 'totaleQuote(acquisti)' },
-  { nome: 'valoreAttuale',              descrizione: 'Valore attuale del portafoglio al prezzo corrente',                                           funzione: 'valoreAttuale(acquisti, prezzoCorrente)' },
-  { nome: 'calcolaROI',                 descrizione: 'ROI percentuale: (valoreAttuale - investito) / investito * 100',                             funzione: 'calcolaROI(acquisti, prezzoCorrente)' },
-  { nome: 'calcolaRendimentoNetto',     descrizione: 'Rendimento netto in €: valoreAttuale - totaleInvestito',                                     funzione: 'calcolaRendimentoNetto(acquisti, prezzoCorrente)' },
-  { nome: 'calcolaDurataM',             descrizione: 'Durata in mesi dal primo acquisto ad oggi',                                                  funzione: 'calcolaDurataM(acquisti)' },
-  { nome: 'calcolaCAGR',                descrizione: 'CAGR: tasso di crescita annuo composto',                                                     funzione: 'calcolaCAGR(acquisti, prezzoCorrente)' },
-  { nome: 'calcolaTWRR',                descrizione: 'TWRR approssimato: rendimento time-weighted per flussi PAC',                                 funzione: 'calcolaTWRR(acquisti, prezzoCorrente)' },
-  { nome: 'calcolaATWRR',               descrizione: 'ATWRR: media geometrica annualizzata del TWRR',                                              funzione: 'calcolaATWRR(acquisti, prezzoCorrente)' },
-  { nome: 'calcolaIRR',                 descrizione: 'XIRR: tasso interno di rendimento per flussi irregolari (Newton-Raphson, annualizzato %)',   funzione: 'calcolaIRR(acquisti, prezzoCorrente)' },
-  { nome: 'serieStorica',               descrizione: 'Serie storica {data, valore} basata sui prezzi di acquisto come proxy NAV',                  funzione: 'serieStorica(acquisti, prezzoCorrente)' },
-  { nome: 'serieStoricaAggregata',      descrizione: 'Serie storica aggregata multi-ETF con timeline unificata e carry-forward',                   funzione: 'serieStoricaAggregata(etfList)' },
-  { nome: 'serieStoricaDaPrezziStorici',descrizione: 'Serie storica mensile da etf_prezzi_storici con fallback a 3 livelli',                       funzione: 'serieStoricaDaPrezziStorici(etfList, prezziStorici)' },
-  { nome: 'calcolaMaxDrawdown',         descrizione: 'Max Drawdown: massima perdita percentuale dal picco (ritorna valore negativo)',               funzione: 'calcolaMaxDrawdown(serie)' },
-  { nome: 'calcolaVolatilita',          descrizione: 'Volatilità mensile annualizzata: std dev rendimenti mensili * sqrt(12)',                      funzione: 'calcolaVolatilita(serie)' },
-  { nome: 'calcolaProiezione',          descrizione: 'Proiezione con capitalizzazione composta mensile (PAC futuro)',                               funzione: 'calcolaProiezione(valoreIniziale, versamentoMensile, rendimentoAnnuo, orizzonteAnni, dataInizio)' },
-  { nome: 'indicatoriPortafoglio',      descrizione: 'Aggregati portafoglio: totInvestito, totValore, roi, netto, durataM, cagr, totFee',          funzione: 'indicatoriPortafoglio(etfList)' },
-  { nome: 'distribuzioneAssetClass',    descrizione: 'Distribuzione percentuale per asset class, ordinata per peso decrescente',                   funzione: 'distribuzioneAssetClass(etfList, brokerFiltro)' },
+  { nome: 'totaleInvestito',            descrizione: 'Total invested capital (importoInvestito + fees)',                                            funzione: 'totaleInvestito(acquisti)' },
+  { nome: 'totaleQuote',                descrizione: 'Total accumulated units/shares',                                                             funzione: 'totaleQuote(acquisti)' },
+  { nome: 'valoreAttuale',              descrizione: 'Current portfolio value at the current price',                                               funzione: 'valoreAttuale(acquisti, prezzoCorrente)' },
+  { nome: 'calcolaROI',                 descrizione: 'ROI percentage: (currentValue - invested) / invested * 100',                                funzione: 'calcolaROI(acquisti, prezzoCorrente)' },
+  { nome: 'calcolaRendimentoNetto',     descrizione: 'Net return in €: currentValue - totalInvested',                                             funzione: 'calcolaRendimentoNetto(acquisti, prezzoCorrente)' },
+  { nome: 'calcolaDurataM',             descrizione: 'Duration in months from the first purchase to today',                                       funzione: 'calcolaDurataM(acquisti)' },
+  { nome: 'calcolaCAGR',                descrizione: 'CAGR: compound annual growth rate',                                                         funzione: 'calcolaCAGR(acquisti, prezzoCorrente)' },
+  { nome: 'calcolaTWRR',                descrizione: 'Approximate TWRR: time-weighted return for PAC cash flows',                                 funzione: 'calcolaTWRR(acquisti, prezzoCorrente)' },
+  { nome: 'calcolaATWRR',               descrizione: 'ATWRR: annualized geometric mean of TWRR',                                                  funzione: 'calcolaATWRR(acquisti, prezzoCorrente)' },
+  { nome: 'calcolaIRR',                 descrizione: 'XIRR: internal rate of return for irregular cash flows (Newton-Raphson, annualized %)',     funzione: 'calcolaIRR(acquisti, prezzoCorrente)' },
+  { nome: 'serieStorica',               descrizione: 'Historical series {date, value} using purchase prices as NAV proxy',                        funzione: 'serieStorica(acquisti, prezzoCorrente)' },
+  { nome: 'serieStoricaAggregata',      descrizione: 'Aggregated multi-ETF historical series with unified timeline and carry-forward',            funzione: 'serieStoricaAggregata(etfList)' },
+  { nome: 'serieStoricaDaPrezziStorici',descrizione: 'Monthly historical series from etf_prezzi_storici with 3-level fallback',                   funzione: 'serieStoricaDaPrezziStorici(etfList, prezziStorici)' },
+  { nome: 'calcolaMaxDrawdown',         descrizione: 'Max Drawdown: maximum percentage loss from peak (returns negative value)',                   funzione: 'calcolaMaxDrawdown(serie)' },
+  { nome: 'calcolaVolatilita',          descrizione: 'Annualized monthly volatility: std dev of monthly returns * sqrt(12)',                      funzione: 'calcolaVolatilita(serie)' },
+  { nome: 'calcolaProiezione',          descrizione: 'Projection with monthly compound interest (future PAC)',                                     funzione: 'calcolaProiezione(valoreIniziale, versamentoMensile, rendimentoAnnuo, orizzonteAnni, dataInizio)' },
+  { nome: 'indicatoriPortafoglio',      descrizione: 'Portfolio aggregates: totInvestito, totValore, roi, netto, durataM, cagr, totFee',          funzione: 'indicatoriPortafoglio(etfList)' },
+  { nome: 'distribuzioneAssetClass',    descrizione: 'Percentage distribution by asset class, sorted by weight descending',                       funzione: 'distribuzioneAssetClass(etfList, brokerFiltro)' },
 ]
 
 function buildMeta() {
   return {
     generated_at: new Date().toISOString(),
-    avviso: 'I prezzi (prezzoCorrente) riflettono l\'ultima sincronizzazione manuale nell\'app. Non sono prezzi di mercato in tempo reale.',
+    avviso: 'Prices (prezzoCorrente) reflect the last manual sync in the app. They are not real-time market prices.',
     archiviati_inclusi: true,
   }
 }
@@ -112,7 +112,7 @@ function buildMcpServer(userId) {
   server.resource(
     'portfolio://broker',
     'broker',
-    { mimeType: 'application/json', description: 'Array dei broker dell\'utente (inclusi archiviati). I prezzi non sono in tempo reale.' },
+    { mimeType: 'application/json', description: 'Array of the user\'s brokers (including archived ones). Prices are not real-time.' },
     async () => {
       if (!userId) throw new Error('userId null')
       const { data } = await adminClient.from('broker').select('*').eq('user_id', userId)
@@ -123,7 +123,7 @@ function buildMcpServer(userId) {
   server.resource(
     'portfolio://indici',
     'indici',
-    { mimeType: 'application/json', description: 'Lista degli indici finanziari calcolabili tramite calcoli.js, con firma e descrizione.' },
+    { mimeType: 'application/json', description: 'List of financial indicators computable via calcoli.js, with function signature and description.' },
     async () => {
       return { contents: [{ uri: 'portfolio://indici', text: JSON.stringify(INDICI) }] }
     }
@@ -132,7 +132,7 @@ function buildMcpServer(userId) {
   server.resource(
     'portfolio://formulas/calcoli',
     'calcoli',
-    { mimeType: 'text/javascript', description: 'Sorgente completo di calcoli.js. I prezzi nei dati non sono in tempo reale.' },
+    { mimeType: 'text/javascript', description: 'Full source of calcoli.js. Prices in the data are not real-time.' },
     async () => {
       return { contents: [{ uri: 'portfolio://formulas/calcoli', text: calcoliSource }] }
     }
@@ -142,7 +142,7 @@ function buildMcpServer(userId) {
 
   server.tool(
     'get_portafoglio',
-    'Restituisce tutti i dati del portafoglio in un unico payload (ETF con acquisti, prezzi storici, scenari, broker, storico annuale). I prezzi non sono in tempo reale.',
+    'Returns all portfolio data in a single payload (ETFs with purchases, historical prices, scenarios, brokers, annual history). Prices are not real-time.',
     async () => {
       if (!userId) throw new Error('userId null')
       const { data: etfs } = await adminClient
@@ -173,8 +173,8 @@ function buildMcpServer(userId) {
 
   server.tool(
     'get_etf',
-    'Restituisce gli ETF dell\'utente (inclusi archiviati). I prezzi non sono in tempo reale. Opzionale: filtra per broker_id.',
-    { brokers: z.array(z.string()).optional().describe('Array di broker ID per filtrare') },
+    'Returns the user\'s ETFs (including archived ones). Prices are not real-time. Optional: filter by broker_id.',
+    { brokers: z.array(z.string()).optional().describe('Array of broker IDs to filter by') },
     async ({ brokers }) => {
       if (!userId) throw new Error('userId null')
       let query = adminClient.from('etf').select('*, acquisti(*)').eq('user_id', userId)
@@ -186,8 +186,8 @@ function buildMcpServer(userId) {
 
   server.tool(
     'get_prezzi_storici',
-    'Restituisce i prezzi storici mensili per un ETF. Verifica che l\'ISIN appartenga all\'utente. I prezzi non sono in tempo reale.',
-    { isin: z.string().describe('ISIN dell\'ETF') },
+    'Returns monthly historical prices for an ETF. Verifies that the ISIN belongs to the user. Prices are not real-time.',
+    { isin: z.string().describe('ETF ISIN') },
     async ({ isin }) => {
       if (!userId) throw new Error('userId null')
       const { data } = await adminClient
@@ -203,11 +203,11 @@ function buildMcpServer(userId) {
 
   server.tool(
     'get_acquisti',
-    'Restituisce gli acquisti dell\'utente. Tutti i parametri sono opzionali: etf_ids filtra per ETF, from/to filtrano per data ISO (inclusivi).',
+    'Returns the user\'s purchases. All parameters are optional: etf_ids filters by ETF, from/to filter by ISO date (inclusive).',
     {
-      etf_ids: z.array(z.string()).optional().describe('Array di ETF ID'),
-      from:    z.string().optional().describe('Data ISO inclusiva (es. 2024-01-01)'),
-      to:      z.string().optional().describe('Data ISO inclusiva (es. 2024-12-31)'),
+      etf_ids: z.array(z.string()).optional().describe('Array of ETF IDs'),
+      from:    z.string().optional().describe('Inclusive ISO date (e.g. 2024-01-01)'),
+      to:      z.string().optional().describe('Inclusive ISO date (e.g. 2024-12-31)'),
     },
     async ({ etf_ids, from, to }) => {
       if (!userId) throw new Error('userId null')
@@ -226,8 +226,8 @@ function buildMcpServer(userId) {
 
   server.tool(
     'get_storico',
-    'Restituisce i dati di portafoglio_storico_annuale dell\'utente. Opzionale: filtra per anno.',
-    { anno: z.number().int().optional().describe('Anno (es. 2024)') },
+    'Returns the user\'s portafoglio_storico_annuale data. Optional: filter by year.',
+    { anno: z.number().int().optional().describe('Year (e.g. 2024)') },
     async ({ anno }) => {
       if (!userId) throw new Error('userId null')
       let query = adminClient
@@ -242,8 +242,8 @@ function buildMcpServer(userId) {
 
   server.tool(
     'get_calcoli',
-    'Restituisce funzioni JS da calcoli.js pronte per essere applicate dall\'LLM. Non esegue calcoli lato server. Opzionale: specifica il nome di una funzione (es. "calcolaCAGR").',
-    { indice: z.string().optional().describe('Nome della funzione (es. "calcolaCAGR", "calcolaTWRR")') },
+    'Returns JS functions from calcoli.js ready to be applied by the LLM. Does not execute calculations server-side. Optional: specify a function name (e.g. "calcolaCAGR").',
+    { indice: z.string().optional().describe('Function name (e.g. "calcolaCAGR", "calcolaTWRR")') },
     async ({ indice }) => {
       if (indice) {
         const fn = extractFunction(calcoliSource, indice)
