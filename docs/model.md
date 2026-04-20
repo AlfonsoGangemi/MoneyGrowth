@@ -104,6 +104,10 @@ create table portafoglio_storico_annuale (
   aggiornato_il  timestamptz default now(),
   unique (user_id, anno, broker_id)
 );
+
+-- Indici aggiuntivi (PAC-112)
+create index on acquisti(user_id, etf_id);
+create index on scenari(user_id);
 ```
 
 ### Row Level Security (RLS)
