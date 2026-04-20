@@ -49,14 +49,15 @@ pac-dashboard/
 
 ## Documentazione di Riferimento
 
-La cartella [`spec/`](spec/) contiene le specifiche dettagliate del progetto:
+La cartella [`docs/`](docs/) contiene le specifiche dettagliate del progetto:
 
 | File | Contenuto |
 |---|---|
-| [`spec/function.md`](spec/function.md) | Funzionalità: gestione ETF, inserimento acquisti, grafico, scenari futuri, indicatori, persistenza |
-| [`spec/model.md`](spec/model.md) | Modello dati: schema SQL Supabase, RLS, variabili d'ambiente, struttura JSON frontend |
-| [`spec/details.md`](spec/details.md) | Dettagli implementativi: flusso autenticazione, comportamento hook `usePortafoglio`, scenari di default |
-| [`spec/deploy.md`](spec/deploy.md) | Deploy su Vercel: build e variabili d'ambiente richieste |
+| [`docs/function.md`](docs/function.md) | Funzionalità: gestione ETF, inserimento acquisti, grafico, scenari futuri, indicatori, persistenza |
+| [`docs/model.md`](docs/model.md) | Modello dati: schema SQL Supabase, RLS, variabili d'ambiente, struttura JSON frontend |
+| [`docs/details.md`](docs/details.md) | Dettagli implementativi: flusso autenticazione, comportamento hook `usePortafoglio`, scenari di default |
+| [`docs/deploy.md`](docs/deploy.md) | Deploy su Vercel: build e variabili d'ambiente richieste |
+| [`docs/mcp.md`](docs/mcp.md) | Layer MCP: architettura, autenticazione API key, risorse e tool esposti, modello di sicurezza |
 
 ---
 
