@@ -1,10 +1,10 @@
 ---
 id: PAC-107
 title: 'Hardening medio: prompt injection, data freshness e CORS sul MCP endpoint'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-04-07 14:21'
-updated_date: '2026-04-20 11:54'
+updated_date: '2026-04-20 12:30'
 labels:
   - security
   - backend
@@ -56,10 +56,10 @@ I client MCP (Claude Desktop, CLI) non sono browser: non inviano preflight OPTIO
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 L'output JSON di get_portfolio include un campo _meta con timestamp ultimo aggiornamento e avviso prezzi non real-time
-- [ ] #2 La description di ogni MCP Tool e Resource menziona esplicitamente che i prezzi non sono real-time
-- [ ] #3 api/mcp.js non contiene alcun header Access-Control-Allow-Origin
-- [ ] #4 I dati ETF sono restituiti come JSON strutturato, nessuna interpolazione di stringhe narrative lato server
+- [x] #1 L'output JSON di get_portfolio include un campo _meta con timestamp ultimo aggiornamento e avviso prezzi non real-time
+- [x] #2 La description di ogni MCP Tool e Resource menziona esplicitamente che i prezzi non sono real-time
+- [x] #3 api/mcp.js non contiene alcun header Access-Control-Allow-Origin
+- [x] #4 I dati ETF sono restituiti come JSON strutturato, nessuna interpolazione di stringhe narrative lato server
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -109,3 +109,9 @@ Non aggiungere mai `res.setHeader('Access-Control-Allow-Origin', ...)` in `api/m
 
 Verifica manuale in code review: un grep su `api/mcp.js` è sufficiente e non va automatizzato (gli altri endpoint ExtraETF usano legittimamente lo stesso header).
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Tutti i vincoli implementati in api/mcp.js: buildMeta() helper con generated_at, avviso prezzi non real-time, archiviati_inclusi:true. Disclaimer nelle description di ogni tool/resource. Output sempre JSON.stringify() via textContent(). Nessun header CORS nell'endpoint.
+<!-- SECTION:FINAL_SUMMARY:END -->

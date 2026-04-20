@@ -3,10 +3,10 @@ id: PAC-106
 title: >-
   Sicurezza alta: JWT verification robusta e ciclo di vita API key (revoca, cap,
   scadenza)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-04-07 14:21'
-updated_date: '2026-04-20 12:10'
+updated_date: '2026-04-20 13:21'
 labels:
   - security
   - backend
@@ -70,11 +70,11 @@ Un utente autenticato potrebbe generare N chiavi senza limite, gonfiando la tabe
 - [x] #2 Endpoint DELETE /api/keys/:keyId esegue hard delete fisico con verifica ownership
 - [x] #3 Un utente non può avere più di 2 chiavi non scadute simultanee (rifiuto con 409)
 - [x] #4 Il lookup chiave filtra solo su expires_at > now() (nessun filtro revoked_at — campo non esiste)
-- [ ] #5 UI mostra lista chiavi con last_used_at, expires_at e pulsante revoca per ciascuna
+- [x] #5 UI mostra lista chiavi con last_used_at, expires_at e pulsante revoca per ciascuna
 <!-- AC:END -->
 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-A1/A3/A4 implementati in `api/keys/generate.js` (JWT via `auth.getUser()`, cap 2 chiavi, cleanup scadute, rate limit 24h). A2 implementato in `api/keys/[keyId].js` (DELETE con ownership check, hard delete fisico, 404 se non trovata). AC #5 (UI) rimane in PAC-110.
+A1/A3/A4 implementati in `api/keys/generate.js` (JWT via `auth.getUser()`, cap 2 chiavi, cleanup scadute, rate limit 24h). A2 implementato in `api/keys/[keyId].js` (DELETE con ownership check, hard delete fisico, 404 se non trovata). AC #5 (UI lista chiavi con last_used_at, expires_at, pulsante revoca) coperto da PAC-110 AC #1.
 <!-- SECTION:FINAL_SUMMARY:END -->

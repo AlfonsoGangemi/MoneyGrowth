@@ -1,10 +1,10 @@
 ---
 id: PAC-112
 title: 'DB: aggiunta indici user_id su acquisti e scenari'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-04-18 15:59'
-updated_date: '2026-04-18 16:13'
+updated_date: '2026-04-20 12:52'
 labels:
   - database
 milestone: m-2
@@ -41,3 +41,9 @@ Da eseguire su Supabase SQL editor.
 - [x] #2 Indice su scenari(user_id) creato in Supabase
 - [x] #3 docs/model.md aggiornato con i due CREATE INDEX nello schema SQL
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Indici creati manualmente su Supabase SQL editor. `docs/model.md` già aggiornato con i due `CREATE INDEX` (righe 109-110). Tutti gli AC soddisfatti.
+<!-- SECTION:FINAL_SUMMARY:END -->
