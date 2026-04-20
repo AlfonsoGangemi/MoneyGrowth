@@ -3,9 +3,10 @@ id: PAC-114
 title: >-
   Sicurezza critica: doppio filtro user_id nel MCP layer — guard null userId
   prima di ogni query
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-04-18 16:18'
+updated_date: '2026-04-20 12:48'
 labels:
   - security
   - backend
@@ -48,7 +49,13 @@ Estratto da PAC-104 (archiviato) — concern C2.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Se api_key non trovata o non valida, l'endpoint ritorna 401 prima di eseguire qualsiasi query Supabase
-- [ ] #2 Ogni query dati in api/mcp.js ha .eq('user_id', userId) hardcoded come primo filtro
-- [ ] #3 Test unitario: lookup chiave fallisce → nessuna query DB eseguita → risposta 401
+- [x] #1 Se api_key non trovata o non valida, l'endpoint ritorna 401 prima di eseguire qualsiasi query Supabase
+- [x] #2 Ogni query dati in api/mcp.js ha .eq('user_id', userId) hardcoded come primo filtro
+- [x] #3 Test unitario: lookup chiave fallisce → nessuna query DB eseguita → risposta 401
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implementato in `pac-dashboard/api/mcp.test.js`. Il test verifica: (1) assenza header → 401, (2) chiave senza prefisso `pac_` → 401, (3) chiave `pac_` non trovata nel DB → 401, (4) metodo non POST → 405. Il lookup DB è mockato per restituire `null`, confermando che nessuna query dati viene eseguita prima del 401. I guard `if (!userId) throw` nei tool/resource di `api/mcp.js` erano già presenti dalla PAC-109.
+<!-- SECTION:FINAL_SUMMARY:END -->

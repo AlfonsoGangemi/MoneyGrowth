@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/mcp.js": {
+      "includeFiles": "src/utils/calcoli.js"
+    }
+  },
   "git": {
     "deploymentEnabled": {
       "ft_*": false,
