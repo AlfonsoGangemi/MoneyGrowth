@@ -652,7 +652,7 @@ export default function Dashboard({ user, onSignOut }) {
                     onClick={() => { setModalApiKey(true); setDropdownAperto(false) }}
                     className="w-full text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2.5 transition-colors"
                   >
-                    Chiavi MCP
+                    {t('dropdown_chiavi_mcp')}
                   </button>
                   <button
                     role="menuitem"

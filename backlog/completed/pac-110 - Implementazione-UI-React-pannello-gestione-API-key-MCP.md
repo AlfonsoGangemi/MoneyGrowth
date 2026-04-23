@@ -1,10 +1,10 @@
 ---
 id: PAC-110
 title: 'Implementazione: UI React pannello gestione API key MCP'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-04-07 14:22'
-updated_date: '2026-04-20 13:39'
+updated_date: '2026-04-21 05:08'
 labels:
   - frontend
 milestone: m-2
@@ -63,11 +63,11 @@ Dopo la generazione, mostrare snippet di configurazione pronto per Claude Deskto
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Il pannello mostra la lista delle chiavi non scadute con created_at, last_used_at, expires_at (query filtrata su expires_at > now(), nessun revoked_at)
-- [ ] #2 La chiave plain viene mostrata una sola volta al momento della generazione con warning visibile e copia-clipboard
-- [ ] #3 La revoca esegue hard delete fisico, richiede conferma esplicita e aggiorna la lista in tempo reale
-- [ ] #4 Viene mostrato lo snippet di configurazione per Claude Desktop con la chiave appena generata
-- [ ] #5 Il pannello non è visibile se l'utente non è autenticato
+- [x] #1 Il pannello mostra la lista delle chiavi non scadute con created_at, last_used_at, expires_at (query filtrata su expires_at > now(), nessun revoked_at)
+- [x] #2 La chiave plain viene mostrata una sola volta al momento della generazione con warning visibile e copia-clipboard
+- [x] #3 La revoca esegue hard delete fisico, richiede conferma esplicita e aggiorna la lista in tempo reale
+- [x] #4 Viene mostrato lo snippet di configurazione per Claude Desktop con la chiave appena generata
+- [x] #5 Il pannello non è visibile se l'utente non è autenticato
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -205,3 +205,9 @@ La lista chiavi usa il client anon direttamente (non l'adminClient). Verificare 
 - La chiave plain (`newKey`) non deve mai essere salvata in localStorage o stato persistente.
 - Il pulsante Revoca non usa modal custom: `window.confirm()` è sufficiente per questa azione.
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implementati `useApiKeys.js` (hook CRUD) e `ApiKeyPanel.jsx` (modal con focus trap, banner chiave one-time, snippet Claude Desktop, lista chiavi con revoca). Integrato in Dashboard.jsx: stato `modalApiKey`, voce "Chiavi MCP" nel dropdown, mount condizionale del panel.
+<!-- SECTION:FINAL_SUMMARY:END -->

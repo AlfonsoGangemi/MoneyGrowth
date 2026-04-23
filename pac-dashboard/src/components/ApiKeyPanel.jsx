@@ -14,40 +14,48 @@ const ASSISTANTS = [
   { id: 'other',       label: 'Other' },
 ]
 
-function getOAuthSnippet(id, t) {
-  const jsonBlock = (obj) => JSON.stringify(obj, null, 2)
-  switch (id) {
-    case 'claude-code':
-      return { note: t('mcp_note_oauth_claude_code'), text: `claude mcp add --transport http etflens ${MCP_URL}` }
-    case 'cursor':
-      return { note: t('mcp_note_cursor'), text: jsonBlock({ mcpServers: { etflens: { url: MCP_URL } } }) }
-    case 'codex':
-      return { note: t('mcp_note_codex'), text: jsonBlock({ mcpServers: { etflens: { type: 'http', url: MCP_URL } } }) }
-    case 'gemini':
-      return { note: t('mcp_note_gemini'), text: jsonBlock({ mcpServers: { etflens: { httpUrl: MCP_URL } } }) }
-    case 'kiro':
-      return { note: t('mcp_note_kiro'), text: jsonBlock({ mcpServers: { etflens: { type: 'http', url: MCP_URL } } }) }
-    default:
-      return { note: t('mcp_note_other_oauth'), text: jsonBlock({ mcpServers: { etflens: { type: 'http', url: MCP_URL } } }) }
+function tomlBlock(obj) {
+  const lines = []
+  function write(node, path) {
+    const entries = Object.entries(node).filter(([, v]) => v !== undefined)
+    const scalars = entries.filter(([, v]) => typeof v !== 'object' || v === null)
+    const objects = entries.filter(([, v]) => typeof v === 'object' && v !== null)
+    if (path && scalars.length > 0) lines.push(`[${path}]`)
+    scalars.forEach(([k, v]) => lines.push(`${k} = ${JSON.stringify(v)}`))
+    objects.forEach(([k, v]) => { if (lines.length > 0) lines.push(''); write(v, path ? `${path}.${k}` : k) })
   }
+  write(obj, '')
+  return lines.join('\n').trimStart()
 }
 
-function getBearerSnippet(id, key, t) {
-  const auth = `Bearer ${key}`
-  const jsonBlock = (obj) => JSON.stringify(obj, null, 2)
+function getSnippet(id, t, key = null) {
+  const auth = key ? `Bearer ${key}` : undefined
+  const headers = auth ? { Authorization: auth } : undefined
+  const mcpJson = (cfg) => JSON.stringify({ mcpServers: { etflens: cfg } }, null, 2)
   switch (id) {
     case 'claude-code':
-      return { note: t('mcp_note_bearer_claude_code'), text: `claude mcp add --transport http etflens ${MCP_URL} --header "Authorization: ${auth}"` }
+      return {
+        note: auth ? t('mcp_note_bearer_claude_code') : t('mcp_note_oauth_claude_code'),
+        text: auth
+          ? `claude mcp add --transport http etflens ${MCP_URL} --header "Authorization: ${auth}"`
+          : `claude mcp add --transport http etflens ${MCP_URL}`,
+      }
     case 'cursor':
-      return { note: t('mcp_note_cursor'), text: jsonBlock({ mcpServers: { etflens: { url: MCP_URL, headers: { Authorization: auth } } } }) }
+      return { note: t('mcp_note_cursor'), text: mcpJson({ url: MCP_URL, ...(headers && { headers }) }) }
     case 'codex':
-      return { note: t('mcp_note_codex'), text: jsonBlock({ mcpServers: { etflens: { type: 'http', url: MCP_URL, headers: { Authorization: auth } } } }) }
+      return {
+        note: t('mcp_note_codex'),
+        text: tomlBlock({ mcp_servers: { etflens: { url: MCP_URL, ...(headers && { http_headers: headers }) } } }),
+      }
     case 'gemini':
-      return { note: t('mcp_note_gemini'), text: jsonBlock({ mcpServers: { etflens: { httpUrl: MCP_URL, headers: { Authorization: auth } } } }) }
+      return { note: t('mcp_note_gemini'), text: mcpJson({ url: MCP_URL, ...(headers && { headers }) }) }
     case 'kiro':
-      return { note: t('mcp_note_kiro'), text: jsonBlock({ mcpServers: { etflens: { type: 'http', url: MCP_URL, headers: { Authorization: auth } } } }) }
+      return { note: t('mcp_note_kiro'), text: mcpJson({ type: 'http', url: MCP_URL, ...(headers && { headers }) }) }
     default:
-      return { note: t('mcp_note_other_bearer'), text: jsonBlock({ mcpServers: { etflens: { type: 'http', url: MCP_URL, headers: { Authorization: auth } } } }) }
+      return {
+        note: auth ? t('mcp_note_other_bearer') : t('mcp_note_other_oauth'),
+        text: mcpJson({ type: 'http', url: MCP_URL, ...(headers && { headers }) }),
+      }
   }
 }
 
@@ -135,8 +143,8 @@ export default function ApiKeyPanel({ onChiudi }) {
     revoke(keyId)
   }
 
-  const oauthSnippet = getOAuthSnippet(assistant, t)
-  const bearerSnippet = newKey ? getBearerSnippet(assistant, newKey, t) : null
+  const oauthSnippet = getSnippet(assistant, t)
+  const bearerSnippet = newKey ? getSnippet(assistant, t, newKey) : null
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
