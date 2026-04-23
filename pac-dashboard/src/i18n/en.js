@@ -255,6 +255,15 @@ export default {
   mcp_note_other_oauth: 'Standard MCP configuration — HTTP transport with automatic OAuth:',
   mcp_note_other_bearer: 'Standard MCP configuration (HTTP transport):',
 
+  // --- OAuth Consent ---
+  oauth_consent_title: 'Authorize portfolio access',
+  oauth_consent_client: 'Application',
+  oauth_scope_label: 'Requested access',
+  oauth_consent_logged_as: 'Signed in as',
+  oauth_authorize_btn: 'Authorize',
+  oauth_authorizing: 'Authorizing…',
+  oauth_error_generic: 'Authorization error. Please try again.',
+
   // --- Termini / Privacy ---
   termini_title: 'Terms of Service',
   privacy_title: 'Privacy Policy',

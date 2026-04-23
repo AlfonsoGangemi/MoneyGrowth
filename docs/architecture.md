@@ -15,14 +15,14 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `api/keys/generate.js` | `POST /api/keys/generate` — genera una Bearer API key `pac_<64hex>`, max 2 attive per utente, TTL 90gg |
 | `api/keys/[keyId].js` | `DELETE /api/keys/:id` — revoca una API key per ID |
 
-### `api/oauth/` — Authorization Server OAuth 2.1 + PKCE _(da implementare, PAC-120)_
+### `api/oauth/` — Authorization Server OAuth 2.1 + PKCE
 
 | File | Responsabilità |
 |---|---|
-| `api/oauth/_lib.js` | Utility condivisa: `adminClient` Supabase, `sha256()`, `redirectUriMatches()` con supporto loopback RFC 8252 |
+| `api/oauth/_lib.js` | Utility condivisa: `adminClient` Supabase, `sha256hex()`, `sha256raw()`, `base64url()`, `redirectUriMatches()` con supporto loopback RFC 8252 |
 | `api/oauth/metadata.js` | `GET /.well-known/oauth-authorization-server` — discovery endpoint RFC 8414 |
-| `api/oauth/authorize.js` | `GET/POST /api/oauth/authorize` — consent page HTML + emissione authorization code PKCE |
-| `api/oauth/token.js` | `POST /api/oauth/token` — scambio code→JWT access token + grant refresh_token |
+| `api/oauth/authorize.js` | `POST /api/oauth/authorize` — validazione consenso + emissione authorization code PKCE. Token Supabase nel body JSON (`access_token`), nessun `Authorization` header |
+| `api/oauth/token.js` | `POST /api/oauth/token` — scambio code→JWT access token (HMAC-SHA256, TTL 1h) + grant `refresh_token` con rotation |
 | `api/oauth/register.js` | `POST /api/oauth/register` — dynamic client registration RFC 7591 |
 
 ---
@@ -38,6 +38,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `TabellaProiezione.jsx` | Tabella scenari: proiezione per orizzonti temporali e rendimenti configurabili |
 | `Indicatori.jsx` | Pannello indicatori finanziari: ROI, CAGR, TWRR, ATWRR, IRR, Drawdown, Volatilità |
 | `ApiKeyPanel.jsx` | Modal gestione API key MCP: OAuth come flusso primario, Bearer key come fallback; snippet per Claude Code, Cursor, Codex CLI, Gemini CLI, Kiro |
+| `OAuthConsent.jsx` | Pagina consenso OAuth 2.1: autenticazione Supabase + POST a `/api/oauth/authorize`; route SPA `/oauth/authorize` |
 | `AuthForm.jsx` | Form login / registrazione con validazione email temporanee (`tempmail.js`) |
 | `LandingPage.jsx` | Homepage pubblica: presentazione funzionalità, CTA registrazione |
 | `ImportExportModal.jsx` | Backup / Ripristino JSON del portafoglio |

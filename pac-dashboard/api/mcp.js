@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'crypto'
+import { jwtVerify } from 'jose'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { join } from 'path'
@@ -83,22 +84,38 @@ function textContent(obj) {
   return { content: [{ type: 'text', text: JSON.stringify(obj) }] }
 }
 
-async function resolveUserIdFromApiKey(apiKey) {
-  if (!apiKey?.startsWith('pac_')) return null
-  const hash = createHash('sha256').update(apiKey).digest('hex')
-  const { data } = await adminClient
-    .from('user_api_keys')
-    .select('user_id, id')
-    .eq('key_hash', hash)
-    .gt('expires_at', new Date().toISOString())
-    .single()
-  if (!data) return null
-  // Aggiorna last_used_at in background (fire-and-forget)
-  adminClient
-    .from('user_api_keys')
-    .update({ last_used_at: new Date().toISOString() })
-    .eq('id', data.id)
-  return data.user_id
+async function resolveUserId(authHeader) {
+  const token = authHeader?.replace('Bearer ', '').trim() ?? ''
+  if (!token) return null
+
+  if (token.startsWith('pac_')) {
+    const hash = createHash('sha256').update(token).digest('hex')
+    const { data } = await adminClient
+      .from('user_api_keys')
+      .select('user_id, id')
+      .eq('key_hash', hash)
+      .gt('expires_at', new Date().toISOString())
+      .single()
+    if (!data) return null
+    // Aggiorna last_used_at in background (fire-and-forget)
+    adminClient
+      .from('user_api_keys')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('id', data.id)
+    return data.user_id
+  }
+
+  try {
+    const secret = new TextEncoder().encode(process.env.OAUTH_JWT_SECRET)
+    const iss = (process.env.VITE_APP_URL ?? 'https://etflens.app').replace(/\/$/, '')
+    const { payload } = await jwtVerify(token, secret, {
+      issuer: iss,
+      audience: 'etflens-mcp',
+    })
+    return payload.sub ?? null
+  } catch {
+    return null
+  }
 }
 
 function buildMcpServer(userId) {
@@ -260,8 +277,7 @@ function buildMcpServer(userId) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  const apiKey = req.headers['authorization']?.replace('Bearer ', '') ?? ''
-  const userId = await resolveUserIdFromApiKey(apiKey)
+  const userId = await resolveUserId(req.headers['authorization'])
   if (!userId) return res.status(401).json({ error: 'Unauthorized' })
 
   const server = buildMcpServer(userId)

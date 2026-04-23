@@ -229,11 +229,135 @@ END $$;
 ALTER TABLE etf ALTER COLUMN asset_class_id SET NOT NULL;
 ```
 
+### Migrazione PAC-122 — funzioni SECURITY DEFINER per schema oauth
+
+Sostituisce l'accesso diretto `adminClient.schema('oauth').from(...)` con RPC via public schema.
+Eseguire dopo aver rimosso `oauth` da `exposed_schemas` in Supabase API settings.
+
+```sql
+-- Permette al service role di eseguire le funzioni
+GRANT USAGE ON SCHEMA oauth TO service_role;
+
+-- 1. Recupera dati client (usata in authorize.js)
+CREATE OR REPLACE FUNCTION public.oauth_get_client(p_client_id text)
+RETURNS TABLE(redirect_uris text[], is_active boolean)
+LANGUAGE sql SECURITY DEFINER SET search_path = oauth
+AS $$
+  SELECT redirect_uris, is_active
+  FROM oauth.clients
+  WHERE client_id = p_client_id;
+$$;
+
+-- 2. Inserisce authorization code (usata in authorize.js)
+CREATE OR REPLACE FUNCTION public.oauth_insert_auth_code(
+  p_code_hash      text,
+  p_client_id      text,
+  p_user_id        uuid,
+  p_redirect_uri   text,
+  p_code_challenge text,
+  p_scope          text,
+  p_expires_at     timestamptz
+)
+RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = oauth
+AS $$
+  INSERT INTO oauth.auth_codes
+    (code_hash, client_id, user_id, redirect_uri, code_challenge, scope, expires_at)
+  VALUES
+    (p_code_hash, p_client_id, p_user_id, p_redirect_uri, p_code_challenge, p_scope, p_expires_at);
+$$;
+
+-- 3. Consuma authorization code (DELETE...RETURNING atomico, usata in token.js)
+CREATE OR REPLACE FUNCTION public.oauth_consume_auth_code(p_code_hash text)
+RETURNS TABLE(
+  code_hash      text,
+  client_id      text,
+  user_id        uuid,
+  redirect_uri   text,
+  code_challenge text,
+  scope          text,
+  expires_at     timestamptz
+)
+LANGUAGE sql SECURITY DEFINER SET search_path = oauth
+AS $$
+  DELETE FROM oauth.auth_codes
+  WHERE code_hash = p_code_hash
+    AND expires_at > now()
+  RETURNING code_hash, client_id, user_id, redirect_uri, code_challenge, scope, expires_at;
+$$;
+
+-- 4. Inserisce refresh token (usata in token.js)
+CREATE OR REPLACE FUNCTION public.oauth_insert_refresh_token(
+  p_token_hash text,
+  p_user_id    uuid,
+  p_client_id  text,
+  p_scope      text,
+  p_expires_at timestamptz
+)
+RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = oauth
+AS $$
+  INSERT INTO oauth.refresh_tokens
+    (token_hash, user_id, client_id, scope, expires_at)
+  VALUES
+    (p_token_hash, p_user_id, p_client_id, p_scope, p_expires_at);
+$$;
+
+-- 5. Rotazione atomica refresh token: elimina il vecchio, inserisce il nuovo (usata in token.js)
+CREATE OR REPLACE FUNCTION public.oauth_rotate_refresh_token(
+  p_old_hash       text,
+  p_new_hash       text,
+  p_new_expires_at timestamptz
+)
+RETURNS TABLE(user_id uuid, client_id text, scope text)
+LANGUAGE sql SECURITY DEFINER SET search_path = oauth
+AS $$
+  WITH deleted AS (
+    DELETE FROM oauth.refresh_tokens
+    WHERE token_hash = p_old_hash
+      AND expires_at > now()
+    RETURNING user_id, client_id, scope
+  ),
+  inserted AS (
+    INSERT INTO oauth.refresh_tokens (token_hash, user_id, client_id, scope, expires_at)
+    SELECT p_new_hash, user_id, client_id, scope, p_new_expires_at
+    FROM deleted
+    RETURNING user_id, client_id, scope
+  )
+  SELECT user_id, client_id, scope FROM inserted;
+$$;
+
+-- 6. Registra nuovo client OAuth (usata in register.js)
+CREATE OR REPLACE FUNCTION public.oauth_register_client(
+  p_client_id     text,
+  p_name          text,
+  p_redirect_uris text[]
+)
+RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = oauth
+AS $$
+  INSERT INTO oauth.clients (client_id, name, redirect_uris, is_active)
+  VALUES (p_client_id, p_name, p_redirect_uris, true);
+$$;
+```
+
+**Step manuale prerequisito:** in Supabase Dashboard → Settings → API → `exposed_schemas`, rimuovere `oauth` dalla lista. Questo blocca l'accesso diretto a `adminClient.schema('oauth')` da qualsiasi client e forza il passaggio dalle funzioni SECURITY DEFINER.
+
+Verifica dopo migrazione:
+```bash
+node --env-file=.env scripts/test-oauth-schema.mjs
+```
+
+---
+
 ### Variabili d'ambiente
 
 ```env
 VITE_SUPABASE_URL=https://<project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_SERVICE_KEY=<service-role-key>    # solo lato server (api/)
+VITE_APP_URL=https://etflens.app           # issuer JWT + base URL endpoint OAuth
+OAUTH_JWT_SECRET=<secret-64-bytes-base64>  # HMAC-SHA256 JWT signing
 ```
 
 ---

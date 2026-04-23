@@ -255,6 +255,15 @@ export default {
   mcp_note_other_oauth: 'Configurazione MCP standard — HTTP transport con OAuth automatico:',
   mcp_note_other_bearer: 'Configurazione MCP standard (HTTP transport):',
 
+  // --- OAuth Consent ---
+  oauth_consent_title: 'Autorizza accesso al portafoglio',
+  oauth_consent_client: 'Applicazione',
+  oauth_scope_label: 'Accesso richiesto',
+  oauth_consent_logged_as: 'Connesso come',
+  oauth_authorize_btn: 'Autorizza',
+  oauth_authorizing: 'Autorizzazione…',
+  oauth_error_generic: 'Errore durante l\'autorizzazione. Riprova.',
+
   // --- Termini / Privacy ---
   termini_title: 'Termini di Servizio',
   privacy_title: 'Privacy Policy',

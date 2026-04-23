@@ -7,11 +7,13 @@ import Dashboard from './components/Dashboard'
 import LandingPage from './components/LandingPage'
 import Termini from './components/Termini'
 import Privacy from './components/Privacy'
+import OAuthConsent from './components/OAuthConsent'
 
 export default function App({ url }) {
   const path = url ?? (typeof window !== 'undefined' ? window.location.pathname : '/')
   if (path === '/termini') return <LocaleProvider><Termini /></LocaleProvider>
   if (path === '/privacy') return <LocaleProvider><Privacy /></LocaleProvider>
+  if (path === '/oauth/authorize') return <ThemeProvider><LocaleProvider><OAuthConsent /></LocaleProvider></ThemeProvider>
 
   return (
     <ThemeProvider>
