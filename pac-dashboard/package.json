@@ -17,6 +17,7 @@
     "@sentry/react": "^10.45.0",
     "@supabase/supabase-js": "^2.97.0",
     "date-fns": "^4.1.0",
+    "jose": "^6.2.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.7.0",
