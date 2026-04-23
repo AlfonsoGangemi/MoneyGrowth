@@ -280,6 +280,11 @@ export default async function handler(req, res) {
   const userId = await resolveUserId(req.headers['authorization'])
   if (!userId) return res.status(401).json({ error: 'Unauthorized' })
 
+  // StreamableHTTPServerTransport requires Accept to include both types.
+  // Force it so any client (curl, Claude Code, Claude Desktop) works without
+  // needing to set the header explicitly.
+  req.headers['accept'] = 'application/json, text/event-stream'
+
   const server = buildMcpServer(userId)
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
   await server.connect(transport)
