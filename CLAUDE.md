@@ -23,6 +23,13 @@ Applicazione web per la gestione e visualizzazione dei rendimenti di un Piano di
 
 ```
 pac-dashboard/
+├── api/
+│   ├── extraetf-quotes.js         # Proxy ExtraETF quotazioni
+│   ├── extraetf-detail.js         # Proxy ExtraETF dettaglio ETF
+│   ├── mcp.js                     # MCP Streamable HTTP server (Vercel serverless)
+│   └── keys/
+│       ├── generate.js            # POST /api/keys/generate — genera API key
+│       └── [keyId].js             # DELETE /api/keys/:id — revoca API key
 ├── public/
 └── src/
     ├── components/
@@ -30,20 +37,71 @@ pac-dashboard/
     │   ├── ETFCard.jsx            # Card riepilogativa per ogni ETF
     │   ├── AcquistoForm.jsx       # Form inserimento acquisto multi-ETF
     │   ├── GraficoPortafoglio.jsx # Grafico storico reale + proiezione scenari
+    │   ├── TabellaProiezione.jsx  # Tabella scenari futuri
     │   ├── Indicatori.jsx         # ROI, CAGR, TWRR, ecc.
-    │   └── AuthForm.jsx           # Login / Registrazione
+    │   ├── ApiKeyPanel.jsx        # Modal gestione API key MCP
+    │   ├── AuthForm.jsx           # Login / Registrazione
+    │   ├── LandingPage.jsx        # Homepage pubblica
+    │   ├── ImportExportModal.jsx  # Backup / Ripristino JSON
+    │   ├── CsvAiModal.jsx         # Import CSV via LLM
+    │   ├── LinguaToggle.jsx       # Selettore lingua IT/EN
+    │   └── ThemeToggle.jsx        # Selettore tema chiaro/scuro
     ├── hooks/
     │   ├── usePortafoglio.js      # Stato globale + CRUD Supabase
-    │   └── useAuth.js             # Sessione utente Supabase
+    │   ├── useAuth.js             # Sessione utente Supabase
+    │   ├── useApiKeys.js          # CRUD API key MCP
+    │   ├── useLocale.jsx          # Contesto lingua + funzione t()
+    │   ├── useTheme.jsx           # Contesto tema
+    │   └── useETFQuotes.js        # Aggiornamento prezzi da ExtraETF
+    ├── i18n/
+    │   ├── it.js                  # Dizionario italiano (lingua di default)
+    │   └── en.js                  # Dizionario inglese
     ├── utils/
     │   ├── calcoli.js             # Tutti i calcoli finanziari
-    │   └── supabase.js            # Client Supabase singleton
+    │   ├── supabase.js            # Client Supabase singleton (anon key)
+    │   └── tempmail.js            # Blocco email temporanee in registrazione
     ├── App.jsx                    # Root: routing auth ↔ dashboard
     └── main.jsx
 ├── index.html
-├── vite.config.js
+├── vite.config.js                 # Vite + plugin api-dev per sviluppo locale
 └── package.json
 ```
+
+---
+
+## Internazionalizzazione (i18n)
+
+L'app supporta italiano e inglese tramite un sistema custom leggero, senza librerie esterne.
+
+### Architettura
+
+| File | Ruolo |
+|---|---|
+| [`src/i18n/it.js`](pac-dashboard/src/i18n/it.js) | Dizionario IT — lingua di default |
+| [`src/i18n/en.js`](pac-dashboard/src/i18n/en.js) | Dizionario EN — stessa struttura chiave per chiave |
+| [`src/hooks/useLocale.jsx`](pac-dashboard/src/hooks/useLocale.jsx) | Context provider + hook `useLocale()` |
+| [`src/components/LinguaToggle.jsx`](pac-dashboard/src/components/LinguaToggle.jsx) | Pulsante IT/EN in navbar |
+
+### Utilizzo nei componenti
+
+```jsx
+import { useLocale } from '../hooks/useLocale'
+
+function MyComponent() {
+  const { t } = useLocale()
+  return <p>{t('chiave_dizionario')}</p>
+}
+```
+
+La funzione `t(key)` cerca prima nel dizionario della lingua corrente, poi in `it` come fallback, poi ritorna la chiave grezza se non trovata.
+
+### Convenzioni per le chiavi
+
+- **Namespace per sezione** con prefisso: `auth_*`, `mcp_*`, `etf_*`, `broker_*`, ecc.
+- Le chiavi sono in italiano descrittivo (`mcp_revoke_confirm`, non `mcp_rc`)
+- Ogni nuova stringa UI **deve** avere la chiave in entrambi i file (`it.js` e `en.js`)
+- I nomi tecnici non traducibili (ISIN, ETF, MCP, OAuth, Bearer) restano invariati in entrambe le lingue
+- La lingua è persistita in `localStorage` con chiave `'lingua'`
 
 ---
 
