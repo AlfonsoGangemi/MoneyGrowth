@@ -1,8 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import it from '../i18n/it'
 import en from '../i18n/en'
+import itFaq from '../i18n/it.faq'
+import enFaq from '../i18n/en.faq'
 
-const dizionari = { it, en }
+const dizionari = {
+  it: { ...it, ...itFaq },
+  en: { ...en, ...enFaq },
+}
 
 const LocaleContext = createContext(null)
 

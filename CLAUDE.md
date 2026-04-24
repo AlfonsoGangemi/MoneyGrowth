@@ -8,55 +8,41 @@ Applicazione web per la gestione e visualizzazione dei rendimenti di un Piano di
 
 ## Stack Tecnologico
 
-- **Framework**: React + Vite
-- **Styling**: Tailwind CSS
-- **Grafici**: Recharts
-- **Date**: date-fns
+- **Framework**: React 19 + Vite 7
+- **Styling**: Tailwind CSS 4
+- **Grafici**: Recharts 3
+- **Date**: date-fns 4
 - **Autenticazione & DB**: Supabase (Auth + PostgreSQL)
 - **Persistenza**: Supabase (cloud, per-utente) + Export/Import JSON
-- **Deploy**: Vercel
+- **Deploy**: Vercel (serverless functions in `api/`)
+- **MCP**: `@modelcontextprotocol/sdk` — layer AI su Vercel serverless
+- **OAuth/JWT**: `jose` — firma e verifica JWT access token (HMAC-SHA256)
+- **Error monitoring**: Sentry (`@sentry/react`, opzionale)
+- **i18n**: sistema custom leggero (nessuna libreria esterna) — vedi `docs/i18n.md`
+- **Test**: Vitest + `@vitest/coverage-v8`
 - **Task Manager**: Backlog.md (via MCP)
 
 ---
 
 ## Struttura del Progetto
 
-```
-pac-dashboard/
-├── public/
-└── src/
-    ├── components/
-    │   ├── Dashboard.jsx          # Vista principale, layout generale
-    │   ├── ETFCard.jsx            # Card riepilogativa per ogni ETF
-    │   ├── AcquistoForm.jsx       # Form inserimento acquisto multi-ETF
-    │   ├── GraficoPortafoglio.jsx # Grafico storico reale + proiezione scenari
-    │   ├── Indicatori.jsx         # ROI, CAGR, TWRR, ecc.
-    │   └── AuthForm.jsx           # Login / Registrazione
-    ├── hooks/
-    │   ├── usePortafoglio.js      # Stato globale + CRUD Supabase
-    │   └── useAuth.js             # Sessione utente Supabase
-    ├── utils/
-    │   ├── calcoli.js             # Tutti i calcoli finanziari
-    │   └── supabase.js            # Client Supabase singleton
-    ├── App.jsx                    # Root: routing auth ↔ dashboard
-    └── main.jsx
-├── index.html
-├── vite.config.js
-└── package.json
-```
+Leggi [`docs/architecture.md`](docs/architecture.md) per la struttura completa e la descrizione di ogni file.
+
+> **Regola:** ogni volta che crei, sposti o elimini un file, aggiorna la tabella corrispondente in `docs/architecture.md`.
+
+---
+
+## Internazionalizzazione (i18n)
+
+Leggi [`docs/i18n.md`](docs/i18n.md) per architettura, utilizzo e convenzioni delle chiavi.
 
 ---
 
 ## Documentazione di Riferimento
 
-La cartella [`spec/`](spec/) contiene le specifiche dettagliate del progetto:
+L'indice completo e aggiornato si trova in [`docs/README.md`](docs/README.md).
 
-| File | Contenuto |
-|---|---|
-| [`spec/function.md`](spec/function.md) | Funzionalità: gestione ETF, inserimento acquisti, grafico, scenari futuri, indicatori, persistenza |
-| [`spec/model.md`](spec/model.md) | Modello dati: schema SQL Supabase, RLS, variabili d'ambiente, struttura JSON frontend |
-| [`spec/details.md`](spec/details.md) | Dettagli implementativi: flusso autenticazione, comportamento hook `usePortafoglio`, scenari di default |
-| [`spec/deploy.md`](spec/deploy.md) | Deploy su Vercel: build e variabili d'ambiente richieste |
+> **Regola:** ogni modifica architetturale (nuovi endpoint, cambio schema DB, nuove variabili d'ambiente, nuovi componenti o hook) deve essere riflessa nel documento pertinente in `docs/` **e** nell'indice `docs/README.md` prima di chiudere il task.
 
 ---
 

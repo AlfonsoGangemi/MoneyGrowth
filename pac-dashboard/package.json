@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr src/entry-server.jsx && node scripts/prerender.mjs",
+    "build": "vite build && vite build --ssr src/entry-server.jsx && node scripts/prerender.mjs && node scripts/check-secrets.mjs --bundle",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
@@ -13,9 +13,11 @@
     "generate-og": "node scripts/generate-og.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@sentry/react": "^10.45.0",
     "@supabase/supabase-js": "^2.97.0",
     "date-fns": "^4.1.0",
+    "jose": "^6.2.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.7.0",
@@ -34,6 +36,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "sharp": "^0.34.5",
+    "supabase": "^2.95.0",
     "tailwindcss": "^4.1.18",
     "vite": "^7.3.1",
     "vitest": "^4.1.0"

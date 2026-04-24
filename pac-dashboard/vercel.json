@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/mcp.js": {
+      "includeFiles": "src/utils/calcoli.js"
+    }
+  },
   "git": {
     "deploymentEnabled": {
       "ft_*": false,
@@ -15,6 +20,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/.well-known/oauth-authorization-server", "destination": "/api/oauth/metadata" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

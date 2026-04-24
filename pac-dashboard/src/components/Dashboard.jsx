@@ -11,6 +11,7 @@ import TabellaProiezione from './TabellaProiezione'
 import LinguaToggle from './LinguaToggle'
 import ThemeToggle from './ThemeToggle'
 import ImportExportModal from './ImportExportModal'
+import ApiKeyPanel from './ApiKeyPanel'
 
 // ── Componenti base ────────────────────────────────────────────────
 
@@ -413,6 +414,7 @@ export default function Dashboard({ user, onSignOut }) {
   const [modalGestoreBroker, setModalGestoreBroker] = useState(false)
   const [privacyMode, setPrivacyMode] = useState(() => localStorage.getItem('privacyMode') === 'true')
   const [modalCrediti, setModalCrediti] = useState(false)
+  const [modalApiKey, setModalApiKey] = useState(false)
   const [dropdownAperto, setDropdownAperto] = useState(false)
   const dropdownRef = useRef(null)
   const [aggStato, setAggStato] = useState('idle') // 'idle' | 'running'
@@ -644,6 +646,13 @@ export default function Dashboard({ user, onSignOut }) {
                     className="w-full text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2.5 transition-colors"
                   >
                     {t('dropdown_import_export')}
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => { setModalApiKey(true); setDropdownAperto(false) }}
+                    className="w-full text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2.5 transition-colors"
+                  >
+                    {t('dropdown_chiavi_mcp')}
                   </button>
                   <button
                     role="menuitem"
@@ -954,6 +963,7 @@ export default function Dashboard({ user, onSignOut }) {
 
       {/* Modal: informazioni */}
       {modalCrediti && <InfoModal onChiudi={() => setModalCrediti(false)} />}
+      {modalApiKey && <ApiKeyPanel onChiudi={() => setModalApiKey(false)} />}
 
       {/* Modal: nuovo scenario */}
       {modalScenario && (
