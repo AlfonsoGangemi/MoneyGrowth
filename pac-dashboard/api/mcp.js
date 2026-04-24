@@ -275,7 +275,7 @@ function buildMcpServer(userId) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end()
+  if (!['GET', 'POST', 'DELETE'].includes(req.method)) return res.status(405).end()
 
   const userId = await resolveUserId(req.headers['authorization'])
   if (!userId) return res.status(401).json({ error: 'Unauthorized' })
