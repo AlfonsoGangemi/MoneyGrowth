@@ -83,6 +83,18 @@ export default {
   footer_termini: 'Termini di Servizio',
   footer_github: 'GitHub',
 
+  // --- Sezione AI (Landing) ---
+  ai_section_title: 'Parla con i tuoi dati in linguaggio naturale',
+  ai_section_sub: 'Connetti ETF Lens a ChatGPT, Claude o Gemini e ottieni analisi immediate del tuo portafoglio — senza formule, senza fogli di calcolo.',
+  ai_how_step1: 'Genera una API key dal pannello Impostazioni',
+  ai_how_step2: 'Aggiungi ETF Lens al tuo client AI preferito',
+  ai_privacy: "I tuoi dati restano nel tuo account — l'assistente AI non può accedere ad altri portafogli.",
+  ai_cta: 'Connetti il portafoglio →',
+  ai_q1: 'Qual è il mio CAGR negli ultimi 3 anni?',
+  ai_q2: "Quale ETF ha performato meglio dall'inizio del PAC?",
+  ai_q3: 'Quanto ho versato in totale per broker?',
+  ai_q4: 'Con €300 al mese, quanto varrà il portafoglio tra 10 anni?',
+
   // --- Dashboard ---
   nav_title: 'ETF Lens',
   nav_mostra_importi: 'Mostra importi',
@@ -267,21 +279,4 @@ export default {
   // --- Termini / Privacy ---
   termini_title: 'Termini di Servizio',
   privacy_title: 'Privacy Policy',
-
-  // --- FAQ Landing ---
-  faq_titolo: 'Domande frequenti',
-  faq_1_q: "Cos'è un ETF?",
-  faq_1_a: "Un ETF (Exchange Traded Fund) è un fondo di investimento quotato in borsa che replica l'andamento di un indice (es. MSCI World, S&P 500). Permette di diversificare il portafoglio con costi di gestione molto ridotti rispetto ai fondi tradizionali.",
-  faq_2_q: "Cos'è un PAC (Piano di Accumulo Capitale)?",
-  faq_2_a: "Un PAC è una strategia di investimento che prevede versamenti periodici — mensili o trimestrali — in uno o più ETF, indipendentemente dal prezzo di mercato. Riduce l'impatto della volatilità grazie al cost averaging.",
-  faq_3_q: "Perché è importante analizzare il proprio portafoglio ETF?",
-  faq_3_a: "Monitorare il portafoglio permette di capire se stai davvero raggiungendo i tuoi obiettivi finanziari. Senza dati precisi è difficile valutare se il rendimento reale giustifica il rischio, se la diversificazione è adeguata o se è il momento di ribilanciare. Un'analisi regolare aiuta a prendere decisioni consapevoli anziché emotive.",
-  faq_4_q: 'ETF Lens ha un costo?',
-  faq_4_a: 'ETF Lens offre un piano gratuito che include fino a 9 ETF, 4 broker e 100 acquisti registrati. Per chi vuole rimuovere questi limiti è disponibile il piano Plus. Il codice sorgente è e rimarrà open source. Non esistono pubblicità né vendita di dati.',
-  faq_5_q: 'Posso usare ETF Lens con più broker?',
-  faq_5_a: 'Sì. Puoi registrare acquisti da broker diversi — Directa, Fineco, DEGIRO, Scalable Capital, Trading 212 e altri — e visualizzare il portafoglio sia aggregato che separato per broker.',
-  faq_6_q: 'I miei dati sono al sicuro?',
-  faq_6_a: "I dati sono archiviati su Supabase con autenticazione sicura e Row Level Security (RLS): nessun altro utente può leggere i tuoi dati. Puoi esportarli o cancellarli in qualsiasi momento dalla dashboard.",
-  faq_7_q: 'Posso importare i miei dati da un CSV o da un altro strumento?',
-  faq_7_a: "Sì. Se hai già un file JSON esportato da ETF Lens, puoi reimportarlo direttamente dalla dashboard per ripristinare tutti gli ETF e gli acquisti. Se i tuoi dati sono in formato CSV (export da broker, Excel, Google Sheets), puoi usare la funzione \"Importa da CSV con AI\": genera un prompt pronto da incollare in ChatGPT o Claude, che convertirà il tuo CSV nel formato corretto. Puoi anche esportare l'intero portafoglio in qualsiasi momento come backup JSON.",
 }

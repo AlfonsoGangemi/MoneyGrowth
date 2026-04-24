@@ -287,6 +287,11 @@ export default function LandingPage({ onCTA }) {
     { q: t('faq_5_q'), a: t('faq_5_a') },
     { q: t('faq_6_q'), a: t('faq_6_a') },
     { q: t('faq_7_q'), a: t('faq_7_a') },
+    { q: t('faq_8_q'), a: t('faq_8_a') },
+    { q: t('faq_9_q'), a: t('faq_9_a') },
+    { q: t('faq_10_q'), a: t('faq_10_a') },
+    { q: t('faq_11_q'), a: t('faq_11_a') },
+    { q: t('faq_12_q'), a: t('faq_12_a') },
   ]
 
   return (
@@ -392,6 +397,67 @@ export default function LandingPage({ onCTA }) {
         </div>
       </section>
 
+      {/* ── AI / Assistenti ───────────────────────────────────── */}
+      <section className="bg-slate-100 dark:bg-slate-950 py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+
+            {/* Colonna sinistra: testo */}
+            <div>
+              {/* Icone AI brand */}
+              <img
+                src="/AI_Agents_hot.png"
+                alt="ChatGPT, Claude e altri assistenti AI"
+                className="h-12 mb-6 drop-shadow-md"
+              />
+
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4 leading-snug">
+                {t('ai_section_title')}
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+                {t('ai_section_sub')}
+              </p>
+
+              <ol className="space-y-4 mb-8">
+                {[t('ai_how_step1'), t('ai_how_step2')].map((step, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">
+                      {i + 1}
+                    </span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{step}</span>
+                  </li>
+                ))}
+              </ol>
+
+              <p className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-500 mb-8">
+                <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                {t('ai_privacy')}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => onCTA('register')}
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm shadow-md"
+              >
+                {t('ai_cta')}
+              </button>
+            </div>
+
+            {/* Colonna destra: chat bubbles */}
+            <div className="flex flex-col gap-3">
+              {['ai_q1', 'ai_q2', 'ai_q3', 'ai_q4'].map((key) => (
+                <div key={key} className="flex justify-end">
+                  <div className="bg-blue-600 text-white text-sm px-4 py-3 rounded-2xl rounded-tr-sm max-w-xs shadow-md leading-snug">
+                    {t(key)}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* ── FAQ ───────────────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('faq_titolo')}</h2>
@@ -410,9 +476,9 @@ export default function LandingPage({ onCTA }) {
                 </button>
                 <div
                   className="bg-slate-100/50 dark:bg-slate-800/50 border border-t-0 border-blue-500/60 rounded-b-xl px-5 overflow-hidden transition-all duration-200"
-                  style={{ maxHeight: isOpen ? '500px' : '0', paddingTop: isOpen ? '1rem' : '0', paddingBottom: isOpen ? '1rem' : '0' }}
+                  style={{ maxHeight: isOpen ? '1000px' : '0', paddingTop: isOpen ? '1rem' : '0', paddingBottom: isOpen ? '1rem' : '0' }}
                 >
-                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{faq.a}</p>
+                  <div className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: faq.a }} />
                 </div>
               </div>
             )

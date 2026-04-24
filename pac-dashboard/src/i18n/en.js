@@ -83,6 +83,18 @@ export default {
   footer_termini: 'Terms of Service',
   footer_github: 'GitHub',
 
+  // --- AI section (Landing) ---
+  ai_section_title: 'Talk to your data in plain language',
+  ai_section_sub: 'Connect ETF Lens to ChatGPT, Claude or Gemini and get instant portfolio analysis — no formulas, no spreadsheets.',
+  ai_how_step1: 'Generate an API key from the Settings panel',
+  ai_how_step2: 'Add ETF Lens to your preferred AI client',
+  ai_privacy: 'Your data stays in your account — the AI assistant cannot access other portfolios.',
+  ai_cta: 'Connect your portfolio →',
+  ai_q1: 'What is my CAGR over the last 3 years?',
+  ai_q2: 'Which ETF has performed best since the start of my PAC?',
+  ai_q3: 'How much have I invested in total per broker?',
+  ai_q4: 'With €300/month, what will my portfolio be worth in 10 years?',
+
   // --- Dashboard ---
   nav_title: 'ETF Lens',
   nav_mostra_importi: 'Show amounts',
@@ -267,21 +279,4 @@ export default {
   // --- Termini / Privacy ---
   termini_title: 'Terms of Service',
   privacy_title: 'Privacy Policy',
-
-  // --- FAQ Landing ---
-  faq_titolo: 'Frequently asked questions',
-  faq_1_q: 'What is an ETF?',
-  faq_1_a: 'An ETF (Exchange Traded Fund) is an investment fund traded on a stock exchange that tracks the performance of an index (e.g. MSCI World, S&P 500). It allows portfolio diversification at very low management costs compared to traditional funds.',
-  faq_2_q: 'What is a PAC (savings accumulation plan)?',
-  faq_2_a: 'A PAC is an investment strategy that involves periodic contributions — monthly or quarterly — into one or more ETFs, regardless of market price. It reduces the impact of volatility through cost averaging.',
-  faq_3_q: 'Does ETF Lens have a cost?',
-  faq_3_a: 'ETF Lens offers a free plan that includes up to 9 ETFs, 4 brokers, and 100 recorded purchases. For those who want to remove these limits, the Plus plan is available. The source code is and will remain open source. There are no ads or data sales.',
-  faq_4_q: 'Is my data secure?',
-  faq_4_a: 'Data is stored on Supabase with secure authentication and Row Level Security (RLS): no other user can read your data. You can export or delete it at any time from the dashboard.',
-  faq_5_q: 'Why is it important to analyse your ETF portfolio?',
-  faq_5_a: "Monitoring your portfolio helps you understand whether you are truly on track to meet your financial goals. Without accurate data it is hard to assess whether the real return justifies the risk, whether diversification is adequate, or whether it is time to rebalance. Regular analysis helps you make informed decisions rather than emotional ones.",
-  faq_6_q: 'Can I use ETF Lens with multiple brokers?',
-  faq_6_a: 'Yes. You can record purchases from different brokers — Directa, Fineco, DEGIRO, Scalable Capital, Trading 212 and others — and view the portfolio both aggregated and broken down by broker.',
-  faq_7_q: 'Can I import my data from a CSV or another tool?',
-  faq_7_a: 'Yes. If you already have a JSON file exported from ETF Lens, you can re-import it directly from the dashboard to restore all your ETFs and purchases. If your data is in CSV format (broker export, Excel, Google Sheets), you can use the "Import from CSV with AI" feature: it generates a ready-made prompt to paste into ChatGPT or Claude, which will convert your CSV into the correct format. You can also export your entire portfolio at any time as a JSON backup.',
 }
