@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocale } from '../hooks/useLocale'
 import { useTheme } from '../hooks/useTheme'
 import LinguaToggle from './LinguaToggle'
@@ -6,503 +6,1021 @@ import ThemeToggle from './ThemeToggle'
 
 const GITHUB_URL = 'https://github.com/AlfonsoGangemi/MoneyGrowth'
 
-const POSIZIONI = [
-  { top: 56, left: 80, opacity: 1,    zIndex: 3, border: '1px solid rgba(148,163,184,0.5)', shadow: '0 10px 30px rgba(0,0,0,0.5)' },
-  { top: 28, left: 40, opacity: 0.65, zIndex: 2, border: '1px solid rgba(148,163,184,0.2)', shadow: '0 4px 12px rgba(0,0,0,0.3)' },
-  { top: 0,  left: 0,  opacity: 0.35, zIndex: 1, border: '1px solid rgba(148,163,184,0.1)', shadow: '0 2px 6px rgba(0,0,0,0.2)'  },
+const BROKERS = [
+  'ExtraETF', 'JustETF', 'Degiro', 'Fineco', 'Directa', 'Trade Republic',
+  'IBKR', 'BG Saxo', 'Binck', 'Unicredit', 'Intesa', 'Sella',
 ]
 
-function StackCardsAnimated({ kpiCards }) {
-  const [activeIdx, setActiveIdx] = useState(0)
-  const pausedRef = useRef(false)
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const id = setInterval(() => {
-      if (!pausedRef.current) setActiveIdx(i => (i + 1) % 3)
-    }, 3000)
-    return () => clearInterval(id)
-  }, [])
-
-  return (
-    <div
-      className="relative mx-auto"
-      style={{ width: '280px', height: '160px' }}
-      onMouseEnter={() => { pausedRef.current = true }}
-      onMouseLeave={() => { pausedRef.current = false }}
-    >
-      {kpiCards.map((card, i) => {
-        const pos = POSIZIONI[(i - activeIdx + 3) % 3]
-        return (
-          <div
-            key={card.label}
-            className="absolute rounded-xl p-4 bg-slate-100 dark:bg-slate-900"
-            style={{
-              width: '200px',
-              top: pos.top,
-              left: pos.left,
-              opacity: pos.opacity,
-              zIndex: pos.zIndex,
-              border: pos.border,
-              boxShadow: pos.shadow,
-              transition: 'top 0.6s ease, left 0.6s ease, opacity 0.6s ease',
-            }}
-          >
-            <p className="text-xs text-slate-400 dark:text-slate-500">{card.label}</p>
-            <p className="text-xl font-bold tabular-nums mt-0.5" style={{ color: card.color }}>{card.valore}</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{card.sub}</p>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function GraficoDecorativo() {
-  return (
-    <div className="w-full max-w-2xl mx-auto mt-10 opacity-60">
-      <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" className="w-full">
-        <defs>
-          <linearGradient id="lg-blue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="lg-green" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {/* Area ottimistica */}
-        <path d="M 0,170 C 150,165 350,110 800,28 L 800,200 L 0,200 Z" fill="url(#lg-green)" />
-        {/* Area conservativa */}
-        <path d="M 0,170 C 150,166 350,132 800,82 L 800,200 L 0,200 Z" fill="url(#lg-blue)" />
-        {/* Linea capitale investito (tratteggiata) */}
-        <line x1="0" y1="170" x2="800" y2="150" stroke="#334155" strokeWidth="1.5" strokeDasharray="6,4" />
-        {/* Linea conservativa */}
-        <path d="M 0,170 C 150,166 350,132 800,82" stroke="#3b82f6" strokeWidth="2" fill="none" />
-        {/* Linea ottimistica */}
-        <path d="M 0,170 C 150,165 350,110 800,28" stroke="#22c55e" strokeWidth="2" fill="none" />
-      </svg>
-    </div>
-  )
-}
-
-function Tooltip({ label, desc }) {
-  return (
-    <span className="relative group cursor-default inline-block">
-      <span className="text-slate-500 dark:text-slate-400 underline decoration-dotted decoration-slate-400 dark:decoration-slate-600 underline-offset-2 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-        {label}
-      </span>
-      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50 shadow-xl text-left">
-        <span className="font-semibold text-slate-900 dark:text-white block mb-1">{label}</span>
-        {desc}
-      </span>
-    </span>
-  )
-}
-
-function WordArt() {
-  return (
-    <div className="mb-6 select-none">
-      <span
-        className="font-black tracking-tight leading-none"
-        style={{
-          fontSize: 'clamp(2.8rem, 9vw, 5.5rem)',
-          background: 'linear-gradient(135deg, #60a5fa 0%, #34d399 55%, #4ade80 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          filter: 'drop-shadow(0 0 32px rgba(96,165,250,0.35)) drop-shadow(0 0 12px rgba(52,211,153,0.2))',
-        }}
-      >
-        ETF Lens
-      </span>
-    </div>
-  )
-}
+// ── SVG icons ──────────────────────────────────────────────────────────────
 
 function IconCheck() {
   return (
-    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+  )
+}
+
+function IconX() {
+  return (
+    <svg className="w-4 h-4 text-rose-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   )
 }
 
 function IconChevron({ open }) {
   return (
-    <svg
-      className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-    >
+    <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
     </svg>
   )
 }
 
-const FEATURE_CARDS = [
-  {
-    id: 'storico',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
-      </svg>
-    ),
-    titolo: (t) => t('feat_storico_titolo'),
-    sub: (t) => t('feat_storico_sub'),
-    dettaglio: (t) => (
-      <div className="mt-4 border-t border-slate-200 dark:border-slate-700 pt-4">
-        <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">{t('feat_storico_esempio')}</p>
-        <table className="w-full text-xs text-slate-600 dark:text-slate-300">
-          <thead>
-            <tr className="text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-slate-700">
-              <th className="text-left pb-1.5 font-medium">{t('feat_storico_col_data')}</th>
-              <th className="text-left pb-1.5 font-medium">{t('feat_storico_col_etf')}</th>
-              <th className="text-right pb-1.5 font-medium">{t('feat_storico_col_prezzo')}</th>
-              <th className="text-right pb-1.5 font-medium">{t('feat_storico_col_quote')}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200/60 dark:divide-slate-700/60">
-            <tr>
-              <td className="py-1.5 text-slate-400 dark:text-slate-400">15/01/2025</td>
-              <td className="py-1.5">VWCE</td>
-              <td className="py-1.5 text-right tabular-nums">€128,40</td>
-              <td className="py-1.5 text-right tabular-nums">2,338</td>
-            </tr>
-            <tr>
-              <td className="py-1.5 text-slate-400 dark:text-slate-400">15/02/2025</td>
-              <td className="py-1.5">VWCE</td>
-              <td className="py-1.5 text-right tabular-nums">€131,20</td>
-              <td className="py-1.5 text-right tabular-nums">2,287</td>
-            </tr>
-            <tr>
-              <td className="py-1.5 text-slate-400 dark:text-slate-400">15/03/2025</td>
-              <td className="py-1.5">VWCE</td>
-              <td className="py-1.5 text-right tabular-nums">€134,60</td>
-              <td className="py-1.5 text-right tabular-nums">2,229</td>
-            </tr>
-          </tbody>
-        </table>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">{t('feat_storico_note')}</p>
+function GithubIcon() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+    </svg>
+  )
+}
+
+function GoogleMark() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 48 48">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.2 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.2 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.2 26.7 36 24 36c-5.3 0-9.7-3.4-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2C40.9 35.2 44 30 44 24c0-1.2-.1-2.3-.4-3.5z" />
+    </svg>
+  )
+}
+
+// ── Chart helpers ───────────────────────────────────────────────────────────
+
+function Sparkline({ color = '#22c55e', data, h = 36, w = 110 }) {
+  const max = Math.max(...data)
+  const min = Math.min(...data)
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w
+    const y = h - ((v - min) / (max - min || 1)) * h
+    return [x, y]
+  })
+  const d = pts.map((p, i) => (i === 0 ? `M ${p[0]},${p[1]}` : `L ${p[0]},${p[1]}`)).join(' ')
+  const area = `${d} L ${w},${h} L 0,${h} Z`
+  const gId = `sg-${color.replace('#', '')}`
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible">
+      <defs>
+        <linearGradient id={gId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#${gId})`} />
+      <path d={d} stroke={color} strokeWidth="1.5" fill="none" />
+    </svg>
+  )
+}
+
+function BigChart() {
+  const months = 28
+  const w = 640; const h = 220
+  const investito = Array.from({ length: months }, (_, i) => 200 + i * 250)
+  const valore = investito.map((v, i) => v * (1 + Math.sin(i / 3) * 0.04 + i * 0.012))
+  const maxY = Math.max(...valore) * 1.05
+  const toXY = (arr) => arr.map((v, i) => [
+    (i / (arr.length - 1)) * w,
+    h - (v / maxY) * h,
+  ])
+  const line = (arr) => toXY(arr).map((p, i) => (i === 0 ? `M ${p[0]},${p[1]}` : `L ${p[0]},${p[1]}`)).join(' ')
+  const area = (arr) => `${line(arr)} L ${w},${h} L 0,${h} Z`
+  const lastY = h - (valore[valore.length - 1] / maxY) * h
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="bc-v" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[0, 1, 2, 3].map((i) => (
+        <line key={i} x1="0" x2={w} y1={h / 4 * i + 0.5} y2={h / 4 * i + 0.5}
+          stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeWidth="1" />
+      ))}
+      <path d={area(valore)} fill="url(#bc-v)" />
+      <path d={line(valore)} stroke="#3b82f6" strokeWidth="2" fill="none" />
+      <path d={line(investito)} stroke="currentColor"
+        className="text-slate-400 dark:text-slate-600" strokeWidth="1.5" strokeDasharray="4 4" fill="none" />
+      <circle cx={w - 1} cy={lastY} r="4" fill="#3b82f6" />
+      <circle cx={w - 1} cy={lastY} r="9" fill="#3b82f6" fillOpacity="0.18" />
+    </svg>
+  )
+}
+
+function KPI({ label, val, delta, pos = true }) {
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
+      <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium">{label}</div>
+      <div className="mt-0.5 flex items-baseline gap-1.5">
+        <span className="text-lg font-bold tabular-nums text-slate-900 dark:text-white">{val}</span>
+        {delta && (
+          <span className={`text-[11px] font-semibold tabular-nums ${pos ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+            {delta}
+          </span>
+        )}
       </div>
-    ),
-  },
-  {
-    id: 'scenari',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-      </svg>
-    ),
-    titolo: (t) => t('feat_scenari_titolo'),
-    sub: (t) => t('feat_scenari_sub'),
-    dettaglio: (t) => (
-      <div className="mt-4 border-t border-slate-200 dark:border-slate-700 pt-4 space-y-2.5">
-        <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">{t('feat_scenari_intro')}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500 dark:text-slate-400">{t('feat_scenari_conservativo')}</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs tabular-nums text-blue-500 dark:text-blue-400 font-medium">5% / anno</span>
-            <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">→ €41.200 in 10 anni</span>
+    </div>
+  )
+}
+
+function ETFRow({ name, isin, broker, invest, val, delta, spark, color }) {
+  return (
+    <div className="grid grid-cols-12 gap-2 items-center px-3 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0">
+      <div className="col-span-5">
+        <div className="text-[13px] font-semibold text-slate-900 dark:text-white leading-tight">{name}</div>
+        <div className="text-[10px] text-slate-400 font-mono mt-0.5">{isin} · {broker}</div>
+      </div>
+      <div className="col-span-2 hidden sm:block">
+        <Sparkline color={color} data={spark} w={70} h={22} />
+      </div>
+      <div className="col-span-2 text-right text-[12px] tabular-nums text-slate-500 dark:text-slate-400">€{invest}</div>
+      <div className="col-span-2 text-right text-[12px] tabular-nums font-semibold text-slate-900 dark:text-white">€{val}</div>
+      <div className="col-span-1 text-right text-[11px] tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">{delta}</div>
+    </div>
+  )
+}
+
+function ProductPreview({ dark: forceDark }) {
+  return (
+    <div className={`relative rounded-2xl shadow-2xl shadow-slate-900/20 dark:shadow-black/50 overflow-hidden border border-slate-200 dark:border-slate-800 ${forceDark ? 'dark' : ''}`}>
+      <div className="bg-white dark:bg-slate-900">
+        {/* Chrome bar */}
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+          </div>
+          <div className="flex-1 flex justify-center">
+            <div className="text-[10px] font-mono text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-0.5 rounded-md">
+              etflens.app / dashboard
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-slate-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" /> live
           </div>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500 dark:text-slate-400">{t('feat_scenari_moderato')}</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs tabular-nums text-blue-500 dark:text-blue-400 font-medium">7% / anno</span>
-            <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">→ €48.600 in 10 anni</span>
+
+        {/* Body */}
+        <div className="p-4 sm:p-5 grid grid-cols-12 gap-4 bg-slate-50 dark:bg-slate-950">
+          {/* Sidebar */}
+          <div className="hidden md:flex col-span-2 flex-col gap-1">
+            {[
+              { l: 'Dashboard', a: true },
+              { l: 'ETF', a: false },
+              { l: 'Acquisti', a: false },
+              { l: 'Scenari', a: false },
+              { l: 'MCP / AI', a: false },
+              { l: 'Impostazioni', a: false },
+            ].map((it) => (
+              <div key={it.l}
+                className={`text-[11px] px-2.5 py-1.5 rounded-lg ${it.a ? 'bg-blue-600 text-white font-medium' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                {it.l}
+              </div>
+            ))}
+            <div className="mt-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 p-2 text-[10px] text-slate-400">
+              <div className="font-mono">Broker</div>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {['Degiro', 'Fineco', 'Directa'].map((b) => (
+                  <span key={b} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400">{b}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Main */}
+          <div className="col-span-12 md:col-span-10 space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <KPI label="Valore" val="€27.720" delta="+18,4%" />
+              <KPI label="Investito" val="€23.400" />
+              <KPI label="CAGR" val="+9,2%" delta="2y" />
+              <KPI label="XIRR" val="+11,1%" delta="real" />
+            </div>
+
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-[11px] text-slate-400 dark:text-slate-500">Portafoglio vs investito</div>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                      <span className="w-2.5 h-0.5 bg-blue-500" />Valore
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                      <span className="w-2.5 border-t border-dashed border-slate-400" />Investito
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-1 text-[10px]">
+                  {['1M', '3M', '1Y', 'Tutto'].map((r, i) => (
+                    <button key={r}
+                      className={`px-2 py-0.5 rounded-md ${i === 3 ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}>
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <BigChart />
+            </div>
+
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                <div className="col-span-5">ETF</div>
+                <div className="col-span-2 hidden sm:block">30d</div>
+                <div className="col-span-2 text-right">Invest.</div>
+                <div className="col-span-2 text-right">Valore</div>
+                <div className="col-span-1 text-right">ROI</div>
+              </div>
+              <ETFRow name="Vanguard FTSE All-World" isin="IE00BK5BQT80" broker="Degiro" invest="12.800" val="15.420" delta="+20,5%" color="#22c55e" spark={[10,12,11,13,14,13,15,16,15,17,18]} />
+              <ETFRow name="iShares Core MSCI EM" isin="IE00BKM4GZ66" broker="Fineco" invest="5.400" val="5.980" delta="+10,7%" color="#3b82f6" spark={[10,11,10,12,11,13,12,13,13,14,14]} />
+              <ETFRow name="iShares €-Aggregate Bond" isin="IE00B3F81R35" broker="Directa" invest="3.200" val="3.180" delta="−0,6%" color="#94a3b8" spark={[12,11,12,11,10,11,10,11,10,11,10]} />
+              <ETFRow name="Invesco Nasdaq-100" isin="IE00BFZXGZ54" broker="Degiro" invest="2.000" val="3.140" delta="+57,0%" color="#a855f7" spark={[8,9,10,11,13,12,14,15,17,18,20]} />
+            </div>
           </div>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500 dark:text-slate-400">{t('feat_scenari_ottimistico')}</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs tabular-nums text-green-500 dark:text-green-400 font-medium">10% / anno</span>
-            <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">→ €61.500 in 10 anni</span>
-          </div>
-        </div>
-        <p className="text-xs text-slate-400 dark:text-slate-500 pt-1">{t('feat_scenari_note')}</p>
       </div>
-    ),
-  },
-  {
-    id: 'dati',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-      </svg>
-    ),
-    titolo: (t) => t('feat_dati_titolo'),
-    sub: (t) => t('feat_dati_sub'),
-    dettaglio: (t) => (
-      <div className="mt-4 border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
-        <div className="flex items-start gap-2">
-          <IconCheck />
-          <p className="text-xs text-slate-500 dark:text-slate-400">{t('feat_dati_1')}</p>
+    </div>
+  )
+}
+
+// ── Header ──────────────────────────────────────────────────────────────────
+
+function Header({ onCTA, t }) {
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  return (
+    <header className={`sticky top-0 z-40 transition-all ${scrolled ? 'bg-white/85 dark:bg-slate-950/85 backdrop-blur border-b border-slate-200 dark:border-slate-800' : 'bg-transparent'}`}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-black text-sm">E</div>
+          <span className="font-bold text-slate-900 dark:text-white tracking-tight">ETF Lens</span>
         </div>
-        <div className="flex items-start gap-2">
-          <IconCheck />
-          <p className="text-xs text-slate-500 dark:text-slate-400">{t('feat_dati_2')}</p>
-        </div>
-        <div className="flex items-start gap-2">
-          <IconCheck />
-          <p className="text-xs text-slate-500 dark:text-slate-400">{t('feat_dati_3')}</p>
-        </div>
-        <div className="flex items-start gap-2">
-          <IconCheck />
-          <p className="text-xs text-slate-500 dark:text-slate-400">{t('feat_dati_4')}</p>
+        <nav className="hidden md:flex items-center gap-6 text-[13px] text-slate-600 dark:text-slate-300">
+          <a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">{t('lp_nav_funzioni')}</a>
+          <a href="#ai" className="hover:text-slate-900 dark:hover:text-white transition-colors">{t('lp_nav_ai')}</a>
+          <a href="#pricing" className="hover:text-slate-900 dark:hover:text-white transition-colors">{t('lp_nav_prezzo')}</a>
+          <a href="#faq" className="hover:text-slate-900 dark:hover:text-white transition-colors">{t('lp_nav_faq')}</a>
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5">
+            <GithubIcon /> GitHub
+          </a>
+        </nav>
+        <div className="flex items-center gap-2">
+          <LinguaToggle />
+          <ThemeToggle />
+          <button onClick={() => onCTA('login')} className="hidden sm:block text-[13px] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2 py-1.5 transition-colors">
+            Accedi
+          </button>
+          <button onClick={() => onCTA('register')} className="text-[13px] bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-lg font-semibold shadow-sm transition-colors">
+            {t('lp_hero_badge1')}
+          </button>
         </div>
       </div>
-    ),
-  },
-]
+    </header>
+  )
+}
 
-export default function LandingPage({ onCTA }) {
-  const { t } = useLocale()
-  const { tema } = useTheme()
-  const [aperta, setAperta] = useState(null)
-  const [faqAperta, setFaqAperta] = useState(null)
+// ── Hero ────────────────────────────────────────────────────────────────────
 
-  const kpiCards = [
-    { label: 'ROI',               valore: '+18,4%',  sub: t('kpi_roi_sub'),   color: '#4ade80' },
-    { label: 'CAGR',              valore: '+9,2%',   sub: t('kpi_cagr_sub'),  color: '#4ade80' },
-    { label: t('valore_portafoglio'), valore: '€27.720', sub: t('kpi_valore_sub'), color: tema === 'dark' ? '#f1f5f9' : '#0f172a' },
-  ]
-
-  const altriIndicatori = [
-    { label: 'XIRR',         desc: t('altri_xirr_desc') },
-    { label: 'TWRR',         desc: t('altri_twrr_desc') },
-    { label: 'Max Drawdown', desc: t('altri_drawdown_desc') },
-    { label: t('volatilita'),    desc: t('altri_volatilita_desc') },
-  ]
-
-  function toggleCard(id) {
-    setAperta(prev => prev === id ? null : id)
-  }
-
-  const faqs = [
-    { q: t('faq_1_q'), a: t('faq_1_a') },
-    { q: t('faq_2_q'), a: t('faq_2_a') },
-    { q: t('faq_3_q'), a: t('faq_3_a') },
-    { q: t('faq_4_q'), a: t('faq_4_a') },
-    { q: t('faq_5_q'), a: t('faq_5_a') },
-    { q: t('faq_6_q'), a: t('faq_6_a') },
-    { q: t('faq_7_q'), a: t('faq_7_a') },
-    { q: t('faq_8_q'), a: t('faq_8_a') },
-    { q: t('faq_9_q'), a: t('faq_9_a') },
-    { q: t('faq_10_q'), a: t('faq_10_a') },
-    { q: t('faq_11_q'), a: t('faq_11_a') },
-    { q: t('faq_12_q'), a: t('faq_12_a') },
-  ]
+function Hero({ onCTA, t, tema }) {
+  const [live, setLive] = useState(27720)
+  useEffect(() => {
+    const id = setInterval(() => setLive((v) => v + Math.round((Math.random() - 0.3) * 6)), 1800)
+    return () => clearInterval(id)
+  }, [])
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300">
+    <section className="relative overflow-hidden">
+      <div className="absolute inset-0 grid-bg pointer-events-none" />
+      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.25), transparent 60%)', filter: 'blur(30px)' }} />
 
-      {/* ── Header sticky ─────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-900 dark:text-white text-sm tracking-tight">ETF Lens</span>
-            <LinguaToggle />
-            <ThemeToggle />
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => onCTA('login')}
-              className="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 transition-colors"
-            >
-              {t('accedi')}
-            </button>
-            <button
-              onClick={() => onCTA('register')}
-              className="text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg font-medium transition-colors"
-            >
-              {t('inizia_gratis')}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Hero ──────────────────────────────────────────────── */}
-      <section className="bg-slate-100 dark:bg-slate-950 pt-20 pb-16 px-4 sm:px-6 text-center">
-        <div className="max-w-2xl mx-auto">
-          <WordArt />
-          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight mb-4">
-            {t('hero_title')}
-          </h1>
-          <p className="text-lg text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
-            {t('hero_sub')}
-          </p>
-          <div className="flex items-center justify-center gap-6 text-sm text-slate-400 dark:text-slate-500">
-            <span className="flex items-center gap-1.5"><IconCheck /> {t('badge_gratuito')}</span>
-            <span className="flex items-center gap-1.5"><IconCheck /> {t('badge_open_source')}</span>
-            <span className="flex items-center gap-1.5"><IconCheck /> {t('badge_dati')}</span>
-          </div>
-          <GraficoDecorativo />
-        </div>
-      </section>
-
-      {/* ── Feature cards ─────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-4">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('feat_section_title')}</h2>
-
-        {/* Card featured: Analisi realtime */}
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6">
-          <div className="flex items-start gap-3 mb-6">
-            <span className="text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-              </svg>
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-14 pb-10 sm:pt-20 sm:pb-16">
+        <div className="text-center max-w-3xl mx-auto">
+          {/* Announcement pill */}
+          <a href="#ai" className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur px-3 py-1 text-[11px] text-slate-600 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-500/40 transition-colors">
+            <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 pulse-dot" />
+              {t('lp_hero_novita')}
             </span>
+            <span>{t('lp_hero_pill')}</span>
+            <span className="text-slate-400">→</span>
+          </a>
+
+          <h1 className="mt-6 text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.05] title-grad text-balance">
+            {t('lp_hero_title')}
+          </h1>
+          <p className="mt-5 text-[17px] sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto text-balance">
+            {t('lp_hero_sub')}
+          </p>
+
+          {/* CTA cluster */}
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button onClick={() => onCTA('register')}
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3.5 rounded-xl shadow-lg shadow-blue-600/25 transition-all text-[15px]">
+              {t('lp_hero_cta')}
+              <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 12h15" />
+              </svg>
+            </button>
+            <button onClick={() => onCTA('register')}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 font-medium px-5 py-3.5 rounded-xl text-[14px] transition-colors">
+              <GoogleMark /> {t('lp_hero_google')}
+            </button>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[12px] text-slate-500 dark:text-slate-500">
+            {['lp_hero_badge1', 'lp_hero_badge2', 'lp_hero_badge3', 'lp_hero_badge4'].map((k) => (
+              <span key={k} className="inline-flex items-center gap-1"><IconCheck /> {t(k)}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Product preview */}
+        <div className="relative mt-12 sm:mt-16 max-w-5xl mx-auto">
+          {/* Floating badge left */}
+          <div className="hidden md:flex absolute -left-6 top-10 z-10 items-center gap-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 shadow-xl rise">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-dot" />
             <div>
-              <p className="text-slate-900 dark:text-white font-semibold">{t('analisi_title')}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('analisi_sub')}</p>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">{t('lp_live_label')}</div>
+              <div className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">€{live.toLocaleString('it-IT')}</div>
+            </div>
+          </div>
+          {/* Floating badge right */}
+          <div className="hidden md:flex absolute -right-4 top-24 z-10 items-start gap-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 shadow-xl rise" style={{ animationDelay: '.2s' }}>
+            <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 17l5-5-5-5M5 12h13" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider">CAGR 2y</div>
+              <div className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">+9,2%</div>
             </div>
           </div>
 
-          <StackCardsAnimated kpiCards={kpiCards} />
-
-          {/* Altri indicatori disponibili */}
-          <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
-            <span>{t('e_ancora')}</span>
-            {altriIndicatori.map((ind, i) => (
-              <span key={ind.label} className="inline-flex items-center gap-1.5">
-                <Tooltip label={ind.label} desc={ind.desc} />
-                {i < altriIndicatori.length - 1 && <span className="text-slate-300 dark:text-slate-600">·</span>}
-              </span>
-            ))}
-          </p>
+          <ProductPreview dark={tema === 'dark'} />
         </div>
 
-        {/* 3 card supporto — cliccabili */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
-          {FEATURE_CARDS.map(card => {
-            const isOpen = aperta === card.id
-            return (
-              <button
-                key={card.id}
-                type="button"
-                onClick={() => toggleCard(card.id)}
-                className={`bg-white dark:bg-slate-800 border rounded-2xl p-5 text-left transition-colors w-full ${isOpen ? 'border-blue-500/60' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5">{card.icon}</span>
-                  <IconChevron open={isOpen} />
-                </div>
-                <p className="text-slate-900 dark:text-white font-semibold mt-3 mb-1">{card.titolo(t)}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{card.sub(t)}</p>
-                {isOpen && card.dettaglio(t)}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* ── AI / Assistenti ───────────────────────────────────── */}
-      <section className="bg-slate-100 dark:bg-slate-950 py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-
-            {/* Colonna sinistra: testo */}
-            <div>
-              {/* Icone AI brand */}
-              <img
-                src="/AI_Agents_hot.png"
-                alt="ChatGPT, Claude e altri assistenti AI"
-                className="h-12 mb-6 drop-shadow-md"
-              />
-
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4 leading-snug">
-                {t('ai_section_title')}
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-                {t('ai_section_sub')}
-              </p>
-
-              <ol className="space-y-4 mb-8">
-                {[t('ai_how_step1'), t('ai_how_step2')].map((step, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">
-                      {i + 1}
-                    </span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{step}</span>
-                  </li>
-                ))}
-              </ol>
-
-              <p className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-500 mb-8">
-                <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                {t('ai_privacy')}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => onCTA('register')}
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm shadow-md"
-              >
-                {t('ai_cta')}
-              </button>
+        {/* Trust marquee */}
+        <div className="mt-10 text-center">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 mb-4">{t('lp_trust_label')}</p>
+          <div className="relative overflow-hidden">
+            <div className="flex gap-10 marquee-track" style={{ width: '200%' }}>
+              {[...BROKERS, ...BROKERS].map((b, i) => (
+                <span key={i} className="text-slate-400 dark:text-slate-600 font-semibold text-sm whitespace-nowrap">{b}</span>
+              ))}
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
-            {/* Colonna destra: chat bubbles */}
-            <div className="flex flex-col gap-3">
-              {['ai_q1', 'ai_q2', 'ai_q3', 'ai_q4'].map((key) => (
-                <div key={key} className="flex justify-end">
-                  <div className="bg-blue-600 text-white text-sm px-4 py-3 rounded-2xl rounded-tr-sm max-w-xs shadow-md leading-snug">
-                    {t(key)}
-                  </div>
+// ── TrustStats ───────────────────────────────────────────────────────────────
+
+function TrustStats({ t }) {
+  const stats = [
+    { val: t('lp_trust_pac'), label: t('lp_trust_pac_label') },
+    { val: t('lp_trust_investitori'), label: t('lp_trust_investitori_label') },
+    { val: t('lp_trust_broker'), label: t('lp_trust_broker_label') },
+    { val: t('lp_trust_github'), label: t('lp_trust_github_label') },
+  ]
+  return (
+    <section className="border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
+        {stats.map((s) => (
+          <div key={s.val} className="text-center">
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{s.val}</div>
+            <div className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ── ProblemSection ───────────────────────────────────────────────────────────
+
+function ProblemSection({ t }) {
+  const before = ['lp_problem_before_1', 'lp_problem_before_2', 'lp_problem_before_3', 'lp_problem_before_4']
+  const after  = ['lp_problem_after_1',  'lp_problem_after_2',  'lp_problem_after_3',  'lp_problem_after_4']
+  return (
+    <section className="py-20 sm:py-24 bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-12">
+          <div className="inline-block text-[11px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-3">{t('lp_problem_eyebrow')}</div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white text-balance">{t('lp_problem_title')}</h2>
+          <p className="mt-4 text-[16px] text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance">{t('lp_problem_sub')}</p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {/* Before */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-xl">😵</span>
+              <h3 className="font-bold text-slate-900 dark:text-white">{t('lp_problem_before_title')}</h3>
+            </div>
+            <ul className="space-y-3">
+              {before.map((k) => (
+                <li key={k} className="flex items-start gap-2.5 text-[14px] text-slate-600 dark:text-slate-400">
+                  <IconX /> {t(k)}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* After */}
+          <div className="rounded-2xl border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-xl">✨</span>
+              <h3 className="font-bold text-slate-900 dark:text-white">{t('lp_problem_after_title')}</h3>
+            </div>
+            <ul className="space-y-3">
+              {after.map((k) => (
+                <li key={k} className="flex items-start gap-2.5 text-[14px] text-slate-700 dark:text-slate-300">
+                  <IconCheck /> {t(k)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Features ─────────────────────────────────────────────────────────────────
+
+function Features({ t }) {
+  return (
+    <section id="features" className="py-20 sm:py-24 bg-white dark:bg-slate-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-12">
+          <div className="inline-block text-[11px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-3">{t('lp_feat_eyebrow')}</div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white text-balance">{t('lp_feat_title')}</h2>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* Big KPI card — spans 2 cols on lg */}
+          <div className="lg:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-6 flex flex-col gap-4">
+            <div>
+              <div className="text-lg font-bold text-slate-900 dark:text-white">{t('lp_feat_kpi_title')}</div>
+              <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">{t('lp_feat_kpi_desc')}</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-auto">
+              {[
+                { l: 'ROI', v: '+18,4%', c: 'text-emerald-600 dark:text-emerald-400' },
+                { l: 'CAGR', v: '+9,2%', c: 'text-blue-600 dark:text-blue-400' },
+                { l: 'XIRR', v: '+11,1%', c: 'text-violet-600 dark:text-violet-400' },
+                { l: 'Max DD', v: '−4,2%', c: 'text-rose-500' },
+              ].map((it) => (
+                <div key={it.l} className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">{it.l}</div>
+                  <div className={`mt-0.5 text-xl font-extrabold tabular-nums ${it.c}`}>{it.v}</div>
                 </div>
               ))}
             </div>
+          </div>
 
+          {/* Scenari */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-6 flex flex-col gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600/10 dark:bg-blue-500/20 flex items-center justify-center text-xl">📈</div>
+            <div>
+              <div className="text-lg font-bold text-slate-900 dark:text-white">{t('lp_feat_scenari_title')}</div>
+              <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">{t('lp_feat_scenari_desc')}</p>
+            </div>
+            <div className="flex flex-col gap-2 mt-auto">
+              {[
+                { k: 'lp_feat_s_conservativo', pct: '4%', w: '40%', c: 'bg-slate-400' },
+                { k: 'lp_feat_s_moderato',    pct: '7%', w: '65%', c: 'bg-blue-500' },
+                { k: 'lp_feat_s_ottimistico', pct: '10%', w: '100%', c: 'bg-emerald-500' },
+              ].map((it) => (
+                <div key={it.k} className="flex items-center gap-2">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 w-24 shrink-0">{t(it.k)}</div>
+                  <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800">
+                    <div className={`h-1.5 rounded-full ${it.c}`} style={{ width: it.w }} />
+                  </div>
+                  <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 w-8 text-right">{it.pct}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Storico */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-6 flex flex-col gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600/10 dark:bg-emerald-500/20 flex items-center justify-center text-xl">🏦</div>
+            <div>
+              <div className="text-lg font-bold text-slate-900 dark:text-white">{t('lp_feat_storico_title')}</div>
+              <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">{t('lp_feat_storico_desc')}</p>
+            </div>
+            <div className="mt-auto flex gap-1.5">
+              {['Degiro', 'Fineco', 'Directa'].map((b) => (
+                <span key={b} className="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 font-medium">{b}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* CSV */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-6 flex flex-col gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-600/10 dark:bg-violet-500/20 flex items-center justify-center text-xl">🤖</div>
+            <div>
+              <div className="text-lg font-bold text-slate-900 dark:text-white">{t('lp_feat_csv_title')}</div>
+              <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">{t('lp_feat_csv_desc')}</p>
+            </div>
+            <div className="mt-auto flex items-center gap-2 text-[12px] text-slate-400">
+              <span className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[11px]">CSV → JSON</span>
+              <span>in 2 min</span>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
+  )
+}
 
-      {/* ── FAQ ───────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('faq_titolo')}</h2>
+// ── AISection ────────────────────────────────────────────────────────────────
+
+function AISection({ onCTA, t }) {
+  const [typing, setTyping] = useState(true)
+  useEffect(() => {
+    const id = setTimeout(() => setTyping(false), 2000)
+    return () => clearTimeout(id)
+  }, [])
+
+  const steps = [
+    { n: '1', tk: 'lp_ai_step1', hk: 'lp_ai_step1_hint' },
+    { n: '2', tk: 'lp_ai_step2', hk: 'lp_ai_step2_hint' },
+    { n: '3', tk: 'lp_ai_step3', hk: 'lp_ai_step3_hint' },
+  ]
+
+  return (
+    <section id="ai" className="py-20 sm:py-24 bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left */}
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-full mb-4">
+              {t('lp_ai_pill')}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+              {t('lp_ai_title1')}<br />{t('lp_ai_title2')}
+            </h2>
+            <p className="mt-4 text-[16px] text-slate-600 dark:text-slate-400 leading-relaxed">{t('lp_ai_sub')}</p>
+
+            <ol className="mt-8 space-y-4">
+              {steps.map((s) => (
+                <li key={s.n} className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shrink-0">{s.n}</div>
+                  <div>
+                    <div className="font-semibold text-slate-900 dark:text-white text-[15px]">{t(s.tk)}</div>
+                    <div className="text-[12px] text-slate-400 mt-0.5">{t(s.hk)}</div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            <p className="mt-6 text-[12px] text-slate-400 dark:text-slate-500">{t('lp_ai_privacy')}</p>
+
+            <button onClick={() => onCTA('register')}
+              className="mt-6 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-3 rounded-xl text-[14px] transition-colors shadow-lg shadow-blue-600/25">
+              {t('lp_ai_cta')}
+            </button>
+          </div>
+
+          {/* Right — chat mock */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xl shadow-slate-900/10">
+            {/* Chat header */}
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">C</div>
+              <div>
+                <div className="text-[13px] font-semibold text-slate-900 dark:text-white">{t('lp_ai_chat_title')}</div>
+                <div className="text-[10px] text-emerald-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" /> {t('lp_ai_connected')}
+                </div>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="p-4 space-y-3 min-h-[200px]">
+              {/* User msg 1 */}
+              <div className="flex justify-end">
+                <div className="bg-blue-600 text-white text-[13px] rounded-2xl rounded-tr-sm px-3.5 py-2 max-w-[80%]">
+                  {t('lp_ai_msg1_user')}
+                </div>
+              </div>
+              {/* AI reply 1 */}
+              <div className="flex justify-start">
+                <div className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[13px] rounded-2xl rounded-tl-sm px-3.5 py-2 max-w-[85%]">
+                  {t('lp_ai_msg1_ai')}
+                </div>
+              </div>
+              {/* User msg 2 */}
+              <div className="flex justify-end">
+                <div className="bg-blue-600 text-white text-[13px] rounded-2xl rounded-tr-sm px-3.5 py-2 max-w-[80%]">
+                  {t('lp_ai_msg2_user')}
+                </div>
+              </div>
+              {/* AI reply 2 or typing */}
+              <div className="flex justify-start">
+                {typing ? (
+                  <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1">
+                    <span className="dot w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    <span className="dot w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    <span className="dot w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  </div>
+                ) : (
+                  <div className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[13px] rounded-2xl rounded-tl-sm px-3.5 py-2 max-w-[85%]">
+                    {t('lp_ai_msg2_ai')}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Input area */}
+            <div className="px-4 pb-4">
+              <div className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-950">
+                <span className="text-[13px] text-slate-400 flex-1">{t('lp_ai_placeholder')}</span>
+                <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── HowItWorks ───────────────────────────────────────────────────────────────
+
+function HowItWorks({ t }) {
+  const steps = [
+    { emoji: '🚀', n: '01', tk: 'lp_how_1_title', dk: 'lp_how_1_desc' },
+    { emoji: '📊', n: '02', tk: 'lp_how_2_title', dk: 'lp_how_2_desc' },
+    { emoji: '💡', n: '03', tk: 'lp_how_3_title', dk: 'lp_how_3_desc' },
+  ]
+  return (
+    <section className="py-20 sm:py-24 bg-white dark:bg-slate-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-12">
+          <div className="inline-block text-[11px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-3">{t('lp_how_eyebrow')}</div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white text-balance">{t('lp_how_title')}</h2>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-6">
+          {steps.map((s) => (
+            <div key={s.n} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-6 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{s.emoji}</span>
+                <span className="text-[11px] font-mono font-bold text-slate-300 dark:text-slate-700">{s.n}</span>
+              </div>
+              <div className="font-bold text-slate-900 dark:text-white text-[17px]">{t(s.tk)}</div>
+              <p className="text-[14px] text-slate-500 dark:text-slate-400">{t(s.dk)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Testimonials ─────────────────────────────────────────────────────────────
+
+function Testimonials({ t }) {
+  const items = [
+    { qk: 'lp_testi_1', ak: 'lp_testi_1_author', rk: 'lp_testi_1_role', initials: 'MD' },
+    { qk: 'lp_testi_2', ak: 'lp_testi_2_author', rk: 'lp_testi_2_role', initials: 'CP' },
+    { qk: 'lp_testi_3', ak: 'lp_testi_3_author', rk: 'lp_testi_3_role', initials: 'LB' },
+    { qk: 'lp_testi_4', ak: 'lp_testi_4_author', rk: 'lp_testi_4_role', initials: 'GM' },
+  ]
+  return (
+    <section className="py-20 sm:py-24 bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-12">
+          <div className="inline-block text-[11px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-3">{t('lp_testi_eyebrow')}</div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white text-balance">{t('lp_testi_title')}</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {items.map((item) => (
+            <div key={item.initials} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col gap-4">
+              <div className="flex text-amber-400 text-sm">{'★★★★★'}</div>
+              <p className="text-[14px] text-slate-600 dark:text-slate-400 leading-relaxed flex-1">"{t(item.qk)}"</p>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-bold text-[11px]">
+                  {item.initials}
+                </div>
+                <div>
+                  <div className="text-[13px] font-semibold text-slate-900 dark:text-white">{t(item.ak)}</div>
+                  <div className="text-[11px] text-slate-400">{t(item.rk)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Pricing ──────────────────────────────────────────────────────────────────
+
+function Pricing({ onCTA, t }) {
+  const freeFeats = [
+    'lp_pricing_free_1', 'lp_pricing_free_2', 'lp_pricing_free_3',
+    'lp_pricing_free_4', 'lp_pricing_free_5', 'lp_pricing_free_6', 'lp_pricing_free_7',
+  ]
+  const proFeats = [
+    'lp_pricing_pro_1', 'lp_pricing_pro_2', 'lp_pricing_pro_3',
+    'lp_pricing_pro_4', 'lp_pricing_pro_5', 'lp_pricing_pro_6',
+  ]
+  return (
+    <section id="pricing" className="py-20 sm:py-24 bg-white dark:bg-slate-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-12">
+          <div className="inline-block text-[11px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-3">{t('lp_pricing_eyebrow')}</div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white text-balance">{t('lp_pricing_title')}</h2>
+          <p className="mt-4 text-[16px] text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance">{t('lp_pricing_sub')}</p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Free */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col gap-5">
+            <div>
+              <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-slate-500 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full mb-3">{t('lp_pricing_free_badge')}</span>
+              <div className="text-3xl font-extrabold text-slate-900 dark:text-white">€0</div>
+              <div className="text-[13px] text-slate-500 mt-1">{t('lp_pricing_free_note')}</div>
+            </div>
+            <ul className="space-y-2.5 flex-1">
+              {freeFeats.map((k) => (
+                <li key={k} className="flex items-start gap-2 text-[14px] text-slate-600 dark:text-slate-400">
+                  <IconCheck /> {t(k)}
+                </li>
+              ))}
+            </ul>
+            <div>
+              <button onClick={() => onCTA('register')}
+                className="w-full bg-slate-900 dark:bg-white hover:bg-slate-700 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-semibold py-3 rounded-xl text-[14px] transition-colors">
+                {t('lp_pricing_free_cta')}
+              </button>
+              <p className="text-center text-[12px] text-slate-400 mt-2">{t('lp_pricing_free_no_card')}</p>
+            </div>
+          </div>
+
+          {/* Pro */}
+          <div className="rounded-2xl border border-blue-200 dark:border-blue-500/40 bg-blue-50 dark:bg-blue-500/10 p-6 flex flex-col gap-5 relative overflow-hidden">
+            <div className="absolute top-3 right-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/20 px-2 py-0.5 rounded-full">{t('lp_pricing_pro_badge_top')}</span>
+            </div>
+            <div>
+              <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/40 px-2.5 py-0.5 rounded-full mb-3">{t('lp_pricing_pro_badge')}</span>
+              <div className="text-3xl font-extrabold text-slate-900 dark:text-white">€4,99<span className="text-lg font-normal text-slate-500">/mo</span></div>
+              <div className="text-[13px] text-slate-500 mt-1">{t('lp_pricing_pro_note')}</div>
+            </div>
+            <ul className="space-y-2.5 flex-1">
+              {proFeats.map((k) => (
+                <li key={k} className="flex items-start gap-2 text-[14px] text-slate-700 dark:text-slate-300">
+                  <IconCheck /> {t(k)}
+                </li>
+              ))}
+            </ul>
+            <div>
+              <button disabled
+                className="w-full bg-blue-600/40 text-white/70 font-semibold py-3 rounded-xl text-[14px] cursor-not-allowed">
+                {t('lp_pricing_pro_cta')} — {t('lp_pricing_pro_soon')}
+              </button>
+              <p className="text-center text-[12px] text-slate-500 mt-2">{t('lp_pricing_pro_coming')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Donate box */}
+        <div className="mt-8 max-w-3xl mx-auto rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <span className="text-2xl">❤️</span>
+          <div className="flex-1">
+            <div className="font-semibold text-slate-900 dark:text-white text-[15px]">{t('lp_pricing_donate_title')}</div>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">{t('lp_pricing_donate_desc')}</p>
+          </div>
+          <a href={GITHUB_URL + '/../../sponsors/AlfonsoGangemi'} target="_blank" rel="noreferrer"
+            className="shrink-0 inline-flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 px-4 py-2 rounded-xl text-[13px] font-medium transition-colors">
+            <GithubIcon /> GitHub Sponsors
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── FAQ ──────────────────────────────────────────────────────────────────────
+
+function FAQ({ t }) {
+  const [open, setOpen] = useState(0)
+  const items = [1, 2, 3, 4, 5, 6]
+  return (
+    <section id="faq" className="py-20 sm:py-24 bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white text-center mb-10">{t('lp_faq_title')}</h2>
         <div className="space-y-2">
-          {faqs.map((faq, i) => {
-            const isOpen = faqAperta === i
+          {items.map((n) => {
+            const isOpen = open === n
             return (
-              <div key={i}>
+              <div key={n} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
                 <button
-                  type="button"
-                  onClick={() => setFaqAperta(prev => prev === i ? null : i)}
-                  className={`w-full bg-white dark:bg-slate-800 border rounded-xl px-5 py-4 text-left flex items-center justify-between gap-3 transition-colors ${isOpen ? 'border-blue-500/60 rounded-b-none' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
-                >
-                  <span className="text-sm font-medium text-slate-900 dark:text-white">{faq.q}</span>
+                  onClick={() => setOpen(isOpen ? null : n)}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left">
+                  <span className="font-semibold text-[15px] text-slate-900 dark:text-white">{t(`lp_faq_${n}_q`)}</span>
                   <IconChevron open={isOpen} />
                 </button>
-                <div
-                  className="bg-slate-100/50 dark:bg-slate-800/50 border border-t-0 border-blue-500/60 rounded-b-xl px-5 overflow-hidden transition-all duration-200"
-                  style={{ maxHeight: isOpen ? '1000px' : '0', paddingTop: isOpen ? '1rem' : '0', paddingBottom: isOpen ? '1rem' : '0' }}
-                >
-                  <div className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: faq.a }} />
-                </div>
+                {isOpen && (
+                  <div className="px-5 pb-4 text-[14px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    {t(`lp_faq_${n}_a`)}
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
-      </section>
+      </div>
+    </section>
+  )
+}
 
-      {/* ── Footer ────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 py-6 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-          <span>ETF Lens</span>
-          <div className="flex items-center gap-4">
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">{t('footer_privacy')}</a>
-            <a href="/termini" target="_blank" rel="noopener noreferrer" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">{t('footer_termini')}</a>
-            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-              </svg>
-              {t('footer_github')}
+// ── FinalCTA ─────────────────────────────────────────────────────────────────
+
+function FinalCTA({ onCTA, t }) {
+  return (
+    <section className="py-20 sm:py-24 relative overflow-hidden bg-slate-900 dark:bg-slate-950">
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.25) 0%, transparent 65%)' }} />
+      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white text-balance">{t('lp_final_title')}</h2>
+        <p className="mt-4 text-[16px] text-slate-400 max-w-xl mx-auto text-balance">{t('lp_final_sub')}</p>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button onClick={() => onCTA('register')}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition-colors text-[15px]">
+            {t('lp_final_cta_register')}
+          </button>
+          <button onClick={() => onCTA('login')}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-medium px-6 py-3.5 rounded-xl text-[14px] transition-colors border border-white/10">
+            {t('lp_final_cta_login')}
+          </button>
+        </div>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px] text-slate-400">
+          {['lp_final_badge1', 'lp_final_badge2', 'lp_final_badge3'].map((k) => (
+            <span key={k} className="inline-flex items-center gap-1.5"><IconCheck /> {t(k)}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Footer ───────────────────────────────────────────────────────────────────
+
+function Footer({ onCTA, t }) {
+  return (
+    <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+          {/* Logo + tagline — spans 2 cols on sm */}
+          <div className="col-span-2 sm:col-span-2">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-black text-sm">E</div>
+              <span className="font-bold text-slate-900 dark:text-white tracking-tight">ETF Lens</span>
+            </div>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 max-w-xs">{t('lp_footer_tagline')}</p>
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer"
+              className="mt-4 inline-flex items-center gap-1.5 text-[12px] text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+              <GithubIcon /> GitHub
             </a>
           </div>
-        </div>
-      </footer>
 
+          {/* Prodotto */}
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">{t('lp_footer_prodotto')}</div>
+            <ul className="space-y-2">
+              {[
+                { label: t('lp_footer_dashboard'), action: () => onCTA('register') },
+                { label: t('lp_footer_ai_int'), href: '#ai' },
+                { label: t('lp_footer_roadmap'), href: GITHUB_URL + '/projects' },
+                { label: t('lp_footer_changelog'), href: GITHUB_URL + '/releases' },
+              ].map((it) => (
+                <li key={it.label}>
+                  {it.href ? (
+                    <a href={it.href} target={it.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer"
+                      className="text-[13px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      {it.label}
+                    </a>
+                  ) : (
+                    <button onClick={it.action}
+                      className="text-[13px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      {it.label}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Risorse */}
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">{t('lp_footer_risorse')}</div>
+            <ul className="space-y-2">
+              {[
+                { label: t('lp_footer_docs'), href: GITHUB_URL + '/wiki' },
+                { label: t('lp_footer_community'), href: GITHUB_URL + '/discussions' },
+                { label: t('lp_footer_lnk_privacy'), action: () => onCTA('privacy') },
+                { label: t('lp_footer_lnk_termini'), action: () => onCTA('termini') },
+              ].map((it) => (
+                <li key={it.label}>
+                  {it.href ? (
+                    <a href={it.href} target="_blank" rel="noreferrer"
+                      className="text-[13px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      {it.label}
+                    </a>
+                  ) : (
+                    <button onClick={it.action}
+                      className="text-[13px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      {it.label}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-800 text-center text-[12px] text-slate-400">
+          {t('lp_footer_copyright')}
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+// ── StickyMobileCTA ──────────────────────────────────────────────────────────
+
+function StickyMobileCTA({ onCTA, t }) {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 600)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  return (
+    <div className={`md:hidden fixed bottom-3 left-3 right-3 z-50 transition-all duration-300 ${show ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'}`}>
+      <div className="rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl p-3 flex items-center gap-3">
+        <div className="flex-1">
+          <div className="text-[13px] font-semibold">{t('lp_mobile_pronto')}</div>
+          <div className="text-[11px] opacity-70">{t('lp_mobile_sub')}</div>
+        </div>
+        <button onClick={() => onCTA('register')}
+          className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl text-[13px]">
+          {t('lp_mobile_btn')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── LandingPage (root export) ────────────────────────────────────────────────
+
+export default function LandingPage({ onCTA }) {
+  const { t } = useLocale()
+  const { tema } = useTheme()
+
+  return (
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300">
+      <Header onCTA={onCTA} t={t} />
+      <Hero onCTA={onCTA} t={t} tema={tema} />
+      <TrustStats t={t} />
+      <ProblemSection t={t} />
+      <Features t={t} />
+      <AISection onCTA={onCTA} t={t} />
+      <HowItWorks t={t} />
+      <Testimonials t={t} />
+      <Pricing onCTA={onCTA} t={t} />
+      <FAQ t={t} />
+      <FinalCTA onCTA={onCTA} t={t} />
+      <Footer onCTA={onCTA} t={t} />
+      <StickyMobileCTA onCTA={onCTA} t={t} />
     </div>
   )
 }

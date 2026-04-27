@@ -40,7 +40,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `ApiKeyPanel.jsx` | Modal gestione API key MCP: OAuth come flusso primario, Bearer key come fallback; snippet per Claude Code, Cursor, Codex CLI, Gemini CLI, Kiro |
 | `OAuthConsent.jsx` | Pagina consenso OAuth 2.1: autenticazione Supabase + POST a `/api/oauth/authorize`; route SPA `/oauth/authorize` |
 | `AuthForm.jsx` | Form login / registrazione con validazione email temporanee (`tempmail.js`) |
-| `LandingPage.jsx` | Homepage pubblica: presentazione funzionalità, CTA registrazione |
+| `LandingPage.jsx` | Homepage pubblica v2: hero con DashboardMock, marquee broker, TrustStats, ProblemSection, HowItWorks, Testimonials, Pricing, FAQ a tab (Generale/Piattaforma/AI/Sicurezza), FinalCTA, StickyMobileCTA |
 | `ImportExportModal.jsx` | Backup / Ripristino JSON del portafoglio |
 | `CsvAiModal.jsx` | Import CSV storico acquisti tramite parsing LLM |
 | `LinguaToggle.jsx` | Pulsante IT/EN in navbar |
@@ -77,8 +77,10 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 
 | File | Responsabilità |
 |---|---|
-| `it.js` | Dizionario italiano — lingua di default e fallback |
+| `it.js` | Dizionario italiano — lingua di default e fallback (namespace `auth_*`, `etf_*`, `mcp_*`, `ai_*`, `landing_*`, `faq_tab_*`, ecc.) |
 | `en.js` | Dizionario inglese — stessa struttura chiave per chiave |
+| `it.faq.js` | Domande e risposte FAQ in italiano (`faq_N_q` / `faq_N_a`, N = 1–12) — importato e mergiato in `it.js` |
+| `en.faq.js` | Domande e risposte FAQ in inglese — importato e mergiato in `en.js` |
 
 Convenzioni: namespace per sezione (`auth_*`, `mcp_*`, `etf_*`), nomi tecnici invariati (ISIN, ETF, MCP, OAuth). Dettagli in [CLAUDE.md](../CLAUDE.md#internazionalizzazione-i18n).
 
