@@ -74,13 +74,15 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'server_error' })
     }
 
-    return res.json({
+    const tokenBody = {
       access_token:  accessToken,
       token_type:    'Bearer',
       expires_in:    TOKEN_TTL_SEC,
       refresh_token: rawRefresh,
       scope:         row.scope,
-    })
+    }
+    console.log('[oauth/token] authorization_code response — scope:', row.scope, 'user_id:', row.user_id, 'token_prefix:', accessToken.slice(0, 20))
+    return res.json(tokenBody)
   }
 
   // ── refresh_token ────────────────────────────────────────────────────────
