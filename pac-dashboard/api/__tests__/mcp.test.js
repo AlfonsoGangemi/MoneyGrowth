@@ -37,13 +37,15 @@ vi.mock('@supabase/supabase-js', () => ({
   })),
 }))
 
-import handler from './mcp.js'
+import handler from '../mcp.js'
 
 function makeReqRes(authHeader = '') {
   const res = {
     statusCode: 200,
+    headers: {},
     status(code) { this.statusCode = code; return this },
     json(data) { this._body = data; return this },
+    setHeader(k, v) { this.headers[k] = v },
     end() { return this },
   }
   const req = {
@@ -82,9 +84,9 @@ describe('mcp handler — autenticazione API key', () => {
     expect(res._body.error).toBe('Unauthorized')
   })
 
-  it('ritorna 405 se il metodo non è POST', async () => {
+  it('ritorna 405 per metodi non consentiti (es. PUT)', async () => {
     const { req, res } = makeReqRes('Bearer pac_' + 'a'.repeat(64))
-    req.method = 'GET'
+    req.method = 'PUT'
     await handler(req, res)
     expect(res.statusCode).toBe(405)
   })
