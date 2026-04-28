@@ -113,7 +113,8 @@ async function resolveUserId(authHeader) {
       audience: 'etflens-mcp',
     })
     return payload.sub ?? null
-  } catch {
+  } catch (err) {
+    console.error('[mcp] JWT verification failed:', err?.code ?? err?.message)
     return null
   }
 }
@@ -278,7 +279,11 @@ export default async function handler(req, res) {
   if (!['GET', 'POST', 'DELETE'].includes(req.method)) return res.status(405).end()
 
   const userId = await resolveUserId(req.headers['authorization'])
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+  if (!userId) {
+    const base = (process.env.VITE_APP_URL ?? 'https://etflens.app').replace(/\/$/, '')
+    res.setHeader('WWW-Authenticate', `Bearer error="invalid_token", resource_metadata="${base}/.well-known/oauth-protected-resource"`)
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
 
   // StreamableHTTPServerTransport requires Accept to include both types.
   // Force it so any client (curl, Claude Code, Claude Desktop) works without

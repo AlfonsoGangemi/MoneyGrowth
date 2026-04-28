@@ -21,6 +21,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 |---|---|
 | `api/oauth/_lib.js` | Utility condivisa: `adminClient` Supabase, `sha256hex()`, `sha256raw()`, `base64url()`, `redirectUriMatches()` con supporto loopback RFC 8252 |
 | `api/oauth/metadata.js` | `GET /.well-known/oauth-authorization-server` — discovery endpoint RFC 8414 |
+| `api/oauth/protected-resource.js` | `GET /.well-known/oauth-protected-resource` — Protected Resource Metadata RFC 9728; indica `resource`, `authorization_servers` e `scopes_supported` |
 | `api/oauth/authorize.js` | `POST /api/oauth/authorize` — validazione consenso + emissione authorization code PKCE. Token Supabase nel body JSON (`access_token`), nessun `Authorization` header |
 | `api/oauth/token.js` | `POST /api/oauth/token` — scambio code→JWT access token (HMAC-SHA256, TTL 1h) + grant `refresh_token` con rotation |
 | `api/oauth/register.js` | `POST /api/oauth/register` — dynamic client registration RFC 7591 |
@@ -112,7 +113,7 @@ Convenzioni: namespace per sezione (`auth_*`, `mcp_*`, `etf_*`), nomi tecnici in
 | File | Responsabilità |
 |---|---|
 | `vite.config.js` | Vite: plugin `api-dev` per routing serverless locale, proxy ExtraETF, build SSR |
-| `vercel.json` | Routing Vercel: rewrite `/.well-known/oauth-authorization-server` → `api/oauth/metadata` |
+| `vercel.json` | Routing Vercel: rewrite `/.well-known/oauth-authorization-server` → `api/oauth/metadata`, `/.well-known/oauth-protected-resource` → `api/oauth/protected-resource` |
 | `eslint.config.js` | Regole ESLint per il progetto |
 | `package.json` | Dipendenze e script npm |
 | `index.html` | Shell HTML entry point |

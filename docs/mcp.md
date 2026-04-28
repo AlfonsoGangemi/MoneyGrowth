@@ -8,18 +8,19 @@ Questo documento descrive l'architettura, il flusso di autenticazione, le scelte
 
 1. [Obiettivo](#obiettivo)
 2. [Architettura generale](#architettura-generale)
-3. [Autenticazione: API Key](#autenticazione-api-key)
-4. [Protocollo MCP: scelte implementative](#protocollo-mcp-scelte-implementative)
-5. [Resources esposte](#resources-esposte)
-6. [Tools esposti](#tools-esposti)
-7. [Schema Supabase](#schema-supabase)
-8. [Configurazione Vercel](#configurazione-vercel)
-9. [Variabili d'ambiente](#variabili-dambiente)
-10. [Modello di sicurezza](#modello-di-sicurezza)
-11. [Carico server e rate limiting](#carico-server-e-rate-limiting)
-12. [Ordine di implementazione](#ordine-di-implementazione)
-13. [Configurazione Claude Desktop](#configurazione-claude-desktop)
-14. [Task di backlog correlati](#task-di-backlog-correlati)
+3. [Autenticazione: PKCE / OAuth 2.0 (consigliata)](#autenticazione-pkce--oauth-20-consigliata)
+4. [Autenticazione: API Key (alternativa)](#autenticazione-api-key-alternativa)
+5. [Protocollo MCP: scelte implementative](#protocollo-mcp-scelte-implementative)
+6. [Resources esposte](#resources-esposte)
+7. [Tools esposti](#tools-esposti)
+8. [Schema Supabase](#schema-supabase)
+9. [Configurazione Vercel](#configurazione-vercel)
+10. [Variabili d'ambiente](#variabili-dambiente)
+11. [Modello di sicurezza](#modello-di-sicurezza)
+12. [Carico server e rate limiting](#carico-server-e-rate-limiting)
+13. [Ordine di implementazione](#ordine-di-implementazione)
+14. [Configurazione Claude Desktop](#configurazione-claude-desktop)
+15. [Task di backlog correlati](#task-di-backlog-correlati)
 
 ---
 
@@ -41,13 +42,18 @@ Il calcolo degli indicatori avviene **lato LLM**, non lato server.
 ```
 Claude Desktop
      │
-     │  POST /api/mcp
-     │  Authorization: Bearer pac_<32-byte-hex>
-     ▼
+     │  ┌─── PKCE / OAuth 2.0 ──────────────────────────────────────┐
+     │  │   Authorization: Bearer <JWT firmato MCP_JWT_SECRET>       │
+     ├──┤                                                             │
+     │  └─── API Key (alternativa) ─────────────────────────────────┘
+     │        Authorization: Bearer pac_<32-byte-hex>
+     │
+     ▼  POST /api/mcp
 Vercel Serverless Function (api/mcp.js)
      │
-     ├── Valida API key → sha256 hash → query su user_api_keys
-     ├── Recupera userId
+     ├── Auth PKCE  → verifica JWT (jose, HMAC-SHA256) → ricava userId dal claim `sub`
+     ├── Auth Key   → sha256(key) → query su user_api_keys → ricava user_id
+     │
      ├── Istanzia McpServer con userId
      │
      ├── Resource: portfolio://data         ← query Supabase (service key)
@@ -62,16 +68,89 @@ Supabase (PostgreSQL)
            etf_prezzi_storici, user_api_keys
 ```
 
-**Flusso di una richiesta MCP:**
-1. Claude Desktop invia POST a `/api/mcp` con la propria sessione MCP nel body e `Authorization: Bearer pac_<key>` nell'header.
-2. `api/mcp.js` calcola `sha256(apiKey)` e cerca la riga corrispondente in `user_api_keys` (non scaduta, non revocata).
+**Flusso di una richiesta MCP (PKCE):**
+1. Al primo avvio, Claude Desktop apre il browser per l'autorizzazione OAuth (nessuna chiave da copiare).
+2. `api/mcp.js` verifica il JWT tramite `jose` e ricava `userId` dal claim `sub`.
+3. Istanzia `McpServer` con tutte le query filtrate per `userId`.
+4. Risponde in formato MCP con le risorse/strumenti richiesti.
+
+**Flusso di una richiesta MCP (API Key):**
+1. Claude Desktop invia POST a `/api/mcp` con `Authorization: Bearer pac_<key>`.
+2. `api/mcp.js` calcola `sha256(apiKey)` e cerca in `user_api_keys` (non scaduta, non revocata).
 3. Se valida, aggiorna `last_used_at` e ricava `user_id`.
-4. Istanzia `McpServer` con tutte le query filtrate per `user_id`.
-5. Risponde in formato MCP (JSON) con le risorse/strumenti richiesti.
+4. Continua come sopra.
 
 ---
 
-## Autenticazione: API Key
+## Autenticazione: PKCE / OAuth 2.0 (consigliata)
+
+**Modalità raccomandata.** I client MCP moderni (Claude Desktop ≥ 0.10, Cursor, Windsurf, ecc.) supportano il flusso OAuth 2.0 con PKCE nativamente: nessuna chiave da generare o copiare.
+
+### Flusso autorizzazione
+
+```
+Claude Desktop
+  │
+  │  1. GET /.well-known/oauth-authorization-server
+  │     ← scopre authorization_endpoint e token_endpoint
+  │
+  │  2. Reindirizza l'utente su /api/mcp/authorize
+  │     Parametri: response_type=code, client_id, redirect_uri,
+  │                code_challenge (SHA-256), code_challenge_method=S256
+  │
+  │  3. Utente fa login via Supabase e approva
+  │
+  │  4. Callback con ?code=<authorization_code>
+  │
+  │  5. POST /api/mcp/token
+  │     Body: grant_type=authorization_code, code, code_verifier
+  │     ← access_token (JWT, 1h), refresh_token
+  │
+  │  6. POST /api/mcp   Authorization: Bearer <access_token>
+  ▼
+Vercel Serverless (api/mcp.js)
+  → verifica JWT con jose (HMAC-SHA256)
+  → ricava userId da claim `sub`
+```
+
+### Endpoint OAuth
+
+```
+GET  /.well-known/oauth-authorization-server   Metadata discovery (RFC 8414)
+GET  /api/mcp/authorize                        Authorization endpoint
+POST /api/mcp/token                            Token exchange (code + refresh)
+```
+
+### Token JWT (access token)
+
+```json
+{
+  "sub":   "<userId UUID Supabase>",
+  "iss":   "etflens.app",
+  "exp":   "<now + 3600>",
+  "scope": "mcp:read"
+}
+```
+
+Firmato con `MCP_JWT_SECRET` tramite HMAC-SHA256 (`jose`).
+
+### Configurazione Claude Desktop (PKCE — consigliata)
+
+```json
+{
+  "mcpServers": {
+    "etflens": {
+      "url": "https://etflens.app/api/mcp"
+    }
+  }
+}
+```
+
+Al primo avvio Claude Desktop apre automaticamente il browser per l'autorizzazione. Nessuna chiave da copiare o gestire.
+
+---
+
+## Autenticazione: API Key (alternativa)
 
 ### Formato chiave
 
@@ -328,6 +407,9 @@ Le funzioni serverless in `api/` hanno priorità sulle rewrite SPA definite in `
 | `SUPABASE_URL` | `api/mcp.js`, `api/keys/*.js` | Stesso valore di `VITE_SUPABASE_URL`, senza prefisso |
 | `SUPABASE_SERVICE_KEY` | `api/mcp.js` | **Nuova.** Service role key Supabase. **MAI con prefisso `VITE_`** |
 | `ALLOWED_ORIGIN` | `api/*.js` esistenti | Non usato da `api/mcp.js` |
+| `MCP_JWT_SECRET` | `api/mcp.js`, `api/mcp/token.js` | **PKCE.** Secret HMAC-SHA256 per firmare/verificare i JWT access token. **MAI con prefisso `VITE_`** |
+| `MCP_OAUTH_CLIENT_ID` | `api/mcp/authorize.js` | **PKCE.** Client ID OAuth (stringa opaca, non sensibile) |
+| `VITE_APP_URL` | `api/mcp/authorize.js` | **PKCE.** Base URL dell'app (es. `https://etflens.app`) per costruire il `redirect_uri` |
 
 **Attenzione:** `SUPABASE_SERVICE_KEY` bypassa tutte le RLS di Supabase. Non deve mai essere esposta al client browser. L'assenza del prefisso `VITE_` garantisce che Vite non la includa nel bundle frontend.
 
@@ -419,7 +501,29 @@ PAC-110  Documentazione e monitoraggio
 
 ## Configurazione Claude Desktop
 
-Dopo aver generato una API key dall'interfaccia web, aggiungere in `claude_desktop_config.json`:
+Il file di configurazione si trova in:
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+### Opzione A — PKCE / OAuth 2.0 (consigliata)
+
+Nessuna chiave necessaria. Claude Desktop gestisce l'autorizzazione OAuth in autonomia.
+
+```json
+{
+  "mcpServers": {
+    "etflens": {
+      "url": "https://etflens.app/api/mcp"
+    }
+  }
+}
+```
+
+Al primo avvio si aprirà il browser per l'autorizzazione; i token vengono rinnovati automaticamente.
+
+### Opzione B — API Key (per client senza OAuth nativo)
+
+Dopo aver generato una API key dall'interfaccia web (Impostazioni → MCP / AI), aggiungere:
 
 ```json
 {
@@ -434,9 +538,7 @@ Dopo aver generato una API key dall'interfaccia web, aggiungere in `claude_deskt
 }
 ```
 
-Il file di configurazione si trova in:
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+La chiave è valida 90 giorni e va rinnovata manualmente alla scadenza.
 
 ### Esempio di utilizzo
 
