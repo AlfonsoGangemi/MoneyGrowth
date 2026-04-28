@@ -108,13 +108,15 @@ async function resolveUserId(authHeader) {
   try {
     const secret = new TextEncoder().encode(process.env.OAUTH_JWT_SECRET)
     const iss = (process.env.VITE_APP_URL ?? 'https://etflens.app').replace(/\/$/, '')
+    console.log('[mcp] jwt verify — iss:', iss, 'secret_len:', secret.length, 'token_prefix:', token.slice(0, 20))
     const { payload } = await jwtVerify(token, secret, {
       issuer: iss,
       audience: 'etflens-mcp',
     })
+    console.log('[mcp] jwt OK — sub:', payload.sub, 'iss:', payload.iss, 'aud:', payload.aud)
     return payload.sub ?? null
   } catch (err) {
-    console.error('[mcp] JWT verification failed:', err?.code ?? err?.message)
+    console.error('[mcp] JWT verification failed:', err?.code, err?.message, 'claim:', err?.claim)
     return null
   }
 }

@@ -46,6 +46,11 @@ L'indice completo e aggiornato si trova in [`docs/README.md`](docs/README.md).
 
 ---
 
+## Limiti Vercel piano free
+
+No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan. Create a team (Pro plan) to deploy more.
+Mantenere il limite dove possibile per rimanare nel limite del Piano gratuito di Vercel.
+
 
 <!-- BACKLOG.MD MCP GUIDELINES START -->
 
