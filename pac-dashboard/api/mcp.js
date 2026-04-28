@@ -278,10 +278,15 @@ function buildMcpServer(userId) {
 export default async function handler(req, res) {
   if (!['GET', 'POST', 'DELETE'].includes(req.method)) return res.status(405).end()
 
-  const userId = await resolveUserId(req.headers['authorization'])
+  const authHeader = req.headers['authorization']
+  const userId = await resolveUserId(authHeader)
   if (!userId) {
     const base = (process.env.VITE_APP_URL ?? 'https://etflens.app').replace(/\/$/, '')
-    res.setHeader('WWW-Authenticate', `Bearer error="invalid_token", resource_metadata="${base}/.well-known/oauth-protected-resource"`)
+    // RFC 6750: include error="invalid_token" only when a token was actually provided but rejected.
+    // An unauthenticated initial request must use a plain Bearer challenge so the client
+    // knows to start the OAuth flow rather than treating it as a token rejection.
+    const errorPart = authHeader ? `error="invalid_token", ` : ''
+    res.setHeader('WWW-Authenticate', `Bearer ${errorPart}resource_metadata="${base}/.well-known/oauth-protected-resource"`)
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
