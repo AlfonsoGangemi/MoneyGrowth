@@ -20,7 +20,7 @@ async function mintAccessToken(userId, scope) {
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(userId)
     .setIssuer(issuer())
-    .setAudience('etflens-mcp')
+    .setAudience(`${issuer()}/api/mcp`)
     .setIssuedAt()
     .setExpirationTime('1h')
     .sign(getSecret())

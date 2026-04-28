@@ -111,7 +111,7 @@ async function resolveUserId(authHeader) {
     console.log('[mcp] jwt verify — iss:', iss, 'secret_len:', secret.length, 'token_prefix:', token.slice(0, 20))
     const { payload } = await jwtVerify(token, secret, {
       issuer: iss,
-      audience: 'etflens-mcp',
+      audience: `${iss}/api/mcp`,
     })
     console.log('[mcp] jwt OK — sub:', payload.sub, 'iss:', payload.iss, 'aud:', payload.aud)
     return payload.sub ?? null
@@ -279,6 +279,8 @@ function buildMcpServer(userId) {
 
 export default async function handler(req, res) {
   if (!['GET', 'POST', 'DELETE'].includes(req.method)) return res.status(405).end()
+
+  console.log('[mcp] incoming request — method:', req.method, 'auth_present:', !!req.headers['authorization'], 'ua:', req.headers['user-agent']?.slice(0, 50))
 
   const authHeader = req.headers['authorization']
   const userId = await resolveUserId(authHeader)
