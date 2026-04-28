@@ -85,7 +85,7 @@ function textContent(obj) {
 }
 
 async function resolveUserId(authHeader) {
-  const token = authHeader?.replace('Bearer ', '').trim() ?? ''
+  const token = authHeader?.replace(/^Bearer /i, '').trim() ?? ''
   if (!token) return null
 
   if (token.startsWith('pac_')) {
