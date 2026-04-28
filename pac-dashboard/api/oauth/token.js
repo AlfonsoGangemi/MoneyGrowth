@@ -76,7 +76,7 @@ export default async function handler(req, res) {
 
     return res.json({
       access_token:  accessToken,
-      token_type:    'bearer',
+      token_type:    'Bearer',
       expires_in:    TOKEN_TTL_SEC,
       refresh_token: rawRefresh,
       scope:         row.scope,
@@ -104,7 +104,7 @@ export default async function handler(req, res) {
 
     return res.json({
       access_token:  accessToken,
-      token_type:    'bearer',
+      token_type:    'Bearer',
       expires_in:    TOKEN_TTL_SEC,
       refresh_token: rawRefresh,
       scope:         rtRow.scope,
