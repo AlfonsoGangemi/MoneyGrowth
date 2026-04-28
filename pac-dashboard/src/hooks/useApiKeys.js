@@ -40,7 +40,7 @@ export function useApiKeys() {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
-    if (!res.ok) { const b = await res.json(); setError(b.error); return }
+    if (!res.ok) { const b = await res.json().catch(() => ({})); setError(b.error ?? 'Errore durante la revoca'); return }
     setKeys(k => k.filter(x => x.id !== keyId))
   }
 

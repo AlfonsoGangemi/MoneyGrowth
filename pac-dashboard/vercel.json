@@ -21,7 +21,7 @@
   ],
   "rewrites": [
     { "source": "/.well-known/oauth-authorization-server", "destination": "/api/oauth/metadata" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api(?:/|$)).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
