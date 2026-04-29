@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useLocale } from '../hooks/useLocale'
 import { useTheme } from '../hooks/useTheme'
+import { useTrustStats } from '../hooks/useTrustStats'
+import { formatStatValue } from '../utils/formatStat'
 import LinguaToggle from './LinguaToggle'
 import ThemeToggle from './ThemeToggle'
 
@@ -394,18 +396,41 @@ function Hero({ onCTA, t, tema }) {
 
 // ── TrustStats ───────────────────────────────────────────────────────────────
 
+const TRUST_THRESHOLDS = {
+  acquisti:        100,
+  utenti:          50,
+  stelle_github:   10,
+  portafogli:      30,
+  capitale_gestito: 100_000,
+}
+
+const STATS_CONFIG = [
+  { key: 'capitale_gestito', labelKey: 'lp_trust_capitale_label', prefix: '€' },
+  { key: 'utenti',           labelKey: 'lp_trust_investitori_label' },
+  { key: 'acquisti',         labelKey: 'lp_trust_acquisti_label' },
+  { key: 'portafogli',       labelKey: 'lp_trust_portafogli_label' },
+  { key: 'stelle_github',    labelKey: 'lp_trust_stelle_label' },
+]
+
 function TrustStats({ t }) {
-  const stats = [
-    { val: t('lp_trust_pac'), label: t('lp_trust_pac_label') },
-    { val: t('lp_trust_investitori'), label: t('lp_trust_investitori_label') },
-    { val: t('lp_trust_broker'), label: t('lp_trust_broker_label') },
-    { val: t('lp_trust_github'), label: t('lp_trust_github_label') },
-  ]
+  const apiStats = useTrustStats()
+
+  if (!apiStats) return null
+
+  const visible = STATS_CONFIG
+    .filter(({ key }) => apiStats[key] != null && apiStats[key] >= TRUST_THRESHOLDS[key])
+    .map(({ key, labelKey, prefix = '' }) => ({
+      val:   `${prefix}${formatStatValue(apiStats[key])}`,
+      label: t(labelKey),
+    }))
+
+  if (visible.length === 0) return null
+
   return (
     <section className="border-y border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
-        {stats.map((s) => (
-          <div key={s.val} className="text-center">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex flex-wrap justify-center gap-8 sm:gap-14">
+        {visible.map((s) => (
+          <div key={s.label} className="text-center">
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{s.val}</div>
             <div className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{s.label}</div>
           </div>
