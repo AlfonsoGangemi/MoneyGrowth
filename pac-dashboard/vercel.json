@@ -20,15 +20,9 @@
     }
   ],
   "rewrites": [
-<<<<<<< HEAD
     { "source": "/.well-known/oauth-authorization-server", "destination": "/api/oauth/metadata" },
     { "source": "/.well-known/oauth-protected-resource",    "destination": "/api/oauth/protected-resource" },
     { "source": "/((?!api(?:/|$)).*)", "destination": "/index.html" }
-=======
-    { "source": "/.well-known/oauth-authorization-server",  "destination": "/api/oauth/metadata" },
-    { "source": "/.well-known/oauth-protected-resource",    "destination": "/api/oauth/protected-resource" },
-    { "source": "/(.*)", "destination": "/index.html" }
->>>>>>> landing_v2
   ],
   "headers": [
     {
