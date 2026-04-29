@@ -95,6 +95,90 @@ export default {
   ai_q3: 'How much have I invested in total per broker?',
   ai_q4: 'With €300/month, what will my portfolio be worth in 10 years?',
 
+  // --- Landing v2: Trust stats ---
+  trust_utenti: '1,000+',
+  trust_utenti_label: 'registered users',
+  trust_etf: '5,000+',
+  trust_etf_label: 'ETFs tracked',
+  trust_acquisti: '50,000+',
+  trust_acquisti_label: 'purchases recorded',
+  trust_open_source: '100%',
+  trust_open_source_label: 'open source',
+
+  // --- Landing v2: Problem section ---
+  problem_title: 'Do you really track your investment plan?',
+  problem_subtitle: 'Without a dedicated tool, monitoring an ETF portfolio with multiple purchases and brokers quickly becomes frustrating.',
+  problem_before_title: 'Without ETF Lens',
+  problem_before_1: 'Complicated spreadsheets to update every month',
+  problem_before_2: 'No clear view of real returns (CAGR, XIRR)',
+  problem_before_3: 'Manual calculations prone to errors',
+  problem_before_4: 'Impossible to compare ETFs and brokers at a glance',
+  problem_after_title: 'With ETF Lens',
+  problem_after_1: 'Automatic dashboard, always up to date',
+  problem_after_2: 'ROI, CAGR, XIRR calculated automatically',
+  problem_after_3: 'Instant comparison between ETFs, brokers and periods',
+  problem_after_4: 'Future projections with customizable scenarios',
+
+  // --- Landing v2: How it works ---
+  howitworks_title: 'Three steps to get started',
+  howitworks_1_title: 'Add your purchases',
+  howitworks_1_desc: 'Enter each ETF purchase: ISIN, date, price paid, fees and broker.',
+  howitworks_2_title: 'Analyse performance',
+  howitworks_2_desc: 'The dashboard automatically calculates ROI, CAGR, XIRR, volatility and max drawdown.',
+  howitworks_3_title: 'Plan the future',
+  howitworks_3_desc: 'Simulate the future value of your portfolio with customizable return scenarios.',
+
+  // --- Landing v2: Testimonials ---
+  testimonials_title: 'What users say',
+  testimonial_1_text: '"Finally a simple tool to track my PAC on VWCE. XIRR and CAGR calculated automatically — goodbye spreadsheets."',
+  testimonial_1_author: 'Marco R.',
+  testimonial_1_role: 'Private investor',
+  testimonial_2_text: '"The AI section with Claude is amazing: I can ask for portfolio analysis in plain language and get immediate answers."',
+  testimonial_2_author: 'Sofia L.',
+  testimonial_2_role: 'PAC on 3 ETFs',
+  testimonial_3_text: '"Open source and free: no other tool offers this combination. Multi-broker support is exactly what I was looking for."',
+  testimonial_3_author: 'Andrea M.',
+  testimonial_3_role: 'DEGIRO + Directa',
+  testimonial_4_text: '"I imported 3 years of Fineco purchases from CSV in 5 minutes with AI import. Perfect dashboard from the start."',
+  testimonial_4_author: 'Laura T.',
+  testimonial_4_role: 'Fineco',
+
+  // --- Landing v2: Pricing ---
+  pricing_title: 'Simple plan, no surprises',
+  pricing_free_title: 'Free',
+  pricing_free_price: '€0',
+  pricing_free_period: 'forever',
+  pricing_free_1: 'Up to 9 ETFs',
+  pricing_free_2: 'Up to 4 brokers',
+  pricing_free_3: 'Up to 100 purchases',
+  pricing_free_4: 'All performance metrics',
+  pricing_free_5: 'JSON export / import',
+  pricing_free_cta: 'Get started free',
+  pricing_pro_title: 'Plus',
+  pricing_pro_price: '€4.99',
+  pricing_pro_period: 'per month',
+  pricing_pro_badge: 'Most popular',
+  pricing_pro_1: 'Unlimited ETFs',
+  pricing_pro_2: 'Unlimited brokers',
+  pricing_pro_3: 'Unlimited purchases',
+  pricing_pro_4: 'AI integration via MCP',
+  pricing_pro_5: 'Priority for new features',
+  pricing_pro_cta: 'Upgrade to Plus',
+
+  // --- Landing v2: Final CTA ---
+  final_cta_title: 'Ready to know the real return of your investment plan?',
+  final_cta_sub: 'Join those who use ETF Lens to analyse their ETF portfolio with real data.',
+  final_cta_btn: 'Get started free — it\'s open source',
+
+  // --- Landing v2: Mobile sticky CTA ---
+  mobile_cta_btn: 'Get started free',
+
+  // --- Landing v2: FAQ tabs (PAC-123) ---
+  faq_tab_generale: 'General',
+  faq_tab_piattaforma: 'Platform',
+  faq_tab_ai: 'AI Integration',
+  faq_tab_sicurezza: 'Security',
+
   // --- Dashboard ---
   nav_title: 'ETF Lens',
   nav_mostra_importi: 'Show amounts',
@@ -305,13 +389,24 @@ export default {
   lp_trust_broker_label: 'supported brokers',
   lp_trust_github: '4.8/5',
   lp_trust_github_label: '⭐ on GitHub',
+<<<<<<< HEAD
+=======
+  lp_trust_capitale_label: 'invested on the platform',
+  lp_trust_acquisti_label: 'recorded purchases',
+  lp_trust_portafogli_label: 'active ETFs',
+  lp_trust_stelle_label: 'GitHub stars',
+>>>>>>> landing_v2
   lp_problem_eyebrow: 'Why ETF Lens',
   lp_problem_title: 'Your investment plan deserves better than a spreadsheet.',
   lp_problem_sub: 'Tracking a multi-broker accumulation plan in Excel works for three months. Then you start missing purchases, breaking formulas, and your projections become fiction.',
   lp_problem_before_title: 'Without ETF Lens',
   lp_problem_before_1: 'Spreadsheets that break when you add a broker',
   lp_problem_before_2: 'Eyeballed returns that ignore your actual purchase dates',
+<<<<<<< HEAD
   lp_problem_before_3: 'Projections scribbled on a napkin with a fixed 7%',
+=======
+  lp_problem_before_3: 'Projections based on a fixed return rate, with no scenarios or historical analysis',
+>>>>>>> landing_v2
   lp_problem_before_4: 'Data scattered across 4 different broker apps',
   lp_problem_after_title: 'With ETF Lens',
   lp_problem_after_1: 'A single dashboard for all your brokers',
@@ -331,6 +426,13 @@ export default {
   lp_feat_storico_desc: 'Every purchase with date, ISIN, price, fee and broker. No more manual reconciliations between Degiro, Fineco and Directa.',
   lp_feat_csv_title: 'CSV import with AI',
   lp_feat_csv_desc: "Paste your broker's CSV into ChatGPT using our prompt. Get back a JSON ready to import. 2 minutes instead of 2 hours.",
+<<<<<<< HEAD
+=======
+  lp_feat_opensource_title: 'Open source, your data',
+  lp_feat_opensource_desc: 'The code is public on GitHub. Export your portfolio as JSON in one click and take it anywhere — no lock-in, no platform dependency.',
+  lp_feat_opensource_github: 'View on GitHub',
+  lp_feat_opensource_export: 'Export JSON',
+>>>>>>> landing_v2
   lp_how_eyebrow: 'In 3 steps',
   lp_how_title: 'From your first purchase to the dashboard in under 5 minutes.',
   lp_how_1_title: 'Sign up in 30 seconds',
@@ -408,7 +510,11 @@ export default {
   lp_faq_3_q: 'How much does it cost?',
   lp_faq_3_a: 'The Free plan is free and covers most cases (up to 9 active ETFs, 5 brokers, 100 purchases). The Pro plan costs €4.99/month and removes all limits. Or you can self-host: the code is MIT open source on GitHub.',
   lp_faq_4_q: 'How does the AI connection (MCP) work?',
+<<<<<<< HEAD
   lp_faq_4_a: 'Generate an API key in Settings and paste it into your AI client (Claude Desktop, Cursor, Codex…). The AI only queries your portfolio.',
+=======
+  lp_faq_4_a: 'Add the MCP server URL to your AI client — the client handles authentication automatically via OAuth 2.1 with PKCE (you grant consent once). Alternatively, you can use a manual API key from Settings. The AI only queries your portfolio.',
+>>>>>>> landing_v2
   lp_faq_5_q: 'Where do prices come from?',
   lp_faq_5_a: 'From ExtraETF — the same data as the major European ETF portals. You can always override manually.',
   lp_faq_6_q: 'Does it work with Italian brokers?',

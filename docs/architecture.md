@@ -14,6 +14,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `api/mcp.js` | MCP Streamable HTTP server (Vercel serverless). Espone tool e resource MCP per accesso LLM ai dati di portafoglio. Dual-auth: Bearer `pac_` API key + JWT OAuth 2.1 |
 | `api/keys/generate.js` | `POST /api/keys/generate` — genera una Bearer API key `pac_<64hex>`, max 2 attive per utente, TTL 90gg |
 | `api/keys/[keyId].js` | `DELETE /api/keys/:id` — revoca una API key per ID |
+| `api/stats.js` | `GET /api/stats` — endpoint pubblico (no auth): statistiche aggregate anonime (acquisti, utenti, portafogli attivi, capitale gestito, stelle GitHub). Cache `public, max-age=3600, stale-while-revalidate=86400`. Graceful degradation per singola fonte. |
 
 ### `api/oauth/` — Authorization Server OAuth 2.1 + PKCE
 
@@ -41,7 +42,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `ApiKeyPanel.jsx` | Modal gestione API key MCP: OAuth come flusso primario, Bearer key come fallback; snippet per Claude Code, Cursor, Codex CLI, Gemini CLI, Kiro |
 | `OAuthConsent.jsx` | Pagina consenso OAuth 2.1: autenticazione Supabase + POST a `/api/oauth/authorize`; route SPA `/oauth/authorize` |
 | `AuthForm.jsx` | Form login / registrazione con validazione email temporanee (`tempmail.js`) |
-| `LandingPage.jsx` | Homepage pubblica: presentazione funzionalità, CTA registrazione |
+| `LandingPage.jsx` | Homepage pubblica v2: hero con DashboardMock, marquee broker, TrustStats, ProblemSection, HowItWorks, Testimonials, Pricing, FAQ a tab (Generale/Piattaforma/AI/Sicurezza), FinalCTA, StickyMobileCTA |
 | `ImportExportModal.jsx` | Backup / Ripristino JSON del portafoglio |
 | `CsvAiModal.jsx` | Import CSV storico acquisti tramite parsing LLM |
 | `LinguaToggle.jsx` | Pulsante IT/EN in navbar |
@@ -61,6 +62,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `useLocale.jsx` | Context provider lingua + hook `useLocale()` con funzione `t(key)` e fallback IT |
 | `useTheme.jsx` | Context provider tema chiaro/scuro con persistenza `localStorage` |
 | `useETFQuotes.js` | Aggiornamento prezzi da ExtraETF: polling, debounce, aggiornamento Supabase |
+| `useTrustStats.js` | Fetcha `GET /api/stats` al mount; restituisce `null` finché la risposta non è disponibile (nessun skeleton, no layout shift) |
 
 ---
 
@@ -69,6 +71,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | File | Responsabilità |
 |---|---|
 | `calcoli.js` | Tutti i calcoli finanziari: ROI, CAGR, TWRR, ATWRR, IRR, Drawdown, Volatilità, proiezioni, serie storiche. Esposto anche via MCP come resource e tool |
+| `formatStat.js` | `formatStatValue(n)` — formatta un numero in notazione compatta con suffisso `+` (es. `1240 → "1K+"`, `3450000 → "3M+"`). Usato da TrustStats per visualizzare le statistiche pubbliche. |
 | `supabase.js` | Client Supabase singleton con anon key (lato client) |
 | `tempmail.js` | Lista domini email temporanei bloccati in registrazione |
 
@@ -78,8 +81,10 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 
 | File | Responsabilità |
 |---|---|
-| `it.js` | Dizionario italiano — lingua di default e fallback |
+| `it.js` | Dizionario italiano — lingua di default e fallback (namespace `auth_*`, `etf_*`, `mcp_*`, `ai_*`, `landing_*`, `faq_tab_*`, ecc.) |
 | `en.js` | Dizionario inglese — stessa struttura chiave per chiave |
+| `it.faq.js` | Domande e risposte FAQ in italiano (`faq_N_q` / `faq_N_a`, N = 1–12) — importato e mergiato in `it.js` |
+| `en.faq.js` | Domande e risposte FAQ in inglese — importato e mergiato in `en.js` |
 
 Convenzioni: namespace per sezione (`auth_*`, `mcp_*`, `etf_*`), nomi tecnici invariati (ISIN, ETF, MCP, OAuth). Dettagli in [CLAUDE.md](../CLAUDE.md#internazionalizzazione-i18n).
 

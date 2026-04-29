@@ -19,3 +19,57 @@ body {
   background-color: #0f172a;
   color: #f1f5f9;
 }
+
+/* Landing page v2 -------------------------------------------------- */
+
+.grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.title-grad {
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+html.dark .title-grad {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes pulse-dot-anim {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+.pulse-dot {
+  animation: pulse-dot-anim 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 60%, 100% { opacity: 1; }
+  30%           { opacity: 0.2; }
+}
+.dot:nth-child(1) { animation: blink 1.4s ease-in-out infinite; }
+.dot:nth-child(2) { animation: blink 1.4s ease-in-out 0.2s infinite; }
+.dot:nth-child(3) { animation: blink 1.4s ease-in-out 0.4s infinite; }
+
+@keyframes rise-anim {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise {
+  animation: rise-anim 0.6s ease-out both;
+}
+
+@keyframes marquee-anim {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee-anim 30s linear infinite;
+}
