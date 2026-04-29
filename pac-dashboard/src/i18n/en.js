@@ -399,7 +399,7 @@ export default {
   lp_problem_before_title: 'Without ETF Lens',
   lp_problem_before_1: 'Spreadsheets that break when you add a broker',
   lp_problem_before_2: 'Eyeballed returns that ignore your actual purchase dates',
-  lp_problem_before_3: 'Projections scribbled on a napkin with a fixed 7%',
+  lp_problem_before_3: 'Projections based on a fixed return rate, with no scenarios or historical analysis',
   lp_problem_before_4: 'Data scattered across 4 different broker apps',
   lp_problem_after_title: 'With ETF Lens',
   lp_problem_after_1: 'A single dashboard for all your brokers',

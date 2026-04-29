@@ -399,7 +399,7 @@ export default {
   lp_problem_before_title: 'Senza ETF Lens',
   lp_problem_before_1: 'Fogli Excel che si rompono quando aggiungi un broker',
   lp_problem_before_2: 'Rendimenti a occhio, senza tener conto delle date dei versamenti',
-  lp_problem_before_3: 'Previsioni fatte su un tovagliolo con il 7% fisso',
+  lp_problem_before_3: 'Proiezioni con rendimento fisso, senza scenari né analisi storica',
   lp_problem_before_4: 'Dati sparsi su 4 app broker diverse',
   lp_problem_after_title: 'Con ETF Lens',
   lp_problem_after_1: 'Una dashboard unica per tutti i tuoi broker',
