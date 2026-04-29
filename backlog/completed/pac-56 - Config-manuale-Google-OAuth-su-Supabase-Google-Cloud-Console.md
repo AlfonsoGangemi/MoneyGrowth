@@ -1,10 +1,10 @@
 ---
 id: PAC-56
 title: 'Config manuale: Google OAuth su Supabase + Google Cloud Console'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-13 22:30'
-updated_date: '2026-03-25 12:07'
+updated_date: '2026-04-29 09:12'
 labels:
   - auth
   - config
@@ -96,6 +96,12 @@ Questa impostazione determina cosa succede se un utente ha già un account email
 - [x] #3 Authorized redirect URIs configurati in Google Cloud Console: callback Supabase + localhost + etflens.app
 - [x] #4 Site URL impostato su https://etflens.app in Supabase Authentication → URL Configuration
 - [x] #5 Additional Redirect URLs include http://localhost:5173
-- [ ] #6 Link by email abilitato in Supabase Authentication → Settings
-- [ ] #7 Il flusso OAuth funziona sia in locale che su etflens.app (verificabile dopo PAC-53)
+- [x] #6 Link by email abilitato in Supabase Authentication → Settings
+- [x] #7 Il flusso OAuth funziona sia in locale che su etflens.app (verificabile dopo PAC-53)
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Login con Google funzionante in produzione (etflens.app). Confermato dall'utente il 2026-04-29. Tutti gli step di configurazione Google Cloud Console e Supabase completati con successo.
+<!-- SECTION:FINAL_SUMMARY:END -->
