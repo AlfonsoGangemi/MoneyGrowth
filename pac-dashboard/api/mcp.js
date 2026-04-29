@@ -116,11 +116,7 @@ async function resolveUserId(authHeader) {
     console.log('[mcp] jwt OK — sub:', payload.sub, 'iss:', payload.iss, 'aud:', payload.aud)
     return payload.sub ?? null
   } catch (err) {
-<<<<<<< HEAD
     console.error('[mcp] JWT verification failed:', err?.code, err?.message, 'claim:', err?.claim)
-=======
-    console.error('[mcp] JWT verification failed:', err?.code ?? err?.message)
->>>>>>> landing_v2
     return null
   }
 }
@@ -285,7 +281,6 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end()
   if (!['GET', 'POST', 'DELETE'].includes(req.method)) return res.status(405).end()
 
-<<<<<<< HEAD
   console.log('[mcp] incoming request — method:', req.method, 'auth_present:', !!req.headers['authorization'], 'ua:', req.headers['user-agent']?.slice(0, 50))
 
   const authHeader = req.headers['authorization']
@@ -297,12 +292,6 @@ export default async function handler(req, res) {
     // knows to start the OAuth flow rather than treating it as a token rejection.
     const errorPart = authHeader ? `error="invalid_token", ` : ''
     res.setHeader('WWW-Authenticate', `Bearer ${errorPart}resource_metadata="${base}/.well-known/oauth-protected-resource"`)
-=======
-  const userId = await resolveUserId(req.headers['authorization'])
-  if (!userId) {
-    const base = (process.env.VITE_APP_URL ?? 'https://etflens.app').replace(/\/$/, '')
-    res.setHeader('WWW-Authenticate', `Bearer error="invalid_token", resource_metadata="${base}/.well-known/oauth-protected-resource"`)
->>>>>>> landing_v2
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
