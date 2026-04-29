@@ -389,24 +389,17 @@ export default {
   lp_trust_broker_label: 'supported brokers',
   lp_trust_github: '4.8/5',
   lp_trust_github_label: '⭐ on GitHub',
-<<<<<<< HEAD
-=======
   lp_trust_capitale_label: 'invested on the platform',
   lp_trust_acquisti_label: 'recorded purchases',
   lp_trust_portafogli_label: 'active ETFs',
   lp_trust_stelle_label: 'GitHub stars',
->>>>>>> landing_v2
   lp_problem_eyebrow: 'Why ETF Lens',
   lp_problem_title: 'Your investment plan deserves better than a spreadsheet.',
   lp_problem_sub: 'Tracking a multi-broker accumulation plan in Excel works for three months. Then you start missing purchases, breaking formulas, and your projections become fiction.',
   lp_problem_before_title: 'Without ETF Lens',
   lp_problem_before_1: 'Spreadsheets that break when you add a broker',
   lp_problem_before_2: 'Eyeballed returns that ignore your actual purchase dates',
-<<<<<<< HEAD
-  lp_problem_before_3: 'Projections scribbled on a napkin with a fixed 7%',
-=======
   lp_problem_before_3: 'Projections based on a fixed return rate, with no scenarios or historical analysis',
->>>>>>> landing_v2
   lp_problem_before_4: 'Data scattered across 4 different broker apps',
   lp_problem_after_title: 'With ETF Lens',
   lp_problem_after_1: 'A single dashboard for all your brokers',
@@ -426,13 +419,6 @@ export default {
   lp_feat_storico_desc: 'Every purchase with date, ISIN, price, fee and broker. No more manual reconciliations between Degiro, Fineco and Directa.',
   lp_feat_csv_title: 'CSV import with AI',
   lp_feat_csv_desc: "Paste your broker's CSV into ChatGPT using our prompt. Get back a JSON ready to import. 2 minutes instead of 2 hours.",
-<<<<<<< HEAD
-=======
-  lp_feat_opensource_title: 'Open source, your data',
-  lp_feat_opensource_desc: 'The code is public on GitHub. Export your portfolio as JSON in one click and take it anywhere — no lock-in, no platform dependency.',
-  lp_feat_opensource_github: 'View on GitHub',
-  lp_feat_opensource_export: 'Export JSON',
->>>>>>> landing_v2
   lp_how_eyebrow: 'In 3 steps',
   lp_how_title: 'From your first purchase to the dashboard in under 5 minutes.',
   lp_how_1_title: 'Sign up in 30 seconds',
@@ -510,11 +496,7 @@ export default {
   lp_faq_3_q: 'How much does it cost?',
   lp_faq_3_a: 'The Free plan is free and covers most cases (up to 9 active ETFs, 5 brokers, 100 purchases). The Pro plan costs €4.99/month and removes all limits. Or you can self-host: the code is MIT open source on GitHub.',
   lp_faq_4_q: 'How does the AI connection (MCP) work?',
-<<<<<<< HEAD
-  lp_faq_4_a: 'Generate an API key in Settings and paste it into your AI client (Claude Desktop, Cursor, Codex…). The AI only queries your portfolio.',
-=======
   lp_faq_4_a: 'Add the MCP server URL to your AI client — the client handles authentication automatically via OAuth 2.1 with PKCE (you grant consent once). Alternatively, you can use a manual API key from Settings. The AI only queries your portfolio.',
->>>>>>> landing_v2
   lp_faq_5_q: 'Where do prices come from?',
   lp_faq_5_a: 'From ExtraETF — the same data as the major European ETF portals. You can always override manually.',
   lp_faq_6_q: 'Does it work with Italian brokers?',

@@ -389,24 +389,17 @@ export default {
   lp_trust_broker_label: 'broker supportati',
   lp_trust_github: '4,8/5',
   lp_trust_github_label: '⭐ su GitHub',
-<<<<<<< HEAD
-=======
   lp_trust_capitale_label: 'investito sulla piattaforma',
   lp_trust_acquisti_label: 'acquisti registrati',
   lp_trust_portafogli_label: 'ETF attivi',
   lp_trust_stelle_label: 'stelle su GitHub',
->>>>>>> landing_v2
   lp_problem_eyebrow: 'Perché ETF Lens',
   lp_problem_title: 'Il tuo PAC merita di meglio di un foglio Excel.',
   lp_problem_sub: 'Tracciare un piano di accumulo multi-broker con Excel funziona per tre mesi. Poi inizi a dimenticare acquisti, sbagli le formule, e le proiezioni diventano fantasia.',
   lp_problem_before_title: 'Senza ETF Lens',
   lp_problem_before_1: 'Fogli Excel che si rompono quando aggiungi un broker',
   lp_problem_before_2: 'Rendimenti a occhio, senza tener conto delle date dei versamenti',
-<<<<<<< HEAD
-  lp_problem_before_3: 'Previsioni fatte su un tovagliolo con il 7% fisso',
-=======
   lp_problem_before_3: 'Proiezioni con rendimento fisso, senza scenari né analisi storica',
->>>>>>> landing_v2
   lp_problem_before_4: 'Dati sparsi su 4 app broker diverse',
   lp_problem_after_title: 'Con ETF Lens',
   lp_problem_after_1: 'Una dashboard unica per tutti i tuoi broker',
@@ -426,13 +419,6 @@ export default {
   lp_feat_storico_desc: 'Ogni acquisto con data, ISIN, prezzo, fee e broker. Niente più conciliazioni a mano tra Degiro, Fineco e Directa.',
   lp_feat_csv_title: 'Import CSV con AI',
   lp_feat_csv_desc: 'Incolla il CSV del broker in ChatGPT, ti diamo il prompt. Ti torna un JSON pronto da importare. 2 minuti invece di 2 ore.',
-<<<<<<< HEAD
-=======
-  lp_feat_opensource_title: 'Open source, dati tuoi',
-  lp_feat_opensource_desc: 'Il codice è pubblico su GitHub. Esporta il portafoglio in JSON in un clic e portalo dove vuoi — nessun lock-in, nessuna dipendenza dalla piattaforma.',
-  lp_feat_opensource_github: 'Vedi su GitHub',
-  lp_feat_opensource_export: 'Esporta JSON',
->>>>>>> landing_v2
   lp_how_eyebrow: 'In 3 passi',
   lp_how_title: 'Dal primo acquisto alla dashboard, in meno di 5 minuti.',
   lp_how_1_title: 'Registrati in 30 secondi',
@@ -510,11 +496,7 @@ export default {
   lp_faq_3_q: 'Quanto costa?',
   lp_faq_3_a: "Il piano Free è gratuito e copre la maggior parte dei casi (fino a 9 ETF attivi, 5 broker, 100 acquisti). Il piano Pro costa €4,99/mese e rimuove tutti i limiti. Oppure puoi self-hostare: il codice è open source MIT su GitHub.",
   lp_faq_4_q: 'Come funziona la connessione AI (MCP)?',
-<<<<<<< HEAD
-  lp_faq_4_a: "Generi una API key nelle Impostazioni e la incolli nel tuo client AI (Claude Desktop, Cursor, Codex…). L'AI interroga solo il tuo portafoglio.",
-=======
   lp_faq_4_a: "Aggiungi l'URL del server MCP nel tuo client AI — il client gestisce l'autenticazione in automatico tramite OAuth 2.1 con PKCE (ti viene chiesto il consenso una sola volta). In alternativa puoi usare una API key manuale dalle Impostazioni. L'AI interroga solo il tuo portafoglio.",
->>>>>>> landing_v2
   lp_faq_5_q: 'Da dove arrivano i prezzi?',
   lp_faq_5_a: 'Da ExtraETF — stessi dati dei principali portali ETF europei. Puoi sempre sovrascrivere manualmente.',
   lp_faq_6_q: 'Funziona con broker italiani?',
