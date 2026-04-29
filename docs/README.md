@@ -12,3 +12,4 @@ Indice dei documenti tecnici del progetto. **Aggiornare questo file ad ogni modi
 | [deploy.md](deploy.md) | Deploy su Vercel: build, variabili d'ambiente richieste, rewrite `vercel.json` |
 | [mcp.md](mcp.md) | Layer MCP: architettura, dual-auth (Bearer `pac_` + OAuth JWT), risorse e tool esposti, modello di sicurezza |
 | [oauth-pkce-analysis.md](oauth-pkce-analysis.md) | Analisi OAuth 2.1 + PKCE: architettura AS, flusso PKCE, impatti, stima effort (PAC-117) |
+| [mcp-auth-official-spec.md](mcp-auth-official-spec.md) | Requisiti ufficiali OAuth per MCP: spec MCP, requisiti Claude.ai, claim JWT, discovery, flusso completo, stato implementazione |

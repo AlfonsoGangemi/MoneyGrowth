@@ -17,7 +17,7 @@ function issuer() {
 
 async function mintAccessToken(userId, scope) {
   return new SignJWT({ scope })
-    .setProtectedHeader({ alg: 'HS256' })
+    .setProtectedHeader({ alg: 'HS256', typ: 'at+JWT' })
     .setSubject(userId)
     .setIssuer(issuer())
     .setAudience(`${issuer()}/api/mcp`)
