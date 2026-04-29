@@ -269,7 +269,7 @@ function Header({ onCTA, t }) {
     <header className={`sticky top-0 z-40 transition-all ${scrolled ? 'bg-white/85 dark:bg-slate-950/85 backdrop-blur border-b border-slate-200 dark:border-slate-800' : 'bg-transparent'}`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-black text-sm">E</div>
+          <img src="/favicon.svg" alt="ETF Lens" className="w-7 h-7" />
           <span className="font-bold text-slate-900 dark:text-white tracking-tight">ETF Lens</span>
         </div>
         <nav className="hidden md:flex items-center gap-6 text-[13px] text-slate-600 dark:text-slate-300">
@@ -570,6 +570,23 @@ function Features({ t }) {
             <div className="mt-auto flex items-center gap-2 text-[12px] text-slate-400">
               <span className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[11px]">CSV → JSON</span>
               <span>in 2 min</span>
+            </div>
+          </div>
+
+          {/* Open source */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-6 flex flex-col gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-600/10 dark:bg-slate-400/10 flex items-center justify-center text-xl">🔓</div>
+            <div>
+              <div className="text-lg font-bold text-slate-900 dark:text-white">{t('lp_feat_opensource_title')}</div>
+              <p className="mt-1 text-[14px] text-slate-500 dark:text-slate-400">{t('lp_feat_opensource_desc')}</p>
+            </div>
+            <div className="mt-auto flex items-center gap-2">
+              <span className="flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                ⭐ {t('lp_feat_opensource_github')}
+              </span>
+              <span className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                {t('lp_feat_opensource_export')}
+              </span>
             </div>
           </div>
         </div>
@@ -926,7 +943,7 @@ function Footer({ onCTA, t }) {
           {/* Logo + tagline — spans 2 cols on sm */}
           <div className="col-span-2 sm:col-span-2">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-black text-sm">E</div>
+              <img src="/favicon.svg" alt="ETF Lens" className="w-7 h-7" />
               <span className="font-bold text-slate-900 dark:text-white tracking-tight">ETF Lens</span>
             </div>
             <p className="text-[13px] text-slate-500 dark:text-slate-400 max-w-xs">{t('lp_footer_tagline')}</p>
