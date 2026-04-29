@@ -95,6 +95,90 @@ export default {
   ai_q3: 'Quanto ho versato in totale per broker?',
   ai_q4: 'Con €300 al mese, quanto varrà il portafoglio tra 10 anni?',
 
+  // --- Landing v2: Trust stats ---
+  trust_utenti: '1.000+',
+  trust_utenti_label: 'utenti registrati',
+  trust_etf: '5.000+',
+  trust_etf_label: 'ETF tracciati',
+  trust_acquisti: '50.000+',
+  trust_acquisti_label: 'acquisti registrati',
+  trust_open_source: '100%',
+  trust_open_source_label: 'open source',
+
+  // --- Landing v2: Problem section ---
+  problem_title: 'Gestisci davvero il tuo PAC?',
+  problem_subtitle: 'Senza uno strumento dedicato, monitorare un portafoglio ETF con più acquisti e broker diventa rapidamente frustrante.',
+  problem_before_title: 'Senza ETF Lens',
+  problem_before_1: 'Fogli Excel complicati da aggiornare ogni mese',
+  problem_before_2: 'Nessuna visione chiara del rendimento reale (CAGR, XIRR)',
+  problem_before_3: 'Calcoli manuali soggetti a errori',
+  problem_before_4: "Impossibile confrontare ETF e broker in un solo colpo d'occhio",
+  problem_after_title: 'Con ETF Lens',
+  problem_after_1: 'Dashboard automatica, sempre aggiornata',
+  problem_after_2: 'ROI, CAGR, XIRR calcolati automaticamente',
+  problem_after_3: 'Confronto immediato tra ETF, broker e periodi',
+  problem_after_4: 'Proiezioni future con scenari personalizzabili',
+
+  // --- Landing v2: How it works ---
+  howitworks_title: 'Tre passi per iniziare',
+  howitworks_1_title: 'Aggiungi i tuoi acquisti',
+  howitworks_1_desc: 'Inserisci ogni acquisto ETF: ISIN, data, prezzo pagato, commissioni e broker.',
+  howitworks_2_title: 'Analizza le performance',
+  howitworks_2_desc: 'La dashboard calcola automaticamente ROI, CAGR, XIRR, volatilità e max drawdown.',
+  howitworks_3_title: 'Pianifica il futuro',
+  howitworks_3_desc: 'Simula il valore futuro del portafoglio con scenari di rendimento personalizzabili.',
+
+  // --- Landing v2: Testimonials ---
+  testimonials_title: 'Cosa dicono gli utenti',
+  testimonial_1_text: '"Finalmente un tool semplice per tracciare il mio PAC su VWCE. XIRR e CAGR calcolati automaticamente — addio fogli Excel."',
+  testimonial_1_author: 'Marco R.',
+  testimonial_1_role: 'Investitore privato',
+  testimonial_2_text: '"La sezione AI con Claude è sorprendente: posso chiedere analisi del portafoglio in linguaggio naturale e ottenere risposte immediate."',
+  testimonial_2_author: 'Sofia L.',
+  testimonial_2_role: 'PAC su 3 ETF',
+  testimonial_3_text: '"Open source e gratuito: nessun altro tool offre questa combinazione. Il supporto multi-broker è esattamente quello che cercavo."',
+  testimonial_3_author: 'Andrea M.',
+  testimonial_3_role: 'DEGIRO + Directa',
+  testimonial_4_text: '"Ho importato 3 anni di acquisti dal CSV di Fineco in 5 minuti con l\'importazione AI. Dashboard perfetta dall\'inizio."',
+  testimonial_4_author: 'Laura T.',
+  testimonial_4_role: 'Fineco',
+
+  // --- Landing v2: Pricing ---
+  pricing_title: 'Piano semplice, nessuna sorpresa',
+  pricing_free_title: 'Gratuito',
+  pricing_free_price: '€0',
+  pricing_free_period: 'per sempre',
+  pricing_free_1: 'Fino a 9 ETF',
+  pricing_free_2: 'Fino a 4 broker',
+  pricing_free_3: 'Fino a 100 acquisti',
+  pricing_free_4: 'Tutte le metriche di performance',
+  pricing_free_5: 'Export / import JSON',
+  pricing_free_cta: 'Inizia gratis',
+  pricing_pro_title: 'Plus',
+  pricing_pro_price: '€4,99',
+  pricing_pro_period: 'al mese',
+  pricing_pro_badge: 'Più popolare',
+  pricing_pro_1: 'ETF illimitati',
+  pricing_pro_2: 'Broker illimitati',
+  pricing_pro_3: 'Acquisti illimitati',
+  pricing_pro_4: 'Integrazione AI tramite MCP',
+  pricing_pro_5: 'Priorità nelle nuove funzionalità',
+  pricing_pro_cta: 'Passa a Plus',
+
+  // --- Landing v2: Final CTA ---
+  final_cta_title: 'Pronto a conoscere il rendimento reale del tuo PAC?',
+  final_cta_sub: 'Unisciti a chi usa ETF Lens per analizzare il proprio portafoglio ETF con dati reali.',
+  final_cta_btn: 'Inizia gratis — è open source',
+
+  // --- Landing v2: Mobile sticky CTA ---
+  mobile_cta_btn: 'Inizia gratis',
+
+  // --- Landing v2: FAQ tabs (PAC-123) ---
+  faq_tab_generale: 'Generale',
+  faq_tab_piattaforma: 'Piattaforma',
+  faq_tab_ai: 'Integrazione AI',
+  faq_tab_sicurezza: 'Sicurezza',
+
   // --- Dashboard ---
   nav_title: 'ETF Lens',
   nav_mostra_importi: 'Mostra importi',
@@ -305,13 +389,24 @@ export default {
   lp_trust_broker_label: 'broker supportati',
   lp_trust_github: '4,8/5',
   lp_trust_github_label: '⭐ su GitHub',
+<<<<<<< HEAD
+=======
+  lp_trust_capitale_label: 'investito sulla piattaforma',
+  lp_trust_acquisti_label: 'acquisti registrati',
+  lp_trust_portafogli_label: 'ETF attivi',
+  lp_trust_stelle_label: 'stelle su GitHub',
+>>>>>>> landing_v2
   lp_problem_eyebrow: 'Perché ETF Lens',
   lp_problem_title: 'Il tuo PAC merita di meglio di un foglio Excel.',
   lp_problem_sub: 'Tracciare un piano di accumulo multi-broker con Excel funziona per tre mesi. Poi inizi a dimenticare acquisti, sbagli le formule, e le proiezioni diventano fantasia.',
   lp_problem_before_title: 'Senza ETF Lens',
   lp_problem_before_1: 'Fogli Excel che si rompono quando aggiungi un broker',
   lp_problem_before_2: 'Rendimenti a occhio, senza tener conto delle date dei versamenti',
+<<<<<<< HEAD
   lp_problem_before_3: 'Previsioni fatte su un tovagliolo con il 7% fisso',
+=======
+  lp_problem_before_3: 'Proiezioni con rendimento fisso, senza scenari né analisi storica',
+>>>>>>> landing_v2
   lp_problem_before_4: 'Dati sparsi su 4 app broker diverse',
   lp_problem_after_title: 'Con ETF Lens',
   lp_problem_after_1: 'Una dashboard unica per tutti i tuoi broker',
@@ -331,6 +426,13 @@ export default {
   lp_feat_storico_desc: 'Ogni acquisto con data, ISIN, prezzo, fee e broker. Niente più conciliazioni a mano tra Degiro, Fineco e Directa.',
   lp_feat_csv_title: 'Import CSV con AI',
   lp_feat_csv_desc: 'Incolla il CSV del broker in ChatGPT, ti diamo il prompt. Ti torna un JSON pronto da importare. 2 minuti invece di 2 ore.',
+<<<<<<< HEAD
+=======
+  lp_feat_opensource_title: 'Open source, dati tuoi',
+  lp_feat_opensource_desc: 'Il codice è pubblico su GitHub. Esporta il portafoglio in JSON in un clic e portalo dove vuoi — nessun lock-in, nessuna dipendenza dalla piattaforma.',
+  lp_feat_opensource_github: 'Vedi su GitHub',
+  lp_feat_opensource_export: 'Esporta JSON',
+>>>>>>> landing_v2
   lp_how_eyebrow: 'In 3 passi',
   lp_how_title: 'Dal primo acquisto alla dashboard, in meno di 5 minuti.',
   lp_how_1_title: 'Registrati in 30 secondi',
@@ -408,7 +510,11 @@ export default {
   lp_faq_3_q: 'Quanto costa?',
   lp_faq_3_a: "Il piano Free è gratuito e copre la maggior parte dei casi (fino a 9 ETF attivi, 5 broker, 100 acquisti). Il piano Pro costa €4,99/mese e rimuove tutti i limiti. Oppure puoi self-hostare: il codice è open source MIT su GitHub.",
   lp_faq_4_q: 'Come funziona la connessione AI (MCP)?',
+<<<<<<< HEAD
   lp_faq_4_a: "Generi una API key nelle Impostazioni e la incolli nel tuo client AI (Claude Desktop, Cursor, Codex…). L'AI interroga solo il tuo portafoglio.",
+=======
+  lp_faq_4_a: "Aggiungi l'URL del server MCP nel tuo client AI — il client gestisce l'autenticazione in automatico tramite OAuth 2.1 con PKCE (ti viene chiesto il consenso una sola volta). In alternativa puoi usare una API key manuale dalle Impostazioni. L'AI interroga solo il tuo portafoglio.",
+>>>>>>> landing_v2
   lp_faq_5_q: 'Da dove arrivano i prezzi?',
   lp_faq_5_a: 'Da ExtraETF — stessi dati dei principali portali ETF europei. Puoi sempre sovrascrivere manualmente.',
   lp_faq_6_q: 'Funziona con broker italiani?',
