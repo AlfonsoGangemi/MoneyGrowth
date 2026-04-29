@@ -278,6 +278,7 @@ function buildMcpServer(userId) {
 }
 
 export default async function handler(req, res) {
+  if (req.method === 'OPTIONS') return res.status(204).end()
   if (!['GET', 'POST', 'DELETE'].includes(req.method)) return res.status(405).end()
 
   console.log('[mcp] incoming request — method:', req.method, 'auth_present:', !!req.headers['authorization'], 'ua:', req.headers['user-agent']?.slice(0, 50))
