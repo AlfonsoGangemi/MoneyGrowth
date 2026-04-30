@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import { useWatchlist } from '../hooks/useWatchlist'
 import { useLocale } from '../hooks/useLocale'
 
+const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{10}$/
+
 const ERROR_KEYS = {
   isin_invalid: 'watchlist_error_isin_invalid',
   not_found:    'watchlist_error_not_found',
@@ -69,13 +71,23 @@ export default function WatchlistPanel() {
           className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={adding}
         />
-        <button
-          type="submit"
-          disabled={adding || !isinInput.trim()}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg disabled:opacity-50 transition-colors"
-        >
-          {adding ? '…' : t('watchlist_add_btn')}
-        </button>
+        <div className="relative group">
+          <button
+            type="submit"
+            disabled={adding || !ISIN_RE.test(isinInput)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg disabled:opacity-50 transition-colors"
+          >
+            {adding ? '…' : t('watchlist_add_btn')}
+          </button>
+          {!ISIN_RE.test(isinInput) && isinInput.length > 0 && (
+            <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-10 w-56">
+              <div className="bg-slate-800 dark:bg-slate-700 text-white text-xs rounded-lg px-3 py-2 shadow-lg">
+                {t('watchlist_error_isin_invalid')}
+                <div className="absolute top-full right-3 border-4 border-transparent border-t-slate-800 dark:border-t-slate-700" />
+              </div>
+            </div>
+          )}
+        </div>
       </form>
 
       {formError && (

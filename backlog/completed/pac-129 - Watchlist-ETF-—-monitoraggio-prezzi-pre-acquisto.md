@@ -1,10 +1,10 @@
 ---
 id: PAC-129
 title: Watchlist ETF — monitoraggio prezzi pre-acquisto
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-04-30 11:00'
-updated_date: '2026-04-30 11:14'
+updated_date: '2026-04-30 15:18'
 labels:
   - watchlist
   - etf
@@ -97,15 +97,15 @@ Form: campo ISIN + bottone Aggiungi. Bottone disabilitato se lista è già a 12 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 L'utente può aggiungere un ISIN alla watchlist: prima viene validato con regex, poi verificato su ExtraETF (GET /api/extraetf-detail); se l'ISIN non esiste su ExtraETF viene mostrato un errore e l'inserimento è bloccato
-- [ ] #2 Nome ed emittente vengono estratti dalla risposta di extraetf-detail e salvati in DB nella stessa operazione di inserimento (nessuna call aggiuntiva)
-- [ ] #3 La watchlist accetta al massimo 12 ETF per utente; oltre il limite il form è disabilitato e viene mostrato un messaggio
-- [ ] #4 Un ISIN già presente in portafoglio (tabella etf) può essere aggiunto anche alla watchlist senza conflitti
-- [ ] #5 Al caricamento della sezione viene recuperato il prezzo corrente di tutti gli ISIN in lista tramite extraetf-quotes real-time (nessun polling automatico)
-- [ ] #6 Ogni riga mostra: ISIN, nome, emittente, prezzo corrente e un link esterno alla pagina ExtraETF dell'ETF
-- [ ] #7 L'utente può rimuovere un ETF dalla watchlist; la rimozione è immediata lato UI e persistita in DB
-- [ ] #8 RLS attiva: ogni utente vede e modifica solo la propria watchlist
-- [ ] #9 Nessuna storicizzazione prezzi: la tabella watchlist non scrive in etf_prezzi_storici
+- [x] #1 L'utente può aggiungere un ISIN alla watchlist: prima viene validato con regex, poi verificato su ExtraETF (GET /api/extraetf-detail); se l'ISIN non esiste su ExtraETF viene mostrato un errore e l'inserimento è bloccato
+- [x] #2 Nome ed emittente vengono estratti dalla risposta di extraetf-detail e salvati in DB nella stessa operazione di inserimento (nessuna call aggiuntiva)
+- [x] #3 La watchlist accetta al massimo 12 ETF per utente; oltre il limite il form è disabilitato e viene mostrato un messaggio
+- [x] #4 Un ISIN già presente in portafoglio (tabella etf) può essere aggiunto anche alla watchlist senza conflitti
+- [x] #5 Al caricamento della sezione viene recuperato il prezzo corrente di tutti gli ISIN in lista tramite extraetf-quotes real-time (nessun polling automatico)
+- [x] #6 Ogni riga mostra: ISIN, nome, emittente, prezzo corrente e un link esterno alla pagina ExtraETF dell'ETF
+- [x] #7 L'utente può rimuovere un ETF dalla watchlist; la rimozione è immediata lato UI e persistita in DB
+- [x] #8 RLS attiva: ogni utente vede e modifica solo la propria watchlist
+- [x] #9 Nessuna storicizzazione prezzi: la tabella watchlist non scrive in etf_prezzi_storici
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -204,3 +204,26 @@ Aggiungere chiavi `watchlist_*` in `src/i18n/it.js` e `src/i18n/en.js`:
 - **`docs/architecture.md`** — aggiungere `useWatchlist.js` in tabella hook, `WatchlistPanel.jsx` in tabella componenti
 - **`docs/model.md`** — aggiungere schema tabella `watchlist` nella sezione Supabase
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+## Implementazione completata
+
+### File creati
+- `pac-dashboard/supabase/migrations/20260430000000_pac129_watchlist.sql` — tabella `watchlist` con RLS (select/insert/delete per `user_id`), applicata con `supabase db push`
+- `pac-dashboard/src/hooks/useWatchlist.js` — hook con `carica`, `aggiornaPrezzi` (al mount), `aggiungiETF` (regex → ExtraETF detail → INSERT con duplicate check), `rimuoviETF` (ottimistico)
+- `pac-dashboard/src/components/WatchlistPanel.jsx` — form ISIN con auto-uppercase, tabella ISIN/nome/emittente/prezzo/link ExtraETF/rimuovi, bottone refresh, stato vuoto
+
+### File modificati
+- `pac-dashboard/src/components/Dashboard.jsx` — import `WatchlistPanel` + render sotto `TabellaProiezione`
+- `pac-dashboard/src/i18n/it.js` e `en.js` — sezione `// --- Watchlist ---` con 17 chiavi
+- `docs/architecture.md` — aggiunti `useWatchlist.js` e `WatchlistPanel.jsx` nelle tabelle
+- `docs/model.md` — schema `watchlist` nello Schema SQL e nella sezione RLS
+
+### Note tecniche
+- Nessuna storicizzazione: la watchlist non scrive in `etf_prezzi_storici`
+- Il prezzo corrente viene fetchato via WebSocket ExtraETF al mount del componente
+- nome/emittente salvati all'inserimento per evitare call aggiuntive a ogni render
+- Duplicate ISIN gestito via codice errore Supabase `23505` → throw `'duplicate'`
+<!-- SECTION:FINAL_SUMMARY:END -->

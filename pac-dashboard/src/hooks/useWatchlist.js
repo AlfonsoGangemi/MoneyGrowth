@@ -48,9 +48,10 @@ export function useWatchlist() {
     const detail = await res.json()
     if (!detail.nome) throw new Error('not_found')
 
+    const { data: { user } } = await supabase.auth.getUser()
     const { error: dbErr } = await supabase
       .from('watchlist')
-      .insert({ isin: upper, nome: detail.nome, emittente: detail.emittente ?? null })
+      .insert({ isin: upper, nome: detail.nome, emittente: detail.emittente ?? null, user_id: user.id })
     if (dbErr) {
       if (dbErr.code === '23505') throw new Error('duplicate')
       throw new Error('db')
