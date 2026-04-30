@@ -17,8 +17,35 @@ function isRateLimited(ip) {
 }
 
 const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{10}$/
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const MAX_ISINS = 20
 const WS_TIMEOUT_MS = 8000
+
+const UPSTREAM_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'application/json',
+  'Referer': 'https://extraetf.com/',
+  'Origin': 'https://extraetf.com',
+}
+
+async function handleHistory(req, res) {
+  const { isin, date_from, date_to } = req.query
+  if (!isin || !ISIN_RE.test(isin)) return res.status(400).json({ error: 'ISIN non valido' })
+  if (!DATE_RE.test(date_from)) return res.status(400).json({ error: 'date_from non valido' })
+  if (date_to && !DATE_RE.test(date_to)) return res.status(400).json({ error: 'date_to non valido' })
+
+  const to = date_to || new Date().toISOString().slice(0, 10)
+  const url = `https://quotes.extraetf.com/v1/chart?isin=${isin}&currency=EUR&ordering=date&date_from=${date_from}&date_to=${to}&interval=1d&extraetf_locale=it`
+
+  try {
+    const upstream = await fetch(url, { headers: UPSTREAM_HEADERS })
+    if (!upstream.ok) return res.status(502).json({ error: 'Errore upstream ExtraETF' })
+    const data = await upstream.json()
+    return res.status(200).json(data)
+  } catch {
+    return res.status(502).json({ error: 'Errore di rete' })
+  }
+}
 
 export default async function handler(req, res) {
   const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || 'unknown'
@@ -27,6 +54,13 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Troppe richieste. Riprova tra un minuto.' })
   }
 
+  const allowedOrigin = process.env.ALLOWED_ORIGIN
+  if (allowedOrigin) res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
+
+  // History mode: date_from presente → REST chart API (un ISIN, range di date)
+  if (req.query.date_from) return handleHistory(req, res)
+
+  // Real-time mode: WebSocket (più ISIN, prezzo corrente)
   const rawIsins = req.query.isins
   if (!rawIsins) {
     return res.status(400).json({ error: 'Parametro isins mancante' })
@@ -44,9 +78,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: `ISIN non valido: ${isin}` })
     }
   }
-
-  const allowedOrigin = process.env.ALLOWED_ORIGIN
-  if (allowedOrigin) res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
 
   return new Promise((resolve) => {
     const pending = new Set(isins)
