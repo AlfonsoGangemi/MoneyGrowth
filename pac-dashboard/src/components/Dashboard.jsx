@@ -399,6 +399,52 @@ function InfoModal({ onChiudi }) {
   )
 }
 
+// ── Aggiorna tutti i prezzi (stato isolato per evitare re-render dei grafici) ──
+
+function AggiornaPrezziButton({ etfConIsin, onApplicaPrezzi, onErrori }) {
+  const { t } = useLocale()
+  const [stato, setStato] = useState('idle')
+  const [cooldown, setCooldown] = useState(0)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = setTimeout(() => setCooldown(s => s - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [cooldown])
+
+  async function handleClick() {
+    if (stato === 'running' || cooldown > 0 || etfConIsin.length === 0) return
+    setStato('running')
+    onErrori([])
+    try {
+      const isins = etfConIsin.map(e => e.isin).join(',')
+      const res = await fetch(`/api/extraetf-quotes?isins=${isins}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      const errori = await onApplicaPrezzi(etfConIsin, data?.prices ?? {})
+      onErrori(errori)
+    } catch (err) {
+      Sentry.captureException(err, { tags: { operation: 'aggiorna_tutti_prezzi' } })
+      onErrori(etfConIsin.map(e => e.isin))
+    }
+    setStato('idle')
+    setCooldown(60)
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={stato === 'running' || cooldown > 0}
+      className="flex items-center gap-1.5 text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-xl transition-colors"
+    >
+      <svg className={`w-3.5 h-3.5 ${stato === 'running' ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      {cooldown > 0 ? `${t('etf_aggiorna_tutti')} (${cooldown}s)` : t('etf_aggiorna_tutti')}
+    </button>
+  )
+}
+
 // ── Dashboard principale ───────────────────────────────────────────
 
 export default function Dashboard({ user, onSignOut }) {
@@ -418,9 +464,7 @@ export default function Dashboard({ user, onSignOut }) {
   const [modalApiKey, setModalApiKey] = useState(false)
   const [dropdownAperto, setDropdownAperto] = useState(false)
   const dropdownRef = useRef(null)
-  const [aggStato, setAggStato] = useState('idle') // 'idle' | 'running'
   const [aggErroriIsin, setAggErroriIsin] = useState([])
-  const [globalCooldownSec, setGlobalCooldownSec] = useState(0)
   const lastSyncByEtf = useRef({})
 
   const { liveMap, updateLivePrice, persistPrezzi } = useETFQuotes(port.etf, user?.id, (id, isin, campi) => port.aggiornaETF(id, isin, campi))
@@ -453,12 +497,6 @@ export default function Dashboard({ user, onSignOut }) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [dropdownAperto])
 
-  useEffect(() => {
-    if (globalCooldownSec <= 0) return
-    const t = setTimeout(() => setGlobalCooldownSec(s => s - 1), 1000)
-    return () => clearTimeout(t)
-  }, [globalCooldownSec])
-
   function handleEliminaETF(id) {
     if (!window.confirm(t('etf_elimina_conferma'))) return
     port.eliminaETF(id)
@@ -474,35 +512,18 @@ export default function Dashboard({ user, onSignOut }) {
     port.aggiornaETF(id, etfItem?.isin, { prezzoCorrente: prezzo })
   }
 
-  async function aggiornaTuttiIPrezzi() {
-    if (aggStato === 'running' || globalCooldownSec > 0) return
-    const daAggiornare = etfAttivi.filter(e => e.isin)
-    if (daAggiornare.length === 0) return
-    setAggStato('running')
-    setAggErroriIsin([])
-    try {
-      const isins = daAggiornare.map(e => e.isin).join(',')
-      const res = await fetch(`/api/extraetf-quotes?isins=${isins}`)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      const prezzi = data?.prices ?? {}
-      const errori = []
-      for (const etf of daAggiornare) {
-        const prezzo = prezzi[etf.isin]
-        if (prezzo && !isNaN(prezzo) && prezzo > 0) {
-          handleAggiornaPrezzo(etf.id, prezzo)
-        } else {
-          errori.push(etf.isin)
-        }
+  async function handleApplicaPrezzi(daAggiornare, prezzi) {
+    const errori = []
+    for (const etf of daAggiornare) {
+      const prezzo = prezzi[etf.isin]
+      if (prezzo && !isNaN(prezzo) && prezzo > 0) {
+        handleAggiornaPrezzo(etf.id, prezzo)
+      } else {
+        errori.push(etf.isin)
       }
-      setAggErroriIsin(errori)
-      await persistPrezzi(prezzi)
-    } catch (err) {
-      Sentry.captureException(err, { tags: { operation: 'aggiorna_tutti_prezzi' } })
-      setAggErroriIsin(daAggiornare.map(e => e.isin))
     }
-    setAggStato('idle')
-    setGlobalCooldownSec(60)
+    await persistPrezzi(prezzi)
+    return errori
   }
 
   // Form nuovo ETF
@@ -762,16 +783,11 @@ export default function Dashboard({ user, onSignOut }) {
               </h2>
               <div className="flex gap-2 items-center">
                 {etfAttivi.filter(e => e.isin).length > 0 && (
-                  <button
-                    onClick={aggiornaTuttiIPrezzi}
-                    disabled={aggStato === 'running' || globalCooldownSec > 0}
-                    className="flex items-center gap-1.5 text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-xl transition-colors"
-                  >
-                    <svg className={`w-3.5 h-3.5 ${aggStato === 'running' ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    {globalCooldownSec > 0 ? `${t('etf_aggiorna_tutti')} (${globalCooldownSec}s)` : t('etf_aggiorna_tutti')}
-                  </button>
+                  <AggiornaPrezziButton
+                    etfConIsin={etfAttivi.filter(e => e.isin)}
+                    onApplicaPrezzi={handleApplicaPrezzi}
+                    onErrori={setAggErroriIsin}
+                  />
                 )}
                 {etfAttivi.length > 0 && (
                   <button
