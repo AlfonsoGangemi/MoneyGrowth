@@ -32,7 +32,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 
 | File | Responsabilità |
 |---|---|
-| `Dashboard.jsx` | Vista principale autenticata: layout generale, orchestrazione componenti, caricamento dati portafoglio |
+| `Dashboard.jsx` | Vista principale autenticata: layout generale, orchestrazione componenti, caricamento dati portafoglio. Contiene il sub-componente privato `AggiornaPrezziButton` (stato countdown isolato per evitare re-render dei grafici) |
 | `ETFCard.jsx` | Card riepilogativa per singolo ETF: valore attuale, ROI, CAGR, acquisti |
 | `AcquistoForm.jsx` | Form inserimento acquisto multi-ETF con selezione broker e data |
 | `GraficoPortafoglio.jsx` | Grafico storico reale + proiezione scenari futuri (Recharts) |
