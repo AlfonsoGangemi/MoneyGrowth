@@ -12,6 +12,7 @@ import LinguaToggle from './LinguaToggle'
 import ThemeToggle from './ThemeToggle'
 import ImportExportModal from './ImportExportModal'
 import ApiKeyPanel from './ApiKeyPanel'
+import WatchlistPanel from './WatchlistPanel'
 
 // ── Componenti base ────────────────────────────────────────────────
 
@@ -890,6 +891,9 @@ export default function Dashboard({ user, onSignOut }) {
             privacyMode={privacyMode}
           />
         )}
+
+        {/* Watchlist */}
+        <WatchlistPanel />
 
       </main>
 

@@ -105,6 +105,17 @@ create table portafoglio_storico_annuale (
   unique (user_id, anno, broker_id)
 );
 
+-- Watchlist (PAC-129) — ETF monitorati pre-acquisto, separati da etf
+create table watchlist (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  isin        text not null check (isin ~ '^[A-Z]{2}[A-Z0-9]{10}$'),
+  nome        text,
+  emittente   text,
+  created_at  timestamptz default now(),
+  unique (user_id, isin)
+);
+
 -- Indici aggiuntivi (PAC-112)
 create index on acquisti(user_id, etf_id);
 create index on scenari(user_id);
@@ -173,6 +184,13 @@ create policy "utente vede il proprio storico annuale"
   on portafoglio_storico_annuale for all
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- watchlist: ogni utente vede e modifica solo la propria (PAC-129)
+alter table watchlist enable row level security;
+
+create policy "watchlist_select" on watchlist for select using (auth.uid() = user_id);
+create policy "watchlist_insert" on watchlist for insert with check (auth.uid() = user_id);
+create policy "watchlist_delete" on watchlist for delete using (auth.uid() = user_id);
 ```
 
 ### Migrazione dati esistenti (PAC-11)
