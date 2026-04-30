@@ -42,6 +42,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `OAuthConsent.jsx` | Pagina consenso OAuth 2.1: autenticazione Supabase + POST a `/api/oauth/authorize`; route SPA `/oauth/authorize` |
 | `AuthForm.jsx` | Form login / registrazione con validazione email temporanee (`tempmail.js`) |
 | `LandingPage.jsx` | Homepage pubblica v2: hero con DashboardMock, marquee broker, TrustStats, ProblemSection, HowItWorks, Testimonials, Pricing, FAQ a tab (Generale/Piattaforma/AI/Sicurezza), FinalCTA, StickyMobileCTA |
+| `WatchlistPanel.jsx` | Pannello watchlist: form inserimento ISIN, tabella con prezzo corrente e link ExtraETF, rimozione ottimistica |
 | `ImportExportModal.jsx` | Backup / Ripristino JSON del portafoglio |
 | `CsvAiModal.jsx` | Import CSV storico acquisti tramite parsing LLM |
 | `LinguaToggle.jsx` | Pulsante IT/EN in navbar |
@@ -62,6 +63,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `useTheme.jsx` | Context provider tema chiaro/scuro con persistenza `localStorage` |
 | `useETFQuotes.js` | Aggiornamento prezzi da ExtraETF: polling, debounce, aggiornamento Supabase |
 | `useTrustStats.js` | Fetcha `GET /api/stats` al mount; restituisce `null` finché la risposta non è disponibile (nessun skeleton, no layout shift) |
+| `useWatchlist.js` | Stato watchlist: CRUD ISIN su tabella `watchlist` Supabase, validazione regex + ExtraETF, prezzi real-time via `/api/extraetf-quotes` |
 
 ---
 
