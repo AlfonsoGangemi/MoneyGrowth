@@ -10,7 +10,6 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 |---|---|
 | `api/extraetf-quotes.js` | Proxy per le quotazioni ExtraETF: bypassa CORS del browser, restituisce i prezzi correnti degli ETF |
 | `api/extraetf-detail.js` | Proxy per i dettagli ETF da ExtraETF (ISIN, nome, asset class) |
-| `api/justetf-proxy.js` | Proxy alternativo JustETF per quotazioni di fallback |
 | `api/mcp.js` | MCP Streamable HTTP server (Vercel serverless). Espone tool e resource MCP per accesso LLM ai dati di portafoglio. Dual-auth: Bearer `pac_` API key + JWT OAuth 2.1 |
 | `api/keys/generate.js` | `POST /api/keys/generate` — genera una Bearer API key `pac_<64hex>`, max 2 attive per utente, TTL 90gg |
 | `api/keys/[keyId].js` | `DELETE /api/keys/:id` — revoca una API key per ID |
@@ -72,6 +71,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 |---|---|
 | `calcoli.js` | Tutti i calcoli finanziari: ROI, CAGR, TWRR, ATWRR, IRR, Drawdown, Volatilità, proiezioni, serie storiche. Esposto anche via MCP come resource e tool |
 | `formatStat.js` | `formatStatValue(n)` — formatta un numero in notazione compatta con suffisso `+` (es. `1240 → "1K+"`, `3450000 → "3M+"`). Usato da TrustStats per visualizzare le statistiche pubbliche. |
+| `backfillPrezzi.js` | `backfillETFPrices(isin, dateFrom, opts)` — storicizzazione demand-driven prezzi mensili ETF: legge gap da `etf_prezzi_storici`, chiama `/api/extraetf-quotes` history mode, upsert risultati; deduplicazione giornaliera via localStorage |
 | `supabase.js` | Client Supabase singleton con anon key (lato client) |
 | `tempmail.js` | Lista domini email temporanei bloccati in registrazione |
 
