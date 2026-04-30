@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import * as Sentry from '@sentry/react'
 import { supabase } from '../utils/supabase'
+import { backfillETFPrices } from '../utils/backfillPrezzi'
 
 // ── Scenari di default inseriti al primo accesso ───────────────────
 const SCENARI_DEFAULT = [
@@ -244,6 +245,27 @@ export function usePortafoglio(user) {
 
   useEffect(() => { caricaDati() }, [caricaDati])
 
+  const etfRef = useRef([])
+  useEffect(() => { etfRef.current = stato.etf }, [stato.etf])
+
+  // Backfill prezzi storici al caricamento iniziale per ogni ETF attivo
+  useEffect(() => {
+    if (!user || loading) return
+    const etfAttivi = etfRef.current.filter(e => !e.archiviato)
+    for (const etf of etfAttivi) {
+      if (!etf.isin || !etf.acquisti.length) continue
+      const dateFrom = etf.acquisti.reduce((min, a) => a.data < min ? a.data : min, etf.acquisti[0].data)
+      backfillETFPrices(etf.isin, dateFrom).then(nuovi => {
+        if (!nuovi.length) return
+        setStato(s => {
+          const map = new Map(s.prezziStorici.map(p => [`${p.isin}-${p.anno}-${p.mese}`, p]))
+          for (const r of nuovi) map.set(`${r.isin}-${r.anno}-${r.mese}`, r)
+          return { ...s, prezziStorici: [...map.values()] }
+        })
+      })
+    }
+  }, [user, loading])
+
   // ── ETF ──────────────────────────────────────────────────────────
   const aggiungiETF = useCallback(async (nome, isin, emittente, importoFisso, assetClassId) => {
     if (stato.etf.filter(e => !e.archiviato).length >= 9) return
@@ -444,6 +466,24 @@ export function usePortafoglio(user) {
           valore: r.valore, totale_versato: r.totaleVersato,
         })))
       if (errStorico) { Sentry.captureException(new Error(errStorico.message), { tags: { operation: 'aggiungi_acquisti_storico' } }); setErrore('Errore nel salvataggio storico annuale.') }
+    }
+
+    // Backfill prezzi storici per ogni ETF coinvolto nell'acquisto appena inserito
+    const etfDates = new Map()
+    for (const item of items) {
+      const prev = etfDates.get(item.etfId)
+      if (!prev || item.data < prev) etfDates.set(item.etfId, item.data)
+    }
+    for (const [etfId, dateFrom] of etfDates) {
+      const etf = etfRef.current.find(e => e.id === etfId)
+      if (!etf || !etf.isin || etf.archiviato) continue
+      const nuovi = await backfillETFPrices(etf.isin, dateFrom, { forceRefresh: true })
+      if (!nuovi.length) continue
+      setStato(s => {
+        const map = new Map(s.prezziStorici.map(p => [`${p.isin}-${p.anno}-${p.mese}`, p]))
+        for (const r of nuovi) map.set(`${r.isin}-${r.anno}-${r.mese}`, r)
+        return { ...s, prezziStorici: [...map.values()] }
+      })
     }
   }, [user])
 
