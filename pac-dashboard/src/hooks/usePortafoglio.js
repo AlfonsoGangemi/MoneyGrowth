@@ -653,11 +653,11 @@ export function usePortafoglio(user) {
             for (const a of (etf.acquisti || [])) {
               if (typeof a.data !== 'string' || !DATE_RE.test(a.data))
                 throw errAtteso(`ETF "${etf.nome}": data acquisto non valida "${a.data}"`)
-              if (!Number.isFinite(Number(a.importoInvestito)) || Number(a.importoInvestito) <= 0)
+              if (!Number.isFinite(Number(a.importoInvestito)) || Number(a.importoInvestito) === 0)
                 throw errAtteso(`ETF "${etf.nome}": importoInvestito non valido`)
               if (!Number.isFinite(Number(a.prezzoUnitario)) || Number(a.prezzoUnitario) <= 0)
                 throw errAtteso(`ETF "${etf.nome}": prezzoUnitario non valido`)
-              if (!Number.isFinite(Number(a.quoteFrazionate)) || Number(a.quoteFrazionate) < 0)
+              if (!Number.isFinite(Number(a.quoteFrazionate)) || Number(a.quoteFrazionate) === 0)
                 throw errAtteso(`ETF "${etf.nome}": quoteFrazionate non valido`)
             }
           }
