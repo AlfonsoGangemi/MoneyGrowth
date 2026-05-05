@@ -82,7 +82,6 @@ export default async function handler(req, res) {
       refresh_token: rawRefresh,
       scope:         row.scope,
     }
-    console.log('[oauth/token] authorization_code response — scope:', row.scope, 'user_id:', row.user_id, 'token_prefix:', accessToken.slice(0, 20))
     return res.json(tokenBody)
   }
 
