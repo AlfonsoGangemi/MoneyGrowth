@@ -14,3 +14,4 @@ Indice dei documenti tecnici del progetto. **Aggiornare questo file ad ogni modi
 | [oauth-pkce-analysis.md](oauth-pkce-analysis.md) | Analisi OAuth 2.1 + PKCE: architettura AS, flusso PKCE, impatti, stima effort (PAC-117) |
 | [mcp-auth-official-spec.md](mcp-auth-official-spec.md) | Requisiti ufficiali OAuth per MCP: spec MCP, requisiti Claude.ai, claim JWT, discovery, flusso completo, stato implementazione |
 | [serverless-functions.md](serverless-functions.md) | Riferimento completo delle 12 Serverless Functions Vercel: endpoint, metodi HTTP, autenticazione, rate limit, request/response |
+| [mcp-python-client.md](mcp-python-client.md) | Guida completa per implementare un client Python MCP indipendente: autenticazione API Key e OAuth 2.1 + PKCE, protocollo JSON-RPC, resources, tools, esempi |
