@@ -18,7 +18,7 @@ Ogni funzione è un modulo ESM con un export default `(req, res) => {}` compatib
 
 Tutte le funzioni vivono in `pac-dashboard/api/` e vengono eseguite come Vercel Serverless Functions (Node.js).
 
-**Limite piano Hobby:** 12 handler file. Il progetto ne usa 11 — c'è uno slot libero.
+**Limite piano Hobby:** 12 handler file. Il progetto ne usa 12 — **limite raggiunto**.
 
 **CORS globale** (da `vercel.json`): ogni rotta `/api/*` riceve automaticamente `Access-Control-Allow-Origin: https://claude.ai`. Le funzioni che lo leggono da `ALLOWED_ORIGIN` lo impostano anche per altri client.
 
@@ -39,6 +39,7 @@ Tutte le funzioni vivono in `pac-dashboard/api/` e vengono eseguite come Vercel 
 | `oauth/token.js` | POST | `/api/oauth/token` | nessuna (PKCE) |
 | `oauth/register.js` | POST | `/api/oauth/register` | nessuna |
 | `mcp.js` | GET / POST / DELETE | `/api/mcp` | Bearer `pac_…` o JWT OAuth |
+| `import.js` | GET / POST | `/api/import` | Supabase JWT |
 
 `oauth/_lib.js` non è un handler — è una libreria condivisa (non conta nel limite).
 
@@ -303,3 +304,97 @@ Se non autenticato, risponde 401 con header `WWW-Authenticate: Bearer resource_m
 - `api/mcp.js` include `src/utils/calcoli.js` nel bundle tramite `vercel.json` (`includeFiles`).
 - I prezzi nei dati non sono real-time: riflettono l'ultimo sync manuale nell'app.
 - Il campo `_meta.avviso` è incluso in ogni risposta `get_portafoglio` per informare l'LLM.
+
+---
+
+## Import acquisti broker (piano PRO)
+
+### `import.js`
+
+```
+GET  /api/import
+POST /api/import
+Authorization: Bearer <supabase-jwt>
+```
+
+Endpoint di merge incrementale acquisti da broker esterno. Richiede piano PRO (`config.is_pro = true`).
+
+**Ogni payload di import è associato a un singolo broker** — il campo `broker` descrive la sorgente del file CSV.
+
+#### GET — verifica accesso PRO
+
+```
+GET /api/import
+Authorization: Bearer <supabase-jwt>
+```
+
+Risposta:
+```json
+{ "allowed": true }
+```
+
+`allowed: false` se l'utente non ha il piano PRO.
+
+#### POST — merge incrementale
+
+```
+POST /api/import
+Authorization: Bearer <supabase-jwt>
+Content-Type: application/json
+
+{
+  "sync_source": "ui_upload",
+  "broker": { "nome": "Trade Republic", "colore": "#6366f1" },
+  "etf": [
+    {
+      "isin": "IE00B4L5Y983",
+      "nome": "iShares Core MSCI World",
+      "emittente": "iShares",
+      "assetClassNome": "Azioni",
+      "acquisti": [
+        {
+          "data": "2024-03-15",
+          "importoInvestito": 500.00,
+          "prezzoUnitario": 95.42,
+          "quoteFrazionate": 5.239,
+          "fee": 0,
+          "tr_transaction_id": "01HXXXXXXXXXXXXXXXXXXXXXXX"
+        }
+      ]
+    }
+  ]
+}
+```
+
+| Campo | Tipo | Note |
+|---|---|---|
+| `sync_source` | string? | Default `'ui_upload'`. Il bot Telegram passa `'telegram_bot'`. |
+| `broker` | object | Broker unico del file CSV. Upsertato con `ignoreDuplicates: true` (preserva il colore dell'utente). |
+| `etf[].isin` | string | Obbligatorio. ETF senza ISIN vengono saltati. |
+| `etf[].assetClassNome` | string? | Usato solo alla prima creazione dell'ETF. Default: `'Azioni'`. |
+| `acquisti[].tr_transaction_id` | string? | UUID v7 di Trade Republic. Usato per dedup primario e per l'enrichment di righe manuali. |
+
+**Logica di merge:**
+
+1. Verifica `is_pro` → 403 se false.
+2. Upsert broker dal campo `broker` (un singolo broker per payload).
+3. Per ogni ETF: UPDATE `nome`/`emittente` se esiste, altrimenti INSERT. Non sovrascrive mai `importo_fisso`, `prezzo_corrente`, `archiviato`.
+4. ETF con `archiviato = true`: tutti i suoi acquisti vengono saltati silenziosamente.
+5. Per ogni acquisto:
+   - **Enrichment**: se `tr_transaction_id` è presente, cerca una riga manuale con stessa `(etf_id, data, importo_investito)` e `tr_transaction_id IS NULL` → aggancia l'ID alla riga esistente invece di inserire un duplicato.
+   - **INSERT**: inserisce il nuovo acquisto. Unique violation `23505` → incrementa `rows_skipped` senza errore.
+6. Scrive sempre un record in `broker_sync_log` (anche in caso di errore parziale).
+
+Risposta:
+```json
+{ "inserted": 12, "skipped": 3, "total": 15 }
+```
+
+In caso di errore parziale (HTTP 500):
+```json
+{ "error": "...", "inserted": 8, "skipped": 2, "total": 15 }
+```
+
+**Dedup:** garantito da due indici parziali su `acquisti`:
+- `acquisti_tr_transaction_id_unique` — `WHERE tr_transaction_id IS NOT NULL`
+- `acquisti_dedup_fallback` — `WHERE tr_transaction_id IS NULL`, su `(etf_id, data, importo_investito)`
