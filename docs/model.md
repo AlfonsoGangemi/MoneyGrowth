@@ -54,16 +54,19 @@ create table etf (
 
 -- Acquisti
 create table acquisti (
-  id                uuid primary key default gen_random_uuid(),
-  etf_id            uuid references etf(id) on delete cascade not null,
-  user_id           uuid references auth.users(id) on delete cascade not null,
-  data              date not null,
-  importo_investito numeric not null,
-  prezzo_unitario   numeric not null,
-  quote_frazionate  numeric not null,
-  fee               numeric not null default 0,
-  broker_id         uuid references broker(id) on delete restrict not null,
-  created_at        timestamptz default now()
+  id                 uuid primary key default gen_random_uuid(),
+  etf_id             uuid references etf(id) on delete cascade not null,
+  user_id            uuid references auth.users(id) on delete cascade not null,
+  data               date not null,
+  importo_investito  numeric not null,
+  prezzo_unitario    numeric not null,
+  quote_frazionate   numeric not null,
+  fee                numeric not null default 0,
+  broker_id          uuid references broker(id) on delete restrict not null,
+  created_at         timestamptz default now(),
+  -- PAC-131: tracciabilità sorgente e dedup CSV broker
+  sync_source        text not null default 'manual',  -- 'manual' | 'ui_upload' | 'telegram_bot'
+  tr_transaction_id  text                             -- UUID v7 TR, chiave dedup primaria
 );
 
 -- Scenari di proiezione
@@ -79,7 +82,8 @@ create table scenari (
 create table config (
   user_id           uuid references auth.users(id) on delete cascade primary key,
   orizzonte_anni    integer not null default 10,
-  broker_filtro     uuid[] not null default '{}'
+  broker_filtro     uuid[] not null default '{}',
+  is_pro            boolean not null default false  -- PAC-131: flag piano PRO
 );
 
 -- Storico prezzi mensili ETF (condiviso tra utenti, chiave per ISIN)
@@ -116,9 +120,36 @@ create table watchlist (
   unique (user_id, isin)
 );
 
+-- Log import CSV broker (PAC-131)
+create table broker_sync_log (
+  id             uuid        primary key default gen_random_uuid(),
+  user_id        uuid        not null references auth.users(id) on delete cascade,
+  synced_at      timestamptz not null default now(),
+  source         text        not null default 'ui_upload',  -- 'ui_upload' | 'telegram_bot'
+  rows_total     int,
+  rows_inserted  int,
+  rows_skipped   int,
+  error_message  text
+);
+
 -- Indici aggiuntivi (PAC-112)
 create index on acquisti(user_id, etf_id);
 create index on scenari(user_id);
+
+-- Indici dedup acquisti CSV broker (PAC-131)
+-- Primario: tr_transaction_id univoco (solo righe non-null)
+create unique index acquisti_tr_transaction_id_unique
+  on acquisti (tr_transaction_id)
+  where tr_transaction_id is not null;
+
+-- Fallback: stessa data+importo sullo stesso ETF tra righe senza ID TR
+create unique index acquisti_dedup_fallback
+  on acquisti (etf_id, data, importo_investito)
+  where tr_transaction_id is null;
+
+-- broker_sync_log: ricerca per utente ordinata per data
+create index broker_sync_log_user_id_idx
+  on broker_sync_log (user_id, synced_at desc);
 ```
 
 ### Row Level Security (RLS)
@@ -191,6 +222,14 @@ alter table watchlist enable row level security;
 create policy "watchlist_select" on watchlist for select using (auth.uid() = user_id);
 create policy "watchlist_insert" on watchlist for insert with check (auth.uid() = user_id);
 create policy "watchlist_delete" on watchlist for delete using (auth.uid() = user_id);
+
+-- broker_sync_log: ogni utente vede e scrive solo i propri log (PAC-131)
+alter table broker_sync_log enable row level security;
+
+create policy "broker_sync_log_select" on broker_sync_log
+  for select using (auth.uid() = user_id);
+create policy "broker_sync_log_insert" on broker_sync_log
+  for insert with check (auth.uid() = user_id);
 ```
 
 ### Migrazione dati esistenti (PAC-11)
@@ -245,6 +284,28 @@ BEGIN
 END $$;
 
 ALTER TABLE etf ALTER COLUMN asset_class_id SET NOT NULL;
+```
+
+### Migrazione PAC-131 — import CSV broker
+
+Aggiunge tracciabilità sorgente e dedup su `acquisti`, flag PRO su `config`, nuova tabella `broker_sync_log`.
+
+File: `pac-dashboard/supabase/migrations/20260507000000_pac131_import_csv_schema.sql`
+
+Se la migration fallisce con `could not create unique index acquisti_dedup_fallback` (duplicati preesistenti), applicare prima la fix migration: `20260507000001_pac131_fix_dedup_fallback.sql` — deduplica le righe manuali mantenendo quella fisicamente più vecchia, poi ricrea l'indice.
+
+```sql
+-- Colonne acquisti
+ALTER TABLE acquisti
+  ADD COLUMN IF NOT EXISTS sync_source       text NOT NULL DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS tr_transaction_id text;
+
+-- Colonna config
+ALTER TABLE config
+  ADD COLUMN IF NOT EXISTS is_pro boolean NOT NULL DEFAULT false;
+
+-- Tabella broker_sync_log (+ RLS: vedi sezione sopra)
+CREATE TABLE IF NOT EXISTS broker_sync_log ( ... );
 ```
 
 ### Migrazione PAC-122 — funzioni SECURITY DEFINER per schema oauth
@@ -418,9 +479,13 @@ Caricata al mount tramite query `WHERE visibile = true`. Usata per popolare il s
   "prezzoUnitario": 88.20,
   "quoteFrazionate": 2.2676,
   "fee": 0,
-  "brokerId": "uuid"
+  "brokerId": "uuid",
+  "syncSource": "manual",
+  "trTransactionId": null
 }
 ```
+`syncSource`: `"manual"` | `"ui_upload"` | `"telegram_bot"`.
+`trTransactionId`: UUID v7 da Trade Republic, `null` per acquisti inseriti manualmente.
 
 ### Broker
 ```json
