@@ -13,6 +13,7 @@ import ThemeToggle from './ThemeToggle'
 import ImportExportModal from './ImportExportModal'
 import ApiKeyPanel from './ApiKeyPanel'
 import WatchlistPanel from './WatchlistPanel'
+import BrokerImportPanel from './BrokerImportPanel'
 
 // ── Componenti base ────────────────────────────────────────────────
 
@@ -198,7 +199,7 @@ function ModificaETFModal({ etf, assetClasses = [], onSalva, onChiudi }) {
 
 // ── Riga broker con nome e colore editabili inline ─────────────────
 
-function BrokerRow({ broker: b, onAggiorna, onElimina }) {
+function BrokerRow({ broker: b, onAggiorna, onElimina, onImporta }) {
   const { t } = useLocale()
   const [editing, setEditing] = useState(false)
   const [nomeTemp, setNomeTemp] = useState(b.nome)
@@ -259,6 +260,14 @@ function BrokerRow({ broker: b, onAggiorna, onElimina }) {
         </span>
       )}
 
+      {!b.archiviato && (
+        <button
+          onClick={() => onImporta(b.id)}
+          className="text-xs text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors flex-shrink-0"
+        >
+          {t('broker_importa_dati')}
+        </button>
+      )}
       <button
         onClick={() => onAggiorna(b.id, { archiviato: !b.archiviato })}
         className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex-shrink-0"
@@ -281,6 +290,7 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
   const { t } = useLocale()
   const [nomeBroker, setNomeBroker] = useState('')
   const [coloreBroker, setColoreBroker] = useState('#6366f1')
+  const [importBrokerId, setImportBrokerId] = useState(null)
 
   async function handleAggiungi(e) {
     e.preventDefault()
@@ -290,9 +300,23 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
     setColoreBroker('#6366f1')
   }
 
+  const importBroker = broker.find(b => b.id === importBrokerId)
+
   return (
     <Modal titolo={t('modal_broker')} onChiudi={onChiudi} wide>
       <div className="space-y-4">
+
+        {importBroker && (
+          <div className="border-b border-slate-200 dark:border-slate-700 pb-4 space-y-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">
+              {t('broker_import_title')} — {importBroker.nome}
+            </p>
+            <div className="overflow-y-auto max-h-[50vh]">
+              <BrokerImportPanel broker={broker} inModal initialBrokerId={importBrokerId} />
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2 max-h-48 overflow-y-auto">
           {broker.map(b => (
             <BrokerRow
@@ -300,9 +324,12 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
               broker={b}
               onAggiorna={onAggiorna}
               onElimina={onElimina}
+              onImporta={setImportBrokerId}
             />
           ))}
         </div>
+     
+
         <form onSubmit={handleAggiungi} className="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('broker_nuovo')}</p>
           <div className="flex gap-2">
@@ -326,6 +353,8 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
             {t('broker_aggiungi')}
           </button>
         </form>
+
+        
       </div>
     </Modal>
   )

@@ -43,6 +43,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `AuthForm.jsx` | Form login / registrazione con validazione email temporanee (`tempmail.js`) |
 | `LandingPage.jsx` | Homepage pubblica v2: hero con DashboardMock, marquee broker, TrustStats, ProblemSection, HowItWorks, Testimonials, Pricing, FAQ a tab (Generale/Piattaforma/AI/Sicurezza), FinalCTA, StickyMobileCTA |
 | `WatchlistPanel.jsx` | Pannello watchlist: form inserimento ISIN, tabella con prezzo corrente e link ExtraETF, rimozione ottimistica |
+| `BrokerImportPanel.jsx` | Pannello import CSV broker (PRO): gate `is_pro`, selezione broker, drop zone CSV TR, spinner + riepilogo `{inserted, skipped, total}`, storico import da `broker_sync_log` |
 | `ImportExportModal.jsx` | Backup / Ripristino JSON del portafoglio |
 | `CsvAiModal.jsx` | Import CSV storico acquisti tramite parsing LLM |
 | `LinguaToggle.jsx` | Pulsante IT/EN in navbar |
@@ -64,6 +65,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `useETFQuotes.js` | Aggiornamento prezzi da ExtraETF: polling, debounce, aggiornamento Supabase |
 | `useTrustStats.js` | Fetcha `GET /api/stats` al mount; restituisce `null` finché la risposta non è disponibile (nessun skeleton, no layout shift) |
 | `useWatchlist.js` | Stato watchlist: CRUD ISIN su tabella `watchlist` Supabase, validazione regex + ExtraETF, prezzi real-time via `/api/extraetf-quotes` |
+| `useBrokerImport.js` | Gate PRO (`config.is_pro`), storico `broker_sync_log`, parsing CSV Trade Republic, POST `/api/import` con JWT sessione |
 
 ---
 

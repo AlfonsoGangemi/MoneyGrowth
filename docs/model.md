@@ -65,9 +65,20 @@ create table acquisti (
   broker_id          uuid references broker(id) on delete restrict not null,
   created_at         timestamptz default now(),
   -- PAC-131: tracciabilità sorgente e dedup CSV broker
-  sync_source        text not null default 'manual',  -- 'manual' | 'ui_upload' | 'telegram_bot'
-  tr_transaction_id  text                             -- UUID v7 TR, chiave dedup primaria
+  sync_source           text not null default 'manual',  -- 'manual' | 'ui_upload' | 'telegram_bot'
+  broker_transaction_id text                             -- ID transazione del broker, chiave dedup primaria
 );
+
+-- Indici dedup acquisti (PAC-131 + PAC-135)
+-- Dedup primario: (broker_id, broker_transaction_id) — stesso ID ammesso su broker diversi
+create unique index acquisti_broker_transaction_id_unique
+  on acquisti (broker_id, broker_transaction_id)
+  where broker_transaction_id is not null;
+
+-- Dedup fallback: transazioni manuali senza broker_transaction_id
+create unique index acquisti_dedup_fallback
+  on acquisti (broker_id, etf_id, data, importo_investito)
+  where broker_transaction_id is null;
 
 -- Scenari di proiezione
 create table scenari (
@@ -120,10 +131,11 @@ create table watchlist (
   unique (user_id, isin)
 );
 
--- Log import CSV broker (PAC-131)
+-- Log import CSV broker (PAC-131 + PAC-135)
 create table broker_sync_log (
   id             uuid        primary key default gen_random_uuid(),
   user_id        uuid        not null references auth.users(id) on delete cascade,
+  broker_id      uuid        references broker(id) on delete set null,  -- PAC-135
   synced_at      timestamptz not null default now(),
   source         text        not null default 'ui_upload',  -- 'ui_upload' | 'telegram_bot'
   rows_total     int,
