@@ -341,6 +341,7 @@ function ultimaDataAcquisto(etf) {
 // ── Modale informazioni ───────────────────────────────────────────
 
 const GITHUB_URL = 'https://github.com/AlfonsoGangemi/MoneyGrowth'
+const GITHUB_SPONSORS_URL = 'https://github.com/sponsors/AlfonsoGangemi'
 
 function InfoModal({ onChiudi }) {
   const { t } = useLocale()
@@ -393,6 +394,7 @@ function InfoModal({ onChiudi }) {
         <div className="border-t border-slate-200 dark:border-slate-700 pt-4 flex gap-4">
           <a href="/privacy" onClick={(e) => { e.preventDefault(); window.open('/privacy', '_blank') }} className={link}>{t('footer_privacy')}</a>
           <a href="/termini" onClick={(e) => { e.preventDefault(); window.open('/termini', '_blank') }} className={link}>{t('footer_termini')}</a>
+          <a href={GITHUB_SPONSORS_URL} target="_blank" rel="noopener noreferrer" className={link}>GitHub Sponsors</a>
         </div>
       </div>
     </Modal>
@@ -711,50 +713,65 @@ export default function Dashboard({ user, onSignOut }) {
 
         {/* Filtro broker + gestione */}
         {port.broker.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {port.broker.length > 1 && (
-              <>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{t('broker_label')}</span>
-                <button
-                  onClick={() => port.setBrokerFiltro([])}
-                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                    port.brokerFiltro.length === 0
-                      ? 'bg-blue-600 border-blue-500 text-white'
-                      : 'border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >{t('broker_tutti')}</button>
-                {port.broker.map(b => (
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {port.broker.length > 1 && (
+                <>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('broker_label')}</span>
                   <button
-                    key={b.id}
-                    onClick={() => {
-                      const sel = port.brokerFiltro.includes(b.id)
-                        ? port.brokerFiltro.filter(id => id !== b.id)
-                        : [...port.brokerFiltro, b.id]
-                      port.setBrokerFiltro(sel)
-                    }}
-                    className={`text-xs px-3 py-1 rounded-full border transition-colors flex items-center gap-1.5 ${
-                      port.brokerFiltro.includes(b.id)
-                        ? 'border-transparent text-white'
+                    onClick={() => port.setBrokerFiltro([])}
+                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                      port.brokerFiltro.length === 0
+                        ? 'bg-blue-600 border-blue-500 text-white'
                         : 'border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    } ${b.archiviato ? 'opacity-50' : ''}`}
-                    style={port.brokerFiltro.includes(b.id) ? { backgroundColor: b.colore } : {}}
-                  >
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: b.colore }} />
-                    {b.nome}
-                    {b.archiviato && <span className="opacity-70">{t('broker_arch')}</span>}
-                  </button>
-                ))}
-              </>
-            )}
-            <button
-              onClick={() => setModalGestoreBroker(true)}
-              className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-              title={t('broker_gestisci')}
+                    }`}
+                  >{t('broker_tutti')}</button>
+                  {port.broker.map(b => (
+                    <button
+                      key={b.id}
+                      onClick={() => {
+                        const sel = port.brokerFiltro.includes(b.id)
+                          ? port.brokerFiltro.filter(id => id !== b.id)
+                          : [...port.brokerFiltro, b.id]
+                        port.setBrokerFiltro(sel)
+                      }}
+                      className={`text-xs px-3 py-1 rounded-full border transition-colors flex items-center gap-1.5 ${
+                        port.brokerFiltro.includes(b.id)
+                          ? 'border-transparent text-white'
+                          : 'border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      } ${b.archiviato ? 'opacity-50' : ''}`}
+                      style={port.brokerFiltro.includes(b.id) ? { backgroundColor: b.colore } : {}}
+                    >
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: b.colore }} />
+                      {b.nome}
+                      {b.archiviato && <span className="opacity-70">{t('broker_arch')}</span>}
+                    </button>
+                  ))}
+                </>
+              )}
+              <button
+                onClick={() => setModalGestoreBroker(true)}
+                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                title={t('broker_gestisci')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            <a
+              href={GITHUB_SPONSORS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center text-xs text-pink-500 hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 transition-colors flex-shrink-0"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
-            </button>
+              <span className="overflow-hidden max-w-0 group-hover:max-w-xs transition-[max-width] duration-300 ease-out whitespace-nowrap">
+                <span className="ml-1.5">{t('info_supporta')}</span>
+              </span>
+            </a>
           </div>
         )}
 

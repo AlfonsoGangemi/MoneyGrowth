@@ -234,6 +234,7 @@ export default {
   info_open_source: 'Progetto open source',
   info_licenza: 'Licenza',
   info_dati_mercato: 'Dati di mercato',
+  info_supporta: 'Supporta il progetto',
   label_isin: 'ISIN',
   isin_non_trovato: 'ISIN non trovato su ExtraETF',
   isin_verifica_errore: 'Impossibile verificare l\'ISIN (errore di rete), procedendo comunque',
