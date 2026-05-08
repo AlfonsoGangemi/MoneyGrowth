@@ -55,35 +55,29 @@ async function handleImport(adminClient, userId, req, res) {
   if (!cfg?.is_pro) return res.status(403).json({ error: 'Piano PRO richiesto' })
 
   const payload = req.body
-  if (!Array.isArray(payload?.etf) || !payload?.broker?.nome) {
-    return res.status(400).json({ error: 'Payload non valido: campi broker e etf[] richiesti' })
+  if (!Array.isArray(payload?.etf) || !payload?.broker_id) {
+    return res.status(400).json({ error: 'Payload non valido: campi broker_id e etf[] richiesti' })
   }
 
   const syncSource = payload.sync_source ?? 'ui_upload'
   let rowsTotal = 0, rowsInserted = 0, rowsSkipped = 0, errorMessage = null
 
   try {
+    // Verifica ownership del broker
+    const { data: brokerRow } = await adminClient
+      .from('broker')
+      .select('id')
+      .eq('id', payload.broker_id)
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (!brokerRow) return res.status(400).json({ error: 'Broker non trovato o non autorizzato' })
+    const brokerId = brokerRow.id
+
     // Precarica asset class → map nome→id (evita N+1 per i nuovi ETF)
     const { data: acRows } = await adminClient.from('asset_class').select('id, nome')
     const acMap = Object.fromEntries((acRows ?? []).map(ac => [ac.nome, ac.id]))
     const defaultAcId = acMap['Azioni'] ?? Object.values(acMap)[0] ?? null
-
-    // Upsert broker del file CSV (un broker per payload; ignoreDuplicates preserva il colore dell'utente)
-    await adminClient
-      .from('broker')
-      .upsert(
-        { user_id: userId, nome: payload.broker.nome, colore: payload.broker.colore ?? '#6366f1' },
-        { onConflict: 'user_id,nome', ignoreDuplicates: true }
-      )
-
-    // Carica id del broker appena upsertato
-    const { data: brokerRow } = await adminClient
-      .from('broker')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('nome', payload.broker.nome)
-      .single()
-    const brokerId = brokerRow?.id ?? null
 
     for (const etfPayload of payload.etf) {
       if (!etfPayload.isin) continue
@@ -142,21 +136,22 @@ async function handleImport(adminClient, userId, req, res) {
           continue
         }
 
-        // Enrichment: riga manuale corrispondente senza tr_transaction_id
-        if (acquisto.tr_transaction_id) {
+        // Enrichment: riga manuale corrispondente senza broker_transaction_id
+        if (acquisto.broker_transaction_id) {
           const { data: manual } = await adminClient
             .from('acquisti')
             .select('id')
             .eq('etf_id', etfId)
+            .eq('broker_id', brokerId)
             .eq('data', acquisto.data)
             .eq('importo_investito', acquisto.importoInvestito)
-            .is('tr_transaction_id', null)
+            .is('broker_transaction_id', null)
             .maybeSingle()
 
           if (manual) {
             await adminClient
               .from('acquisti')
-              .update({ tr_transaction_id: acquisto.tr_transaction_id, sync_source: syncSource })
+              .update({ broker_transaction_id: acquisto.broker_transaction_id, sync_source: syncSource })
               .eq('id', manual.id)
             rowsSkipped++
             continue
@@ -173,7 +168,7 @@ async function handleImport(adminClient, userId, req, res) {
           fee: acquisto.fee ?? 0,
           broker_id: brokerId,
           sync_source: syncSource,
-          tr_transaction_id: acquisto.tr_transaction_id ?? null,
+          broker_transaction_id: acquisto.broker_transaction_id ?? null,
         })
 
         if (insertErr) {
@@ -194,6 +189,7 @@ async function handleImport(adminClient, userId, req, res) {
   // Scrivi log sempre, anche in caso di errore parziale
   await adminClient.from('broker_sync_log').insert({
     user_id: userId,
+    broker_id: payload.broker_id,
     source: syncSource,
     rows_total: rowsTotal,
     rows_inserted: rowsInserted,

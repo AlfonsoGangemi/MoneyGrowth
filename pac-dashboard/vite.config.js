@@ -18,6 +18,7 @@ function apiDevPlugin() {
           '/api/extraetf-quotes',
           '/api/extraetf-detail',
           '/api/mcp',
+          '/api/import',
         ]
         const isKeysRoute = pathname.startsWith('/api/keys/')
         const isOAuthRoute = pathname.startsWith('/api/oauth/')
@@ -70,6 +71,9 @@ function apiDevPlugin() {
               const { default: handler } = await import('./api/keys/[keyId].js')
               await handler(req, res)
             }
+          } else if (pathname === '/api/import') {
+            const { default: handler } = await import('./api/import.js')
+            await handler(req, res)
           } else if (isWellKnown) {
             const { default: handler } = await import('./api/oauth/metadata.js')
             await handler(req, res)
