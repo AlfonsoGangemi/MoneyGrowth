@@ -35,7 +35,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
   function calcolaQuote(riga) {
     const imp = parseFloat(riga.importo)
     const pr = parseFloat(riga.prezzo.replace(',', '.'))
-    return !isNaN(imp) && imp > 0 && !isNaN(pr) && pr > 0
+    return !isNaN(imp) && imp !== 0 && !isNaN(pr) && pr > 0
       ? (imp / pr).toFixed(6)
       : '—'
   }
@@ -53,7 +53,7 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
         prezzoUnitario: parseFloat(r.prezzo.replace(',', '.')),
       }))
       .filter(item =>
-        !isNaN(item.importoInvestito) && item.importoInvestito > 0 &&
+        !isNaN(item.importoInvestito) && item.importoInvestito !== 0 &&
         !isNaN(item.prezzoUnitario) && item.prezzoUnitario > 0
       )
     if (items.length === 0) return
@@ -137,7 +137,6 @@ export default function AcquistoForm({ etfList, brokerList, onAggiungi, onChiudi
                         <input
                           type="number"
                           step="0.01"
-                          min="0.01"
                           value={riga.importo}
                           onChange={e => setRigaVal(riga.etfId, 'importo', e.target.value)}
                           onClick={e => e.stopPropagation()}
