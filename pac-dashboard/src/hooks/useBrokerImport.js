@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../utils/supabase'
+import { parseGenericCsv, readCsvHeader, detectTrMapping } from '../utils/csvParsers'
 
 export function useBrokerImport() {
   const [isPro, setIsPro] = useState(null)
   const [syncLog, setSyncLog] = useState([])
+  const [brokerMappings, setBrokerMappings] = useState(new Map()) // brokerId → csv_mapping
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const [{ data: cfg }, { data: log }] = await Promise.all([
+    const [{ data: cfg }, { data: log }, { data: brokers }] = await Promise.all([
       supabase.from('config').select('is_pro').eq('user_id', user.id).maybeSingle(),
       supabase
         .from('broker_sync_log')
@@ -18,18 +20,28 @@ export function useBrokerImport() {
         .eq('user_id', user.id)
         .order('synced_at', { ascending: false })
         .limit(20),
+      // csv_mapping disponibile dopo la migration Supabase (ALTER TABLE broker ADD COLUMN csv_mapping JSONB)
+      supabase.from('broker').select('id, csv_mapping').eq('user_id', user.id),
     ])
 
     setIsPro(cfg?.is_pro ?? false)
     setSyncLog(log ?? [])
+    if (brokers) {
+      setBrokerMappings(new Map(brokers.map(b => [b.id, b.csv_mapping ?? null])))
+    }
     setLoading(false)
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  async function importCsv(brokerId, csvText) {
-    const etfMap = parseTrCsv(csvText)
+  // Import tramite mapping esplicito (usato da BrokerImportPanel con ColumnMappingUI).
+  // Salva il mapping se il parse produce un dataset valido (anche con inserted=0).
+  // Non resetta il mapping in caso di errori server/rete.
+  async function importCsvWithMapping(brokerId, csvText, mapping) {
+    const etfMap = parseGenericCsv(csvText, mapping)
     if (!etfMap) throw Object.assign(new Error(), { code: 'csv_non_riconosciuto' })
+
+    await saveBrokerMapping(brokerId, mapping)
 
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.access_token) throw new Error('Sessione scaduta')
@@ -56,12 +68,35 @@ export function useBrokerImport() {
     return body
   }
 
-  return { isPro, syncLog, loading, importCsv }
+  async function saveBrokerMapping(brokerId, mapping) {
+    await supabase.from('broker').update({ csv_mapping: mapping }).eq('id', brokerId)
+    setBrokerMappings(prev => new Map(prev).set(brokerId, mapping))
+  }
+
+  async function clearBrokerMapping(brokerId) {
+    await supabase.from('broker').update({ csv_mapping: null }).eq('id', brokerId)
+    setBrokerMappings(prev => { const m = new Map(prev); m.set(brokerId, null); return m })
+  }
+
+  // Import legacy solo Trade Republic (backward compat — usato dai test esistenti).
+  async function importCsv(brokerId, csvText) {
+    const { headers } = readCsvHeader(csvText) ?? {}
+    const mapping = headers ? detectTrMapping(headers) : null
+    if (!mapping) throw Object.assign(new Error(), { code: 'csv_non_riconosciuto' })
+    return importCsvWithMapping(brokerId, csvText, mapping)
+  }
+
+  return {
+    isPro, syncLog, brokerMappings, loading,
+    importCsv, importCsvWithMapping,
+    saveBrokerMapping, clearBrokerMapping,
+    readCsvHeader, detectTrMapping,
+  }
 }
 
-// ── Parser CSV Trade Republic ──────────────────────────────────────
+// ── Parser CSV Trade Republic (mantenuti per compatibilità con i test) ────────
 
-function parseCsvRow(line, sep) {
+export function parseCsvRow(line, sep) {
   const result = []
   let current = ''
   let inQuotes = false
@@ -86,7 +121,7 @@ function parseCsvRow(line, sep) {
   return result
 }
 
-function parseTrCsv(text) {
+export function parseTrCsv(text) {
   const lines = text.trim().split('\n')
   if (lines.length < 2) return null
 
