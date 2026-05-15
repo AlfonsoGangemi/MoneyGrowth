@@ -65,8 +65,9 @@ create table acquisti (
   broker_id          uuid references broker(id) on delete restrict not null,
   created_at         timestamptz default now(),
   -- PAC-131: tracciabilità sorgente e dedup CSV broker
-  sync_source        text not null default 'manual',  -- 'manual' | 'ui_upload' | 'telegram_bot'
-  tr_transaction_id  text                             -- UUID v7 TR, chiave dedup primaria
+  sync_source           text not null default 'manual',  -- 'manual' | 'ui_upload' | 'telegram_bot'
+  -- PAC-135: rinominato da tr_transaction_id → broker_transaction_id (multi-broker)
+  broker_transaction_id text
 );
 
 -- Scenari di proiezione
@@ -120,10 +121,11 @@ create table watchlist (
   unique (user_id, isin)
 );
 
--- Log import CSV broker (PAC-131)
+-- Log import CSV broker (PAC-131, colonna broker_id aggiunta da PAC-135)
 create table broker_sync_log (
   id             uuid        primary key default gen_random_uuid(),
   user_id        uuid        not null references auth.users(id) on delete cascade,
+  broker_id      uuid        references broker(id) on delete set null,  -- PAC-135
   synced_at      timestamptz not null default now(),
   source         text        not null default 'ui_upload',  -- 'ui_upload' | 'telegram_bot'
   rows_total     int,
@@ -136,16 +138,16 @@ create table broker_sync_log (
 create index on acquisti(user_id, etf_id);
 create index on scenari(user_id);
 
--- Indici dedup acquisti CSV broker (PAC-131)
--- Primario: tr_transaction_id univoco (solo righe non-null)
-create unique index acquisti_tr_transaction_id_unique
-  on acquisti (tr_transaction_id)
-  where tr_transaction_id is not null;
+-- Indici dedup acquisti CSV broker (PAC-131 + PAC-135)
+-- Primario: (broker_id, broker_transaction_id) — stesso ID ammesso su broker diversi
+create unique index acquisti_broker_transaction_id_unique
+  on acquisti (broker_id, broker_transaction_id)
+  where broker_transaction_id is not null;
 
--- Fallback: stessa data+importo sullo stesso ETF tra righe senza ID TR
+-- Fallback: data+importo+ETF+broker tra righe senza ID transazione
 create unique index acquisti_dedup_fallback
-  on acquisti (etf_id, data, importo_investito)
-  where tr_transaction_id is null;
+  on acquisti (broker_id, etf_id, data, importo_investito)
+  where broker_transaction_id is null;
 
 -- broker_sync_log: ricerca per utente ordinata per data
 create index broker_sync_log_user_id_idx
@@ -232,6 +234,41 @@ create policy "broker_sync_log_insert" on broker_sync_log
   for insert with check (auth.uid() = user_id);
 ```
 
+### GRANT espliciti (PAC-145)
+
+> **Regola:** ogni nuova tabella esposta via Data API (supabase-js / PostgREST) **deve** includere GRANT espliciti nella propria migrazione, oltre a RLS e policies. Dal 30 ottobre 2026 Supabase rimuove i GRANT impliciti sullo schema public per tutti i progetti esistenti (breaking change annunciato a maggio 2026).
+
+```sql
+-- Tabelle utente — CRUD per ruolo authenticated
+grant select, insert, update, delete on public.etf                         to authenticated;
+grant select, insert, update, delete on public.acquisti                    to authenticated;
+grant select, insert, update, delete on public.scenari                     to authenticated;
+grant select, insert, update, delete on public.config                      to authenticated;
+grant select, insert, update, delete on public.broker                      to authenticated;
+grant select, insert, update, delete on public.portafoglio_storico_annuale to authenticated;
+grant select, insert, update, delete on public.watchlist                   to authenticated;
+
+-- user_api_keys: solo SELECT per authenticated (INSERT/DELETE via service_role in api/)
+grant select on public.user_api_keys to authenticated;
+
+-- asset_class: sola lettura condivisa
+grant select on public.asset_class to authenticated;
+
+-- etf_prezzi_storici: lettura + scrittura (backfill prezzi)
+grant select, insert, update on public.etf_prezzi_storici to authenticated;
+
+-- broker_sync_log: log import CSV, lettura + insert per authenticated (PAC-131)
+grant select, insert on public.broker_sync_log to authenticated;
+
+-- Funzioni SECURITY DEFINER oauth_* (PAC-122): chiamate lato server via service_role
+grant execute on function public.oauth_get_client(text)                                             to service_role;
+grant execute on function public.oauth_insert_auth_code(text, text, uuid, text, text, text, timestamptz) to service_role;
+grant execute on function public.oauth_consume_auth_code(text)                                      to service_role;
+grant execute on function public.oauth_insert_refresh_token(text, uuid, text, text, timestamptz)    to service_role;
+grant execute on function public.oauth_rotate_refresh_token(text, text, timestamptz)                to service_role;
+grant execute on function public.oauth_register_client(text, text, text[])                          to service_role;
+```
+
 ### Migrazione dati esistenti (PAC-11)
 
 Eseguire in ordine su Supabase SQL editor:
@@ -306,6 +343,36 @@ ALTER TABLE config
 
 -- Tabella broker_sync_log (+ RLS: vedi sezione sopra)
 CREATE TABLE IF NOT EXISTS broker_sync_log ( ... );
+```
+
+### Migrazione PAC-135 — rename broker_transaction_id (multi-broker)
+
+Rinomina `tr_transaction_id` → `broker_transaction_id` su `acquisti`, aggiorna gli indici dedup per includere `broker_id`, aggiunge `broker_id` a `broker_sync_log`.
+
+File: `pac-dashboard/supabase/migrations/20260508000000_pac135_broker_transaction_id.sql`
+
+```sql
+-- Drop indici vecchi (specifici Trade Republic)
+DROP INDEX IF EXISTS acquisti_tr_transaction_id_unique;
+DROP INDEX IF EXISTS acquisti_dedup_fallback;
+
+-- Rinomina colonna
+ALTER TABLE acquisti
+  RENAME COLUMN tr_transaction_id TO broker_transaction_id;
+
+-- Dedup primario: (broker_id, broker_transaction_id) — stesso ID ammesso su broker diversi
+CREATE UNIQUE INDEX acquisti_broker_transaction_id_unique
+  ON acquisti (broker_id, broker_transaction_id)
+  WHERE broker_transaction_id IS NOT NULL;
+
+-- Dedup fallback: include broker_id per non confondere transazioni su broker diversi
+CREATE UNIQUE INDEX acquisti_dedup_fallback
+  ON acquisti (broker_id, etf_id, data, importo_investito)
+  WHERE broker_transaction_id IS NULL;
+
+-- Aggiunge broker_id a broker_sync_log per tracciare quale broker è stato importato
+ALTER TABLE broker_sync_log
+  ADD COLUMN IF NOT EXISTS broker_id uuid REFERENCES broker(id) ON DELETE SET NULL;
 ```
 
 ### Migrazione PAC-122 — funzioni SECURITY DEFINER per schema oauth
@@ -481,11 +548,11 @@ Caricata al mount tramite query `WHERE visibile = true`. Usata per popolare il s
   "fee": 0,
   "brokerId": "uuid",
   "syncSource": "manual",
-  "trTransactionId": null
+  "brokerTransactionId": null
 }
 ```
 `syncSource`: `"manual"` | `"ui_upload"` | `"telegram_bot"`.
-`trTransactionId`: UUID v7 da Trade Republic, `null` per acquisti inseriti manualmente.
+`brokerTransactionId`: ID transazione emesso dal broker (UUID v7 per Trade Republic), `null` per acquisti inseriti manualmente. Rinominato da `trTransactionId` in PAC-135 per supporto multi-broker.
 
 ### Broker
 ```json
