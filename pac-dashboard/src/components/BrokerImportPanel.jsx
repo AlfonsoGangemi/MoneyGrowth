@@ -40,7 +40,14 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
   }
 
   function handleFile(f) {
-    if (!f) return
+    console.debug('[BrokerImport] handleFile chiamato', f
+      ? { name: f.name, size: f.size, type: f.type, lastModified: f.lastModified }
+      : 'undefined/null'
+    )
+    if (!f) {
+      console.warn('[BrokerImport] file undefined o null — selezione ignorata')
+      return
+    }
     setFile(f)
     setResult(null)
     setError(null)
@@ -49,6 +56,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
   function handleDrop(e) {
     e.preventDefault()
     setDragging(false)
+    console.debug('[BrokerImport] drop event, files:', e.dataTransfer.files.length)
     handleFile(e.dataTransfer.files[0])
   }
 
@@ -108,7 +116,10 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         onDrop={handleDrop}
         onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => {
+          console.debug('[BrokerImport] click drop zone, inputRef.current:', !!inputRef.current)
+          inputRef.current?.click()
+        }}
         role="button"
         tabIndex={0}
         onKeyDown={e => e.key === 'Enter' && inputRef.current?.click()}
@@ -123,7 +134,10 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
           type="file"
           accept=".csv,text/csv"
           className="hidden"
-          onChange={e => handleFile(e.target.files[0])}
+          onChange={e => {
+            console.debug('[BrokerImport] onChange input file, files count:', e.target.files?.length, 'accept:', e.target.accept)
+            handleFile(e.target.files?.[0])
+          }}
         />
         <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
