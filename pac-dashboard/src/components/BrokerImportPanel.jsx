@@ -12,9 +12,6 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [dragging, setDragging] = useState(false)
-  const [debugInfo, setDebugInfo] = useState(() => {
-    try { return localStorage.getItem('_brokerImportDebug') } catch (_) { return null }
-  })
 
   const inputRef = useRef(null)
   const pickingRef = useRef(false)
@@ -43,24 +40,8 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
     )
   }
 
-  function logDebug(msg) {
-    const entry = `[${new Date().toISOString()}] ${msg}`
-    console.error('[BrokerImport]', msg)
-    try {
-      const prev = localStorage.getItem('_brokerImportDebug') ?? ''
-      localStorage.setItem('_brokerImportDebug', `${entry}\n${prev}`.slice(0, 2000))
-    } catch (_) {}
-    setDebugInfo(entry + '\n' + (localStorage.getItem('_brokerImportDebug') ?? ''))
-  }
-
   function handleFile(f) {
-    if (!f) {
-      logDebug('handleFile: file null/undefined')
-      return
-    }
-    try { localStorage.removeItem('_brokerImportDebug') } catch (_) {}
-    setDebugInfo(null)
-    logDebug(`handleFile: name=${f.name} | type="${f.type || '(vuoto)'}" | size=${f.size}B`)
+    if (!f) return
     setFile(f)
     setResult(null)
     setError(null)
@@ -69,7 +50,6 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
   function handleDrop(e) {
     e.preventDefault()
     setDragging(false)
-    logDebug(`drop: files.length=${e.dataTransfer.files.length}`)
     handleFile(e.dataTransfer.files[0])
   }
 
@@ -105,7 +85,6 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         </h2>
       )}
 
-      {/* Selezione broker (nascosta quando pre-selezionata) */}
       {!initialBrokerId && (
         <select
           value={selectedBrokerId}
@@ -124,19 +103,14 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         </select>
       )}
 
-      {/* Drop zone */}
       <div
         onDrop={handleDrop}
         onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
         onClick={e => {
           e.stopPropagation()
-          if (pickingRef.current) {
-            logDebug('tap drop zone: ignorato (picker già aperto)')
-            return
-          }
+          if (pickingRef.current) return
           pickingRef.current = true
-          logDebug(`tap drop zone: inputRef ok=${!!inputRef.current}`)
           inputRef.current?.click()
         }}
         role="button"
@@ -155,7 +129,6 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
           className="hidden"
           onChange={e => {
             pickingRef.current = false
-            logDebug(`onChange: files.length=${e.target.files?.length ?? 'null'} | type="${e.target.files?.[0]?.type || '(vuoto)'}"`)
             handleFile(e.target.files?.[0])
           }}
         />
@@ -168,7 +141,6 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         }
       </div>
 
-      {/* Pulsante import */}
       <button
         onClick={handleImport}
         disabled={!file || !selectedBrokerId || uploading}
@@ -177,14 +149,6 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         {uploading ? t('broker_import_uploading') : t('broker_import_btn')}
       </button>
 
-      {/* Debug temporaneo — rimuovere dopo il debug */}
-      {debugInfo && (
-        <div className="text-xs font-mono bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded px-3 py-2 text-yellow-800 dark:text-yellow-300 break-all">
-          DEBUG: {debugInfo}
-        </div>
-      )}
-
-      {/* Risultato */}
       {result && (
         <div className="text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg px-4 py-3">
           {t('broker_import_successo')
@@ -200,7 +164,6 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         </div>
       )}
 
-      {/* Storico import */}
       <div>
         <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('broker_import_log_titolo')}
@@ -210,10 +173,9 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
           <p className="text-sm text-gray-400">{t('broker_import_log_vuoto')}</p>
         ) : (
           <>
-            {/* Mobile */}
             <div className="sm:hidden space-y-2">
               {syncLog.map(row => {
-                const brokerNome = broker.find(b => b.id === row.broker_id)?.nome ?? '—'
+                const brokerNome = (broker ?? []).find(b => b.id === row.broker_id)?.nome ?? '—'
                 return (
                   <div key={row.id} className="border border-gray-100 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
                     <div className="flex justify-between text-gray-500 dark:text-gray-400 text-xs mb-1">
@@ -232,7 +194,6 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
               })}
             </div>
 
-            {/* Desktop */}
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -247,7 +208,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
                 </thead>
                 <tbody>
                   {syncLog.map(row => {
-                    const brokerNome = broker.find(b => b.id === row.broker_id)?.nome ?? '—'
+                    const brokerNome = (broker ?? []).find(b => b.id === row.broker_id)?.nome ?? '—'
                     const canale = row.source === 'ui_upload'
                       ? t('broker_import_canale_ui')
                       : t('broker_import_canale_bot')
