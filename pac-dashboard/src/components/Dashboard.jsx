@@ -305,7 +305,8 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
     setColoreBroker('#6366f1')
   }
 
-  const importBroker = broker.find(b => b.id === importBrokerId)
+  const brokerList = broker ?? []
+  const importBroker = brokerList.find(b => b.id === importBrokerId)
 
   return (
     <Modal titolo={t('modal_broker')} onChiudi={onChiudi} wide>
@@ -317,13 +318,13 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
               {t('broker_import_title')}{importBroker ? ` — ${importBroker.nome}` : ''}
             </p>
             <div className="overflow-y-auto max-h-[50vh]">
-              <BrokerImportPanel broker={broker} inModal initialBrokerId={importBrokerId} />
+              <BrokerImportPanel broker={brokerList} inModal initialBrokerId={importBrokerId} />
             </div>
           </div>
         )}
 
         <div className="space-y-2 max-h-48 overflow-y-auto">
-          {broker.map(b => (
+          {brokerList.map(b => (
             <BrokerRow
               key={b.id}
               broker={b}
