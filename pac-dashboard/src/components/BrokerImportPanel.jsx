@@ -19,7 +19,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
   const inputRef = useRef(null)
   const pickingRef = useRef(false)
 
-  const brokerAttivi = broker.filter(b => !b.archiviato)
+  const brokerAttivi = (broker ?? []).filter(b => !b.archiviato)
 
   if (loading) return null
 
