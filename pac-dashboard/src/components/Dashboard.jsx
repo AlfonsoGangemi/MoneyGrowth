@@ -34,7 +34,12 @@ function Modal({ titolo, onChiudi, children, wide }) {
   // Keydown: Escape + Tab trap
   useEffect(() => {
     function handleKeyDown(e) {
-      if (e.key === 'Escape') { onChiudi(); return }
+      if (e.key === 'Escape') {
+        // Ignora Escape se il focus è fuori dalla dialog (es. dopo chiusura file picker su mobile)
+        if (dialogRef.current && !dialogRef.current.contains(document.activeElement)) return
+        onChiudi()
+        return
+      }
       if (e.key !== 'Tab') return
       const list = getFocusable()
       if (!list.length) return
