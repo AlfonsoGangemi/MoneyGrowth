@@ -17,6 +17,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
   })
 
   const inputRef = useRef(null)
+  const pickingRef = useRef(false)
 
   const brokerAttivi = broker.filter(b => !b.archiviato)
 
@@ -126,7 +127,13 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         onDrop={handleDrop}
         onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
-        onClick={() => {
+        onClick={e => {
+          e.stopPropagation()
+          if (pickingRef.current) {
+            logDebug('tap drop zone: ignorato (picker già aperto)')
+            return
+          }
+          pickingRef.current = true
           logDebug(`tap drop zone: inputRef ok=${!!inputRef.current}`)
           inputRef.current?.click()
         }}
@@ -145,6 +152,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
           accept=".csv,text/csv,text/plain,application/octet-stream,*/*"
           className="hidden"
           onChange={e => {
+            pickingRef.current = false
             logDebug(`onChange: files.length=${e.target.files?.length ?? 'null'} | type="${e.target.files?.[0]?.type || '(vuoto)'}"`)
             handleFile(e.target.files?.[0])
           }}
