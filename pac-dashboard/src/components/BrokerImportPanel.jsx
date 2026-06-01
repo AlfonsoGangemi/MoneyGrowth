@@ -12,7 +12,9 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [dragging, setDragging] = useState(false)
-  const [debugInfo, setDebugInfo] = useState(null)
+  const [debugInfo, setDebugInfo] = useState(() => {
+    try { return localStorage.getItem('_brokerImportDebug') } catch (_) { return null }
+  })
 
   const inputRef = useRef(null)
 
@@ -40,13 +42,22 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
     )
   }
 
+  function logDebug(msg) {
+    const entry = `[${new Date().toISOString()}] ${msg}`
+    console.error('[BrokerImport]', msg)
+    try {
+      const prev = localStorage.getItem('_brokerImportDebug') ?? ''
+      localStorage.setItem('_brokerImportDebug', `${entry}\n${prev}`.slice(0, 2000))
+    } catch (_) {}
+    setDebugInfo(msg)
+  }
+
   function handleFile(f) {
-    const info = f
-      ? { name: f.name, size: f.size, type: f.type || '(vuoto)', lastModified: f.lastModified }
-      : null
-    console.error('[BrokerImport] handleFile:', info ?? 'file null/undefined')
-    setDebugInfo(info ? `✓ ${f.name} (${f.type || 'tipo sconosciuto'}, ${f.size}B)` : '✗ file null')
-    if (!f) return
+    if (!f) {
+      logDebug('handleFile: file null/undefined')
+      return
+    }
+    logDebug(`handleFile: name=${f.name} | type="${f.type || '(vuoto)'}" | size=${f.size}B`)
     setFile(f)
     setResult(null)
     setError(null)
@@ -55,7 +66,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
   function handleDrop(e) {
     e.preventDefault()
     setDragging(false)
-    console.error('[BrokerImport] drop, files:', e.dataTransfer.files.length)
+    logDebug(`drop: files.length=${e.dataTransfer.files.length}`)
     handleFile(e.dataTransfer.files[0])
   }
 
@@ -116,8 +127,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
         onClick={() => {
-          console.error('[BrokerImport] tap drop zone, inputRef ok:', !!inputRef.current)
-          setDebugInfo('tap ricevuto — apertura picker...')
+          logDebug(`tap drop zone: inputRef ok=${!!inputRef.current}`)
           inputRef.current?.click()
         }}
         role="button"
@@ -135,7 +145,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
           accept=".csv,text/csv,text/plain,application/octet-stream,*/*"
           className="hidden"
           onChange={e => {
-            console.error('[BrokerImport] onChange: files count =', e.target.files?.length, '| tipo =', e.target.files?.[0]?.type || '(vuoto)')
+            logDebug(`onChange: files.length=${e.target.files?.length ?? 'null'} | type="${e.target.files?.[0]?.type || '(vuoto)'}"`)
             handleFile(e.target.files?.[0])
           }}
         />
