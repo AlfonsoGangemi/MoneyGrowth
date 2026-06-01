@@ -50,7 +50,7 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
       const prev = localStorage.getItem('_brokerImportDebug') ?? ''
       localStorage.setItem('_brokerImportDebug', `${entry}\n${prev}`.slice(0, 2000))
     } catch (_) {}
-    setDebugInfo(msg)
+    setDebugInfo(entry + '\n' + (localStorage.getItem('_brokerImportDebug') ?? ''))
   }
 
   function handleFile(f) {
@@ -58,6 +58,8 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
       logDebug('handleFile: file null/undefined')
       return
     }
+    try { localStorage.removeItem('_brokerImportDebug') } catch (_) {}
+    setDebugInfo(null)
     logDebug(`handleFile: name=${f.name} | type="${f.type || '(vuoto)'}" | size=${f.size}B`)
     setFile(f)
     setResult(null)

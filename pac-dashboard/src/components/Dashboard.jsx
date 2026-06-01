@@ -311,10 +311,10 @@ function GestoreBrokerModal({ broker, onAggiungi, onAggiorna, onElimina, onChiud
     <Modal titolo={t('modal_broker')} onChiudi={onChiudi} wide>
       <div className="space-y-4">
 
-        {importBroker && (
+        {importBrokerId && (
           <div className="border-b border-slate-200 dark:border-slate-700 pb-4 space-y-1">
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">
-              {t('broker_import_title')} — {importBroker.nome}
+              {t('broker_import_title')}{importBroker ? ` — ${importBroker.nome}` : ''}
             </p>
             <div className="overflow-y-auto max-h-[50vh]">
               <BrokerImportPanel broker={broker} inModal initialBrokerId={importBrokerId} />
