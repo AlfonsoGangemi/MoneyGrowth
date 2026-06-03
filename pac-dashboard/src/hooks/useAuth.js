@@ -15,7 +15,8 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null
-      setUser(u)
+      // Stabilizza il riferimento: aggiorna solo se l'identità cambia (non a ogni token refresh)
+      setUser(prev => (u?.id === prev?.id ? prev : u))
       if (u) {
         Sentry.setUser({ id: u.id })
       } else {

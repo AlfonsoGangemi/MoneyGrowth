@@ -9,7 +9,7 @@ import { execSync } from 'child_process'
 import { join, resolve } from 'path'
 
 const mode = process.argv[2] ?? '--bundle'
-const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')
+const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')
 
 // File che non devono mai essere committati
 const FORBIDDEN_FILES = new Set(['.env', '.env.local', '.env.production', '.env.development'])
