@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto'
-import { SignJWT } from 'jose'
+import { SignJWT, decodeJwt, decodeProtectedHeader } from 'jose'
 import { adminClient, sha256hex, sha256raw, base64url, redirectUriMatches } from './_lib.js'
 
 const TOKEN_TTL_SEC = 3600
@@ -17,7 +17,7 @@ function issuer() {
 
 async function mintAccessToken(userId, scope) {
   return new SignJWT({ scope })
-    .setProtectedHeader({ alg: 'HS256', typ: 'at+JWT' })
+    .setProtectedHeader({ alg: 'HS256', typ: 'at+jwt' })
     .setSubject(userId)
     .setIssuer(issuer())
     .setAudience(`${issuer()}/api/mcp`)
@@ -82,6 +82,18 @@ export default async function handler(req, res) {
       refresh_token: rawRefresh,
       scope:         row.scope,
     }
+    // DEBUG PAC-127 (rimuovere a fine indagine): ispeziona token e request per capire
+    // perché claude.ai scarta il token senza chiamare /api/mcp
+    console.log('[oauth/token] code exchange', JSON.stringify({
+      grant_type,
+      client_id,
+      redirect_uri,
+      resource: req.body?.resource ?? null,
+      requested_scope: req.body?.scope ?? null,
+      granted_scope: row.scope,
+      jwt_header: decodeProtectedHeader(accessToken),
+      jwt_claims: decodeJwt(accessToken),
+    }))
     return res.json(tokenBody)
   }
 
