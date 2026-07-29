@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import * as Sentry from '@sentry/react'
 import { supabase } from '../utils/supabase'
-import { backfillETFPrices } from '../utils/backfillPrezzi'
+import { backfillETFPrices, fetchExistingMonths, needsBackfillToday } from '../utils/backfillPrezzi'
 
 // ── Scenari di default inseriti al primo accesso ───────────────────
 const SCENARI_DEFAULT = [
@@ -248,22 +248,38 @@ export function usePortafoglio(user) {
   const etfRef = useRef([])
   useEffect(() => { etfRef.current = stato.etf }, [stato.etf])
 
-  // Backfill prezzi storici al caricamento iniziale per ogni ETF attivo
+  // Backfill prezzi storici al caricamento iniziale per ogni ETF attivo.
+  // I mesi già presenti vengono letti in un'unica query batch (evita N+1),
+  // poi ogni ETF backfilla i propri gap dall'API esterna.
   useEffect(() => {
     if (!user || loading) return
-    const etfAttivi = etfRef.current.filter(e => !e.archiviato)
-    for (const etf of etfAttivi) {
-      if (!etf.isin || !etf.acquisti.length) continue
-      const dateFrom = etf.acquisti.reduce((min, a) => a.data < min ? a.data : min, etf.acquisti[0].data)
-      backfillETFPrices(etf.isin, dateFrom).then(nuovi => {
-        if (!nuovi.length) return
-        setStato(s => {
-          const map = new Map(s.prezziStorici.map(p => [`${p.isin}-${p.anno}-${p.mese}`, p]))
-          for (const r of nuovi) map.set(`${r.isin}-${r.anno}-${r.mese}`, r)
-          return { ...s, prezziStorici: [...map.values()] }
-        })
+    const daBackfillare = etfRef.current
+      .filter(e => !e.archiviato && e.isin && e.acquisti.length)
+      .map(e => ({
+        isin: e.isin,
+        dateFrom: e.acquisti.reduce((min, a) => a.data < min ? a.data : min, e.acquisti[0].data),
+      }))
+      .filter(({ isin }) => needsBackfillToday(isin))
+    if (!daBackfillare.length) return
+
+    const isins = daBackfillare.map(e => e.isin)
+    const minFromYear = Math.min(...daBackfillare.map(e => Number(e.dateFrom.slice(0, 4))))
+
+    const applicaNuovi = nuovi => {
+      if (!nuovi.length) return
+      setStato(s => {
+        const map = new Map(s.prezziStorici.map(p => [`${p.isin}-${p.anno}-${p.mese}`, p]))
+        for (const r of nuovi) map.set(`${r.isin}-${r.anno}-${r.mese}`, r)
+        return { ...s, prezziStorici: [...map.values()] }
       })
     }
+
+    fetchExistingMonths(isins, minFromYear).then(existingByIsin => {
+      for (const { isin, dateFrom } of daBackfillare) {
+        backfillETFPrices(isin, dateFrom, { existingMonths: existingByIsin.get(isin) ?? new Set() })
+          .then(applicaNuovi)
+      }
+    })
   }, [user, loading])
 
   // ── ETF ──────────────────────────────────────────────────────────

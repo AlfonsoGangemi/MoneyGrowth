@@ -3,6 +3,32 @@ import { supabase } from './supabase'
 const localKey = (isin) => `backfill_last_${isin}`
 const todayStr = () => new Date().toISOString().slice(0, 10)
 
+// True se l'ISIN non è ancora stato backfillato oggi (dedup giornaliera via localStorage).
+export function needsBackfillToday(isin) {
+  return localStorage.getItem(localKey(isin)) !== todayStr()
+}
+
+// Legge in una sola query i (anno, mese) già presenti per un set di ISIN.
+// fromYear è il minimo tra le date di partenza — il chiamato partiziona per ISIN.
+// Restituisce Map<isin, Set<'anno-mese'>>.
+export async function fetchExistingMonths(isins, fromYear) {
+  const map = new Map()
+  if (!isins?.length) return map
+  for (const isin of isins) map.set(isin, new Set())
+
+  const { data } = await supabase
+    .from('etf_prezzi_storici')
+    .select('isin, anno, mese')
+    .in('isin', isins)
+    .gte('anno', fromYear)
+
+  for (const r of data || []) {
+    if (!map.has(r.isin)) map.set(r.isin, new Set())
+    map.get(r.isin).add(`${r.anno}-${r.mese}`)
+  }
+  return map
+}
+
 function mesiTraDate(dateFromStr) {
   const result = []
   const [y0, m0] = dateFromStr.split('-').map(Number)
@@ -21,7 +47,9 @@ function mesiTraDate(dateFromStr) {
 // Restituisce i record appena inseriti in DB: [{ isin, anno, mese, prezzo }]
 // Usa localStorage per evitare chiamate ridondanti nella stessa giornata (per ISIN).
 // forceRefresh: true bypassa il controllo localStorage (es. dopo un nuovo acquisto).
-export async function backfillETFPrices(isin, dateFrom, { forceRefresh = false } = {}) {
+// existingMonths: Set<'anno-mese'> pre-caricato (via fetchExistingMonths) per evitare
+// una query di lettura per ISIN — se assente, la lettura viene eseguita qui.
+export async function backfillETFPrices(isin, dateFrom, { forceRefresh = false, existingMonths = null } = {}) {
   if (!isin || !dateFrom) return []
 
   const today = todayStr()
@@ -30,13 +58,15 @@ export async function backfillETFPrices(isin, dateFrom, { forceRefresh = false }
   const dateFromStr = dateFrom.slice(0, 10)
   const fromYear = Number(dateFromStr.slice(0, 4))
 
-  const { data: esistenti } = await supabase
-    .from('etf_prezzi_storici')
-    .select('anno, mese')
-    .eq('isin', isin)
-    .gte('anno', fromYear)
-
-  const esistentiSet = new Set((esistenti || []).map(r => `${r.anno}-${r.mese}`))
+  let esistentiSet = existingMonths
+  if (!esistentiSet) {
+    const { data: esistenti } = await supabase
+      .from('etf_prezzi_storici')
+      .select('anno, mese')
+      .eq('isin', isin)
+      .gte('anno', fromYear)
+    esistentiSet = new Set((esistenti || []).map(r => `${r.anno}-${r.mese}`))
+  }
 
   const now = new Date()
   const meseCorrKey = `${now.getFullYear()}-${now.getMonth() + 1}`

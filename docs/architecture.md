@@ -75,7 +75,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 |---|---|
 | `calcoli.js` | Tutti i calcoli finanziari: ROI, CAGR, TWRR, ATWRR, IRR, Drawdown, Volatilità, proiezioni, serie storiche. Esposto anche via MCP come resource e tool |
 | `formatStat.js` | `formatStatValue(n)` — formatta un numero in notazione compatta con suffisso `+` (es. `1240 → "1K+"`, `3450000 → "3M+"`). Usato da TrustStats per visualizzare le statistiche pubbliche. |
-| `backfillPrezzi.js` | `backfillETFPrices(isin, dateFrom, opts)` — storicizzazione demand-driven prezzi mensili ETF: legge gap da `etf_prezzi_storici`, chiama `/api/extraetf-quotes` history mode, upsert risultati; deduplicazione giornaliera via localStorage |
+| `backfillPrezzi.js` | `backfillETFPrices(isin, dateFrom, opts)` — storicizzazione demand-driven prezzi mensili ETF: legge gap da `etf_prezzi_storici`, chiama `/api/extraetf-quotes` history mode, upsert risultati; deduplicazione giornaliera via localStorage. `fetchExistingMonths(isins, fromYear)` legge i mesi già presenti per più ISIN in un'unica query batch (evita N+1 al caricamento), passata a `backfillETFPrices` via `opts.existingMonths`. `needsBackfillToday(isin)` espone il check di dedup giornaliera |
 | `supabase.js` | Client Supabase singleton con anon key (lato client) |
 | `tempmail.js` | Lista domini email temporanei bloccati in registrazione |
 
