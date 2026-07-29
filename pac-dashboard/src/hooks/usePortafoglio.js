@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import * as Sentry from '@sentry/react'
 import { supabase } from '../utils/supabase'
-import { backfillETFPrices, fetchExistingMonths, needsBackfillToday } from '../utils/backfillPrezzi'
+import { backfillETFPricesBatch, fetchExistingMonths, needsBackfillToday } from '../utils/backfillPrezzi'
 
 // ── Scenari di default inseriti al primo accesso ───────────────────
 const SCENARI_DEFAULT = [
@@ -248,9 +248,9 @@ export function usePortafoglio(user) {
   const etfRef = useRef([])
   useEffect(() => { etfRef.current = stato.etf }, [stato.etf])
 
-  // Backfill prezzi storici al caricamento iniziale per ogni ETF attivo.
-  // I mesi già presenti vengono letti in un'unica query batch (evita N+1),
-  // poi ogni ETF backfilla i propri gap dall'API esterna.
+  // Backfill prezzi storici al caricamento iniziale per tutti gli ETF attivi.
+  // Un'unica query batch per i mesi esistenti + una sola call all'endpoint (che fa
+  // N fetch upstream lato server) + un solo upsert → nessun N+1 lato client.
   useEffect(() => {
     if (!user || loading) return
     const daBackfillare = etfRef.current
@@ -262,24 +262,18 @@ export function usePortafoglio(user) {
       .filter(({ isin }) => needsBackfillToday(isin))
     if (!daBackfillare.length) return
 
-    const isins = daBackfillare.map(e => e.isin)
     const minFromYear = Math.min(...daBackfillare.map(e => Number(e.dateFrom.slice(0, 4))))
 
-    const applicaNuovi = nuovi => {
-      if (!nuovi.length) return
-      setStato(s => {
-        const map = new Map(s.prezziStorici.map(p => [`${p.isin}-${p.anno}-${p.mese}`, p]))
-        for (const r of nuovi) map.set(`${r.isin}-${r.anno}-${r.mese}`, r)
-        return { ...s, prezziStorici: [...map.values()] }
+    fetchExistingMonths(daBackfillare.map(e => e.isin), minFromYear)
+      .then(existingByIsin => backfillETFPricesBatch(daBackfillare, { existingByIsin }))
+      .then(nuovi => {
+        if (!nuovi.length) return
+        setStato(s => {
+          const map = new Map(s.prezziStorici.map(p => [`${p.isin}-${p.anno}-${p.mese}`, p]))
+          for (const r of nuovi) map.set(`${r.isin}-${r.anno}-${r.mese}`, r)
+          return { ...s, prezziStorici: [...map.values()] }
+        })
       })
-    }
-
-    fetchExistingMonths(isins, minFromYear).then(existingByIsin => {
-      for (const { isin, dateFrom } of daBackfillare) {
-        backfillETFPrices(isin, dateFrom, { existingMonths: existingByIsin.get(isin) ?? new Set() })
-          .then(applicaNuovi)
-      }
-    })
   }, [user, loading])
 
   // ── ETF ──────────────────────────────────────────────────────────
@@ -484,22 +478,27 @@ export function usePortafoglio(user) {
       if (errStorico) { Sentry.captureException(new Error(errStorico.message), { tags: { operation: 'aggiungi_acquisti_storico' } }); setErrore('Errore nel salvataggio storico annuale.') }
     }
 
-    // Backfill prezzi storici per ogni ETF coinvolto nell'acquisto appena inserito
+    // Backfill prezzi storici per ogni ETF coinvolto nell'acquisto appena inserito (in batch)
     const etfDates = new Map()
     for (const item of items) {
       const prev = etfDates.get(item.etfId)
       if (!prev || item.data < prev) etfDates.set(item.etfId, item.data)
     }
+    const daBackfillare = []
     for (const [etfId, dateFrom] of etfDates) {
       const etf = etfRef.current.find(e => e.id === etfId)
       if (!etf || !etf.isin || etf.archiviato) continue
-      const nuovi = await backfillETFPrices(etf.isin, dateFrom, { forceRefresh: true })
-      if (!nuovi.length) continue
-      setStato(s => {
-        const map = new Map(s.prezziStorici.map(p => [`${p.isin}-${p.anno}-${p.mese}`, p]))
-        for (const r of nuovi) map.set(`${r.isin}-${r.anno}-${r.mese}`, r)
-        return { ...s, prezziStorici: [...map.values()] }
-      })
+      daBackfillare.push({ isin: etf.isin, dateFrom })
+    }
+    if (daBackfillare.length) {
+      const nuovi = await backfillETFPricesBatch(daBackfillare, { forceRefresh: true })
+      if (nuovi.length) {
+        setStato(s => {
+          const map = new Map(s.prezziStorici.map(p => [`${p.isin}-${p.anno}-${p.mese}`, p]))
+          for (const r of nuovi) map.set(`${r.isin}-${r.anno}-${r.mese}`, r)
+          return { ...s, prezziStorici: [...map.values()] }
+        })
+      }
     }
   }, [user])
 

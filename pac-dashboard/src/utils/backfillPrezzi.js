@@ -43,65 +43,9 @@ function mesiTraDate(dateFromStr) {
   return result
 }
 
-// Backfilla i prezzi mensili mancanti per un ISIN a partire da dateFrom.
-// Restituisce i record appena inseriti in DB: [{ isin, anno, mese, prezzo }]
-// Usa localStorage per evitare chiamate ridondanti nella stessa giornata (per ISIN).
-// forceRefresh: true bypassa il controllo localStorage (es. dopo un nuovo acquisto).
-// existingMonths: Set<'anno-mese'> pre-caricato (via fetchExistingMonths) per evitare
-// una query di lettura per ISIN — se assente, la lettura viene eseguita qui.
-export async function backfillETFPrices(isin, dateFrom, { forceRefresh = false, existingMonths = null } = {}) {
-  if (!isin || !dateFrom) return []
-
-  const today = todayStr()
-  if (!forceRefresh && localStorage.getItem(localKey(isin)) === today) return []
-
-  const dateFromStr = dateFrom.slice(0, 10)
-  const fromYear = Number(dateFromStr.slice(0, 4))
-
-  let esistentiSet = existingMonths
-  if (!esistentiSet) {
-    const { data: esistenti } = await supabase
-      .from('etf_prezzi_storici')
-      .select('anno, mese')
-      .eq('isin', isin)
-      .gte('anno', fromYear)
-    esistentiSet = new Set((esistenti || []).map(r => `${r.anno}-${r.mese}`))
-  }
-
-  const now = new Date()
-  const meseCorrKey = `${now.getFullYear()}-${now.getMonth() + 1}`
-
-  // Mesi mancanti + mese corrente (va sempre rinfrescato)
-  const mancanti = mesiTraDate(dateFromStr).filter(
-    m => !esistentiSet.has(`${m.anno}-${m.mese}`) || `${m.anno}-${m.mese}` === meseCorrKey
-  )
-
-  if (mancanti.length === 0) {
-    localStorage.setItem(localKey(isin), today)
-    return []
-  }
-
-  const oldest = mancanti[0]
-  const apiDateFrom = `${oldest.anno}-${String(oldest.mese).padStart(2, '0')}-01`
-  const params = new URLSearchParams({ isin, date_from: apiDateFrom, date_to: today })
-
-  let json
-  try {
-    const res = await fetch(`/api/extraetf-quotes?${params}`)
-    if (!res.ok) return []
-    json = await res.json()
-  } catch {
-    return []
-  }
-
-  // ExtraETF chart API: { count, results: [{ date, closing_price, ... }] }
-  const rows = json.results ?? json.data ?? []
-  if (!rows.length) {
-    localStorage.setItem(localKey(isin), today)
-    return []
-  }
-
-  // Raggruppa per (anno, mese) → tieni l'ultimo giorno di borsa del mese
+// Da un array di righe ExtraETF chart ({ date, closing_price }) estrae, per ogni
+// mese richiesto in mancantiSet, il prezzo dell'ultimo giorno di borsa.
+function estraiPrezziMensili(isin, rows, mancantiSet) {
   const byMese = new Map()
   for (const row of rows) {
     if (!row.date) continue
@@ -115,11 +59,84 @@ export async function backfillETFPrices(isin, dateFrom, { forceRefresh = false, 
       byMese.set(key, { anno, mese, prezzo, date: row.date })
     }
   }
-
-  const mancantiSet = new Set(mancanti.map(m => `${m.anno}-${m.mese}`))
-  const toUpsert = [...byMese.values()]
+  return [...byMese.values()]
     .filter(r => mancantiSet.has(`${r.anno}-${r.mese}`))
     .map(({ anno, mese, prezzo }) => ({ isin, anno, mese, prezzo }))
+}
+
+// Backfilla i prezzi mensili mancanti per più ISIN in un solo giro:
+//  - una query batch per i mesi già presenti (via fetchExistingMonths, salvo prefetch)
+//  - una sola chiamata a /api/extraetf-quotes (modalità batch, N fetch upstream lato server)
+//  - un solo upsert su etf_prezzi_storici
+// items: [{ isin, dateFrom }]. Restituisce i record inseriti: [{ isin, anno, mese, prezzo }].
+// forceRefresh bypassa la dedup giornaliera; existingByIsin è un prefetch opzionale.
+export async function backfillETFPricesBatch(items, { forceRefresh = false, existingByIsin = null } = {}) {
+  const today = todayStr()
+
+  // Dedup giornaliera + validazione base
+  const attivi = (items || []).filter(
+    ({ isin, dateFrom }) => isin && dateFrom && (forceRefresh || needsBackfillToday(isin))
+  )
+  if (!attivi.length) return []
+
+  // Mesi già presenti: prefetch se disponibile, altrimenti una query batch
+  let existing = existingByIsin
+  if (!existing) {
+    const minFromYear = Math.min(...attivi.map(({ dateFrom }) => Number(dateFrom.slice(0, 4))))
+    existing = await fetchExistingMonths(attivi.map(i => i.isin), minFromYear)
+  }
+
+  const now = new Date()
+  const meseCorrKey = `${now.getFullYear()}-${now.getMonth() + 1}`
+
+  // Pianifica i mesi mancanti per ISIN (nessuna rete). Gli ISIN già completi
+  // vengono marcati come fatti oggi e scartati.
+  const piani = []
+  for (const { isin, dateFrom } of attivi) {
+    const dateFromStr = dateFrom.slice(0, 10)
+    const esistentiSet = existing.get(isin) ?? new Set()
+    const mancanti = mesiTraDate(dateFromStr).filter(
+      m => !esistentiSet.has(`${m.anno}-${m.mese}`) || `${m.anno}-${m.mese}` === meseCorrKey
+    )
+    if (mancanti.length === 0) {
+      localStorage.setItem(localKey(isin), today)
+      continue
+    }
+    const oldest = mancanti[0]
+    piani.push({
+      isin,
+      apiDateFrom: `${oldest.anno}-${String(oldest.mese).padStart(2, '0')}-01`,
+      mancantiSet: new Set(mancanti.map(m => `${m.anno}-${m.mese}`)),
+    })
+  }
+  if (!piani.length) return []
+
+  // Una sola call: tutti gli ISIN, range = min apiDateFrom (ogni ISIN filtra i propri mesi)
+  const minDateFrom = piani.reduce((min, p) => (p.apiDateFrom < min ? p.apiDateFrom : min), piani[0].apiDateFrom)
+  const params = new URLSearchParams({
+    isins: piani.map(p => p.isin).join(','),
+    date_from: minDateFrom,
+    date_to: today,
+  })
+
+  let resultsByIsin
+  try {
+    const res = await fetch(`/api/extraetf-quotes?${params}`)
+    if (!res.ok) return []
+    const json = await res.json()
+    resultsByIsin = json.results ?? {}
+  } catch {
+    return []
+  }
+
+  // Distribuzione per ISIN + upsert unico
+  const toUpsert = []
+  for (const { isin, mancantiSet } of piani) {
+    const perIsin = resultsByIsin[isin]
+    const rows = perIsin?.results ?? perIsin?.data ?? (Array.isArray(perIsin) ? perIsin : [])
+    toUpsert.push(...estraiPrezziMensili(isin, rows, mancantiSet))
+    localStorage.setItem(localKey(isin), today)
+  }
 
   if (toUpsert.length > 0) {
     await supabase
@@ -127,6 +144,15 @@ export async function backfillETFPrices(isin, dateFrom, { forceRefresh = false, 
       .upsert(toUpsert, { onConflict: 'isin,anno,mese' })
   }
 
-  localStorage.setItem(localKey(isin), today)
   return toUpsert
+}
+
+// Backfill per singolo ISIN — delega a backfillETFPricesBatch.
+// Restituisce i record appena inseriti in DB: [{ isin, anno, mese, prezzo }].
+// forceRefresh: true bypassa il controllo localStorage (es. dopo un nuovo acquisto).
+// existingMonths: Set<'anno-mese'> pre-caricato per evitare la query di lettura.
+export async function backfillETFPrices(isin, dateFrom, { forceRefresh = false, existingMonths = null } = {}) {
+  if (!isin || !dateFrom) return []
+  const existingByIsin = existingMonths ? new Map([[isin, existingMonths]]) : null
+  return backfillETFPricesBatch([{ isin, dateFrom }], { forceRefresh, existingByIsin })
 }

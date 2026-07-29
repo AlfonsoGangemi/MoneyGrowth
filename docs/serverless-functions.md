@@ -69,6 +69,21 @@ Risposta (passata tal quale dal proxy):
 
 Usato da `backfillETFPrices` in `src/utils/backfillPrezzi.js` per storicizzare i prezzi mensili.
 
+**Modalità history batch** (`date_from` + `isins` plurale)
+
+```
+GET /api/extraetf-quotes?isins=IE00B4L5Y983,LU1681043599&date_from=2024-01-01&date_to=2024-12-31
+```
+
+Un solo round-trip dal client: il server esegue in parallelo (`Promise.all`) N fetch verso la chart API, uno per ISIN sullo stesso range. Evita l'N+1 lato client quando più ETF vengono backfillati insieme (init pagina, acquisti multipli).
+
+Risposta — chart json per ISIN (ISIN falliti omessi):
+```json
+{ "results": { "IE00B4L5Y983": { "count": 250, "results": [...] }, "LU1681043599": { ... } } }
+```
+
+Usato da `backfillETFPricesBatch` in `src/utils/backfillPrezzi.js`.
+
 **Modalità real-time** (`isins` presente, nessun `date_from`)
 
 ```
