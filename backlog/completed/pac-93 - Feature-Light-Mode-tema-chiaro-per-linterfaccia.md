@@ -1,14 +1,35 @@
 ---
 id: PAC-93
 title: 'Feature: Light Mode - tema chiaro per l''interfaccia'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-25 14:14'
-updated_date: '2026-03-25 14:45'
+updated_date: '2026-07-30 13:48'
 labels:
   - ui
   - theme
 dependencies: []
+modified_files:
+  - pac-dashboard/src/hooks/useTheme.jsx
+  - pac-dashboard/src/components/ThemeToggle.jsx
+  - pac-dashboard/src/App.jsx
+  - pac-dashboard/src/components/Dashboard.jsx
+  - pac-dashboard/src/components/LandingPage.jsx
+  - pac-dashboard/src/components/AuthForm.jsx
+  - pac-dashboard/src/components/ETFCard.jsx
+  - pac-dashboard/src/components/AcquistoForm.jsx
+  - pac-dashboard/src/components/Indicatori.jsx
+  - pac-dashboard/src/components/TabellaProiezione.jsx
+  - pac-dashboard/src/components/GraficoPortafoglio.jsx
+  - pac-dashboard/src/components/ImportExportModal.jsx
+  - pac-dashboard/src/components/CsvAiModal.jsx
+  - pac-dashboard/src/components/Privacy.jsx
+  - pac-dashboard/src/components/Termini.jsx
+  - pac-dashboard/src/components/WatchlistPanel.jsx
+  - pac-dashboard/src/components/BrokerImportPanel.jsx
+  - pac-dashboard/src/components/OAuthConsent.jsx
+  - pac-dashboard/src/components/ApiKeyPanel.jsx
+  - pac-dashboard/src/components/LinguaToggle.jsx
 priority: medium
 ---
 
@@ -20,11 +41,11 @@ Aggiungere il supporto al tema chiaro (light mode) nell'applicazione PAC Dashboa
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Toggle visibile nell'interfaccia (es. header o impostazioni) per passare tra light e dark mode
-- [ ] #2 Il tema chiaro applica correttamente colori di sfondo, testo, card, grafici e tutti i componenti
-- [ ] #3 La preferenza del tema è persistita in localStorage e ripristinata al ricaricamento della pagina
-- [ ] #4 Tutti i componenti (ETFCard, GraficoPortafoglio, Indicatori, AcquistoForm, AuthForm) sono compatibili con entrambi i temi
-- [ ] #5 Il tema di default è dark se localStorage è assente o contiene un valore non valido
+- [x] #1 Toggle visibile nell'interfaccia (es. header o impostazioni) per passare tra light e dark mode
+- [x] #2 Il tema chiaro applica correttamente colori di sfondo, testo, card, grafici e tutti i componenti
+- [x] #3 La preferenza del tema è persistita in localStorage e ripristinata al ricaricamento della pagina
+- [x] #4 Tutti i componenti (ETFCard, GraficoPortafoglio, Indicatori, AcquistoForm, AuthForm) sono compatibili con entrambi i temi
+- [x] #5 Il tema di default è dark se localStorage è assente o contiene un valore non valido
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -183,3 +204,9 @@ const temaIniziale = (stored === 'light' || stored === 'dark') ? stored : 'dark'
 
 L'acceptance criteria #4 (`prefers-color-scheme` come default) va rimosso — il comportamento scelto è dark fisso come fallback.
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implementazione completa via analisi statica del codice (senza verifica visiva nel browser, su richiesta esplicita dell'utente). Hook `useTheme` (context + localStorage key `lightMode`, fallback dark se assente/non valido) applica/rimuove la classe `.dark` su `<html>`. `ThemeToggle` integrato in Dashboard, LandingPage e AuthForm. Tutti i componenti con classi hardcoded dark sono stati convertiti al pattern `bg-white dark:bg-slate-900` (invertendo la logica: base = light, `dark:` = scuro), verificato su 18 file. Caso speciale `GraficoPortafoglio.jsx`: colori Recharts (grid, tick, reference line) passati come prop JS condizionali su `tema` dell'hook, non essendo gestibili via classi CSS.
+<!-- SECTION:FINAL_SUMMARY:END -->
