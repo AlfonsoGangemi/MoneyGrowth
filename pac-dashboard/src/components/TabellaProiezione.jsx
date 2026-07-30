@@ -8,6 +8,7 @@ function fmt(val) {
     currency: 'EUR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
+    useGrouping: true,
   }).format(val)
 }
 
