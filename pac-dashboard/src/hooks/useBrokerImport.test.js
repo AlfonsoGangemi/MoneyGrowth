@@ -75,6 +75,13 @@ DIVIDEND;DIV;2024-02-01;IE00B4L5Y983;iShares;0;0;12.50;0;`
     expect(primoAcquisto.importoInvestito).toBe(1035.00)
   })
 
+  it('quoteFrazionate diventa negativo per SELL', () => {
+    const result = parseTrCsv(TR_CSV)
+    const vendita = result['IE00B4L5Y983'].acquisti.find(a => a.broker_transaction_id === 'TR-004')
+    expect(vendita.quoteFrazionate).toBe(-2)
+    expect(vendita.importoInvestito).toBe(-216.00)
+  })
+
   it('legge fee come valore assoluto', () => {
     const result = parseTrCsv(TR_CSV)
     const primoAcquisto = result['IE00B4L5Y983'].acquisti.find(a => a.broker_transaction_id === 'TR-001')

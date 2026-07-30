@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import * as Sentry from '@sentry/react'
 import { supabase } from '../utils/supabase'
 import { backfillETFPricesBatch, fetchExistingMonths, needsBackfillToday } from '../utils/backfillPrezzi'
+import { QUOTE_EPSILON } from '../utils/calcoli'
 
 // ── Scenari di default inseriti al primo accesso ───────────────────
 const SCENARI_DEFAULT = [
@@ -79,7 +80,7 @@ function calcolaAnnoStorico(anno, brokerId, etfList, prezziStorici) {
     )
     totaleVersato += acquistiAnno.reduce((s, a) => s + a.importoInvestito, 0)
     const quote = acquistiAnno.reduce((s, a) => s + a.quoteFrazionate, 0)
-    if (quote === 0) continue
+    if (Math.abs(quote) < QUOTE_EPSILON) continue
     const prezziEtf = prezziStorici
       .filter(p => p.isin === etf.isin && p.anno === anno)
       .sort((a, b) => b.mese - a.mese)

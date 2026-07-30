@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { indicatoriPortafoglio, calcolaIRR, calcolaTWRR, calcolaATWRR, serieStoricaDaPrezziStorici, calcolaMaxDrawdown, calcolaVolatilita, distribuzioneAssetClass } from '../utils/calcoli'
+import { indicatoriPortafoglio, calcolaIRR, calcolaTWRR, calcolaATWRR, serieStoricaDaPrezziStorici, calcolaMaxDrawdown, calcolaVolatilita, distribuzioneAssetClass, QUOTE_EPSILON } from '../utils/calcoli'
 import { useLocale } from '../hooks/useLocale'
 
 const ETF_PALETTE = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899','#84cc16']
@@ -173,7 +173,7 @@ export default function Indicatori({ etfList, prezziStorici = [], privacyMode = 
             ? etf.acquisti.filter(a => brokerFiltro.includes(a.brokerId))
             : etf.acquisti
           const quote = acqFiltered.reduce((s, a) => s + a.quoteFrazionate, 0)
-          if (quote === 0) continue
+          if (Math.abs(quote) < QUOTE_EPSILON) continue
           const valore = quote * etf.prezzoCorrente
           totalePerETF.push({ nome: etf.nome, valore })
           totETF += valore

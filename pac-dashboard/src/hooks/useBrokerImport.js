@@ -171,11 +171,13 @@ export function parseTrCsv(text) {
       etfMap[isin] = { isin, nome, emittente: null, acquisti: [] }
     }
 
+    const importoInvestito = -amount
     etfMap[isin].acquisti.push({
       data,
-      importoInvestito:  -amount,
+      importoInvestito,
       prezzoUnitario:    price,
-      quoteFrazionate:   shares,
+      // Segno delle quote coerente con importoInvestito: una vendita (importo negativo) riduce le quote
+      quoteFrazionate:   importoInvestito < 0 ? -Math.abs(shares) : Math.abs(shares),
       fee,
       broker_transaction_id: txId,
     })

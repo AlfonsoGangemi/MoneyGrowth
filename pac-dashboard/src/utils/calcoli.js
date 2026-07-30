@@ -1,6 +1,9 @@
 import { differenceInMonths, differenceInCalendarDays, parseISO, addMonths, format } from 'date-fns'
 import * as Sentry from '@sentry/react'
 
+// Soglia sotto la quale un totale quote va considerato azzerato (residui da arrotondamento float)
+export const QUOTE_EPSILON = 0.01
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 export function totaleInvestito(acquisti) {
@@ -447,7 +450,7 @@ export function distribuzioneAssetClass(etfList, brokerFiltro) {
       ? etf.acquisti.filter(a => brokerFiltro.includes(a.brokerId))
       : etf.acquisti
     const quote = acquistiFiltered.reduce((s, a) => s + a.quoteFrazionate, 0)
-    if (quote === 0) continue
+    if (Math.abs(quote) < QUOTE_EPSILON) continue
     const valore = quote * etf.prezzoCorrente
     const nome = etf.assetClassNome ?? 'Azioni'
     totalePerClasse.set(nome, (totalePerClasse.get(nome) ?? 0) + valore)

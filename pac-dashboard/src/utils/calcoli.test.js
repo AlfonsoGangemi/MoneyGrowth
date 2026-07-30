@@ -17,6 +17,7 @@ import {
   calcolaVolatilita,
   calcolaProiezione,
   indicatoriPortafoglio,
+  distribuzioneAssetClass,
 } from './calcoli'
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -533,5 +534,47 @@ describe('indicatoriPortafoglio', () => {
     expect(r.totValore).toBeCloseTo(2 * 60 + 2.5 * 100) // 120 + 250 = 370
     expect(r.totFee).toBeCloseTo(5)
     expect(r.roi).toBeCloseTo((370 - 305) / 305 * 100, 0)
+  })
+})
+
+// ── distribuzioneAssetClass (PAC-147) ───────────────────────────────────────
+
+describe('distribuzioneAssetClass', () => {
+  it('esclude un ETF completamente venduto (quote nette a 0)', () => {
+    const etfList = [
+      {
+        assetClassNome: 'Azioni',
+        prezzoCorrente: 100,
+        acquisti: [
+          acq('2024-01-01', 1000, 100), // 10 quote acquistate
+          { data: '2024-06-01', importoInvestito: -1000, prezzoUnitario: 100, quoteFrazionate: -10, fee: 0 }, // vendita totale
+        ],
+      },
+      {
+        assetClassNome: 'Obbligazioni',
+        prezzoCorrente: 50,
+        acquisti: [acq('2024-01-01', 500, 50)], // 10 quote, mai vendute
+      },
+    ]
+    const dist = distribuzioneAssetClass(etfList, [])
+    expect(dist).toHaveLength(1)
+    expect(dist[0].nome).toBe('Obbligazioni')
+    expect(dist[0].percentuale).toBe(100)
+  })
+
+  it('esclude un ETF con residuo di quote sotto QUOTE_EPSILON dopo vendita totale', () => {
+    const etfList = [
+      {
+        assetClassNome: 'Azioni',
+        prezzoCorrente: 100,
+        acquisti: [
+          acq('2024-01-01', 1000, 100), // 10 quote acquistate
+          // vendita con minuscolo residuo float (< QUOTE_EPSILON) invece di 0 esatto
+          { data: '2024-06-01', importoInvestito: -1000, prezzoUnitario: 100, quoteFrazionate: -9.999999, fee: 0 },
+        ],
+      },
+    ]
+    const dist = distribuzioneAssetClass(etfList, [])
+    expect(dist).toEqual([])
   })
 })

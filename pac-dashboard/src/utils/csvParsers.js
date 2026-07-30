@@ -170,11 +170,13 @@ export function parseGenericCsv(text, mapping) {
       const txId   = iTxId   !== null ? (cols[iTxId]?.trim() || null)  : null
 
       if (!etfMap[isin]) etfMap[isin] = { isin, nome, emittente: null, acquisti: [] }
+      const importoInvestito = -amount
       etfMap[isin].acquisti.push({
         data,
-        importoInvestito:  -amount,
+        importoInvestito,
         prezzoUnitario:    price,
-        quoteFrazionate:   qty,
+        // Segno delle quote coerente con importoInvestito: una vendita (importo negativo) riduce le quote
+        quoteFrazionate:   importoInvestito < 0 ? -Math.abs(qty) : Math.abs(qty),
         fee,
         broker_transaction_id: txId,
       })
@@ -239,11 +241,13 @@ export function parseGenericCsv(text, mapping) {
     const fee = feeFromCol + (feeAccum.get(txId) ?? 0)
 
     if (!etfMap[isin]) etfMap[isin] = { isin, nome, emittente: null, acquisti: [] }
+    const importoInvestito = -amount
     etfMap[isin].acquisti.push({
       data,
-      importoInvestito:  -amount,
+      importoInvestito,
       prezzoUnitario:    price,
-      quoteFrazionate:   qty,
+      // Segno delle quote coerente con importoInvestito: una vendita (importo negativo) riduce le quote
+      quoteFrazionate:   importoInvestito < 0 ? -Math.abs(qty) : Math.abs(qty),
       fee,
       broker_transaction_id: txId,
     })

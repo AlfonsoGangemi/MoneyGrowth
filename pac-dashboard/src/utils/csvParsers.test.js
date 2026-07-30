@@ -87,6 +87,19 @@ describe('parseGenericCsv — Trade Republic', () => {
     expect(tx.quoteFrazionate).toBe(10)
   })
 
+  it('riga SELL produce quoteFrazionate negativo e importoInvestito negativo', () => {
+    const result = parseGenericCsv(TR_CSV, TR_MAPPING)
+    const tx = result['IE00B4L5Y983'].acquisti.find(a => a.broker_transaction_id === 'TR-004')
+    expect(tx.quoteFrazionate).toBe(-2)
+    expect(tx.importoInvestito).toBe(-216.00)
+  })
+
+  it('il totale quote dopo BUY+BUY+SELL sottrae le quote vendute', () => {
+    const result = parseGenericCsv(TR_CSV, TR_MAPPING)
+    const totale = result['IE00B4L5Y983'].acquisti.reduce((s, a) => s + a.quoteFrazionate, 0)
+    expect(totale).toBe(13) // 10 + 5 - 2
+  })
+
   it('legge broker_transaction_id', () => {
     const result = parseGenericCsv(TR_CSV, TR_MAPPING)
     const ids = result['IE00B4L5Y983'].acquisti.map(a => a.broker_transaction_id)
