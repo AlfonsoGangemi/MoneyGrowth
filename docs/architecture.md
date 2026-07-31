@@ -110,7 +110,7 @@ Convenzioni: namespace per sezione (`auth_*`, `mcp_*`, `etf_*`), nomi tecnici in
 
 | File | Responsabilità |
 |---|---|
-| `prerender.mjs` | Prerendering SSR delle pagine pubbliche (LandingPage, Privacy, Termini) per SEO |
+| `prerender.mjs` | Prerendering SSR delle pagine pubbliche (LandingPage, Privacy, Termini) per SEO + iniezione di `title`, `description` e `canonical` per rotta (vedi [deploy.md](deploy.md)) |
 | `check-secrets.mjs` | Lint pre-commit: rileva variabili d'ambiente esposte nel bundle client |
 | `generate-og.mjs` | Generazione immagine Open Graph per social sharing |
 | `png-to-svg.mjs` | Conversione asset PNG → SVG |
