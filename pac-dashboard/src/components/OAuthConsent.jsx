@@ -5,7 +5,9 @@ import AuthForm from './AuthForm'
 
 export default function OAuthConsent() {
   const { t } = useLocale()
-  const params = new URLSearchParams(window.location.search)
+  // La pagina è prerenderizzata: durante l'SSR `window` non esiste. Il markup
+  // iniziale mostra solo lo spinner, quindi i parametri non incidono sull'idratazione.
+  const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
   const clientId = params.get('client_id') ?? ''
   const redirectUri = params.get('redirect_uri') ?? ''
   const codeChallenge = params.get('code_challenge') ?? ''

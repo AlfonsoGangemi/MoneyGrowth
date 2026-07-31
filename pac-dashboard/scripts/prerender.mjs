@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { KNOWN_ROUTES, NOT_FOUND_ROUTE } from '../src/utils/routes.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
@@ -11,23 +12,53 @@ const { render } = await import(pathToFileURL(path.join(root, 'dist-server/entry
 const SITE = 'https://etflens.app'
 
 // Metadati per rotta: senza questi ogni pagina eredita il canonical della home
-// e Google la scarta come duplicato invece di indicizzarla.
+// e Google la scarta come duplicato.
+//
+// `out` è il file generato in dist/. Ogni rotta client-side va aggiunta qui,
+// altrimenti riceve il markup della home e l'idratazione fallisce.
 const routes = {
   '/': {
+    out: 'index.html',
     title: 'ETF Lens — Tracker gratuito per portafoglio ETF e PAC',
     description: 'ETF Lens: traccia il tuo portafoglio ETF e piano di accumulo (PAC), calcola rendimento reale, CAGR e proietta la crescita futura. Gratis, sicuro, senza pubblicità.',
     canonical: SITE,
   },
   '/privacy': {
+    out: 'privacy/index.html',
     title: 'Privacy Policy — ETF Lens',
     description: 'Informativa privacy di ETF Lens: dati raccolti, finalità del trattamento, conservazione, condivisione con terze parti e i tuoi diritti ai sensi del GDPR.',
     canonical: `${SITE}/privacy`,
   },
   '/termini': {
+    out: 'termini/index.html',
     title: 'Termini di Servizio — ETF Lens',
     description: "Termini di servizio di ETF Lens: condizioni d'uso, account, limitazioni di responsabilità e disclaimer sugli strumenti di analisi del portafoglio ETF.",
     canonical: `${SITE}/termini`,
   },
+  // Pagina di consenso OAuth: prerenderizzata per evitare che il rewrite le serva
+  // il markup della landing, che romperebbe l'idratazione di `OAuthConsent`.
+  '/oauth/authorize': {
+    out: 'oauth/authorize/index.html',
+    title: 'Autorizzazione accesso — ETF Lens',
+    description: 'Pagina di consenso per autorizzare un client esterno ad accedere ai dati del tuo portafoglio ETF Lens.',
+    canonical: `${SITE}/oauth/authorize`,
+    noindex: true,
+  },
+  // Servita da Vercel con status 404 per ogni path senza corrispondenza.
+  '/404': {
+    out: '404.html',
+    title: 'Pagina non trovata — ETF Lens',
+    description: 'La pagina richiesta non esiste o è stata spostata.',
+    canonical: `${SITE}/404`,
+    noindex: true,
+  },
+}
+
+// Una rotta servita dalla SPA ma senza metadati qui riceverebbe il markup della
+// home: meglio rompere il build che accorgersene dal comportamento in produzione.
+const senzaMetadati = [...KNOWN_ROUTES, NOT_FOUND_ROUTE].filter((rotta) => !routes[rotta])
+if (senzaMetadati.length > 0) {
+  throw new Error(`prerender: rotte dichiarate in routes.js ma senza metadati: ${senzaMetadati.join(', ')}`)
 }
 
 /** Sostituisce l'unica occorrenza attesa; fallisce il build se il template cambia. */
@@ -54,8 +85,17 @@ function applyMeta(html, meta, isHome) {
     html = replaceOnce(html, pattern, replacement, label)
   }
 
-  // Il FAQPage descrive solo la landing: lasciarlo su privacy/termini dichiarerebbe
-  // a Google delle FAQ che quelle pagine non contengono.
+  if (meta.noindex) {
+    html = replaceOnce(
+      html,
+      /<link rel="canonical"/,
+      '<meta name="robots" content="noindex, follow" />\n    <link rel="canonical"',
+      'punto di inserimento meta robots'
+    )
+  }
+
+  // Il FAQPage descrive solo la landing: lasciarlo altrove dichiarerebbe a Google
+  // delle FAQ che quelle pagine non contengono.
   if (!isHome) {
     html = replaceOnce(
       html,
@@ -73,15 +113,11 @@ for (const [url, meta] of Object.entries(routes)) {
   let html = template.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`)
   html = applyMeta(html, meta, isHome)
 
-  if (isHome) {
-    await fs.writeFile(path.join(root, 'dist/index.html'), html)
-  } else {
-    const dir = path.join(root, 'dist', url)
-    await fs.mkdir(dir, { recursive: true })
-    await fs.writeFile(path.join(dir, 'index.html'), html)
-  }
+  const outPath = path.join(root, 'dist', meta.out)
+  await fs.mkdir(path.dirname(outPath), { recursive: true })
+  await fs.writeFile(outPath, html)
 
-  console.log(`Prerendered: ${url} → ${meta.canonical}`)
+  console.log(`Prerendered: ${url} → dist/${meta.out}${meta.noindex ? ' (noindex)' : ''}`)
 }
 
 console.log('Prerendering done.')

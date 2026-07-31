@@ -48,6 +48,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `CsvAiModal.jsx` | Import CSV storico acquisti tramite parsing LLM |
 | `LinguaToggle.jsx` | Pulsante IT/EN in navbar |
 | `ThemeToggle.jsx` | Pulsante tema chiaro/scuro in navbar |
+| `NotFound.jsx` | Pagina 404 (IT/EN) servita per ogni path non presente in `utils/routes.js`; prerenderizzata in `dist/404.html` |
 | `Privacy.jsx` | Pagina informativa Privacy Policy |
 | `Termini.jsx` | Pagina informativa Termini di Servizio |
 
@@ -76,6 +77,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `calcoli.js` | Tutti i calcoli finanziari: ROI, CAGR, TWRR, ATWRR, IRR, Drawdown, Volatilità, proiezioni, serie storiche. Esposto anche via MCP come resource e tool |
 | `formatStat.js` | `formatStatValue(n)` — formatta un numero in notazione compatta con suffisso `+` (es. `1240 → "1K+"`, `3450000 → "3M+"`). Usato da TrustStats per visualizzare le statistiche pubbliche. |
 | `backfillPrezzi.js` | `backfillETFPricesBatch(items, opts)` — storicizzazione demand-driven prezzi mensili per più ETF senza N+1: una query batch per i mesi esistenti (`fetchExistingMonths`), una sola call a `/api/extraetf-quotes` history batch, un solo upsert su `etf_prezzi_storici`; dedup giornaliera per ISIN via localStorage. `backfillETFPrices(isin, dateFrom, opts)` è il wrapper single-ISIN che delega al batch. `fetchExistingMonths(isins, fromYear)` legge i mesi già presenti per più ISIN in un'unica query (`Map<isin, Set>`). `needsBackfillToday(isin)` espone il check di dedup giornaliera |
+| `routes.js` | `KNOWN_ROUTES`, `NOT_FOUND_ROUTE`, `normalizePath()`, `isKnownRoute()` — unica fonte di verità delle rotte pubbliche, condivisa tra `App.jsx` e `scripts/prerender.mjs`. Ogni path non elencato riceve la pagina 404 |
 | `supabase.js` | Client Supabase singleton con anon key (lato client) |
 | `tempmail.js` | Lista domini email temporanei bloccati in registrazione |
 

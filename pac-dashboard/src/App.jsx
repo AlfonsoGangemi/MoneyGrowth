@@ -8,12 +8,17 @@ import LandingPage from './components/LandingPage'
 import Termini from './components/Termini'
 import Privacy from './components/Privacy'
 import OAuthConsent from './components/OAuthConsent'
+import NotFound from './components/NotFound'
+import { normalizePath } from './utils/routes'
 
 export default function App({ url }) {
-  const path = url ?? (typeof window !== 'undefined' ? window.location.pathname : '/')
+  const path = normalizePath(url ?? (typeof window !== 'undefined' ? window.location.pathname : '/'))
   if (path === '/termini') return <LocaleProvider><Termini /></LocaleProvider>
   if (path === '/privacy') return <LocaleProvider><Privacy /></LocaleProvider>
   if (path === '/oauth/authorize') return <ThemeProvider><LocaleProvider><OAuthConsent /></LocaleProvider></ThemeProvider>
+  // Ogni altra rotta non esiste: senza questo fallback la SPA mostrerebbe la landing
+  // con HTTP 200, che Google tratta come soft 404.
+  if (path !== '/') return <LocaleProvider><NotFound /></LocaleProvider>
 
   return (
     <ThemeProvider>

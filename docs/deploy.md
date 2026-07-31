@@ -37,13 +37,31 @@ Se le rotte servono lo stesso numero di byte, il prerender non sta girando. Nei 
 
 ## Prerendering e metadati SEO
 
-`scripts/prerender.mjs` genera HTML statico per `/`, `/privacy` e `/termini` usando `src/entry-server.jsx`. Oltre a iniettare il markup React in `<div id="root">`, sostituisce per ogni rotta:
+`scripts/prerender.mjs` genera HTML statico usando `src/entry-server.jsx`. Oltre a iniettare il markup React in `<div id="root">`, sostituisce per ogni rotta:
 
 - `<title>` e `<meta name="description">`
 - `<link rel="canonical">`, `og:url`, `og:title`, `og:description`, `twitter:title`, `twitter:description`
+- `<meta name="robots" content="noindex, follow">` sulle rotte marcate `noindex: true`
 - rimuove il blocco JSON-LD `FAQPage` dalle pagine diverse dalla home (descrive solo la landing)
 
-I metadati per rotta sono definiti nell'oggetto `routes` in cima allo script: **per aggiungere una pagina pubblica indicizzabile, va aggiunta lì** e in `public/sitemap.xml`.
+| Rotta | File generato | Indicizzabile |
+|---|---|---|
+| `/` | `dist/index.html` | sì |
+| `/privacy` | `dist/privacy/index.html` | sì |
+| `/termini` | `dist/termini/index.html` | sì |
+| `/oauth/authorize` | `dist/oauth/authorize/index.html` | no |
+| `/404` | `dist/404.html` | no |
+
+### Aggiungere una rotta
+
+Va fatto in **due punti**, ed è verificato dai test:
+
+1. `src/utils/routes.js` → `KNOWN_ROUTES` (routing client in `App.jsx`)
+2. `scripts/prerender.mjs` → oggetto `routes`, con `out` e metadati
+
+Se una rotta compare solo nel primo, il build **fallisce**: senza HTML dedicato riceverebbe il markup della home e l'idratazione salterebbe. Se è indicizzabile va aggiunta anche a `public/sitemap.xml`.
+
+⚠️ I componenti raggiungibili da una rotta prerenderizzata devono essere **SSR-safe**: nessun accesso a `window` o `document` durante il render (solo dentro `useEffect`, oppure con guardia `typeof window !== 'undefined'`). Il markup del primo render deve coincidere tra server e client, altrimenti l'idratazione fallisce.
 
 Le sostituzioni passano da `replaceOnce()`, che fa fallire il build se un pattern non trova esattamente un match: se il template `index.html` cambia struttura, il build si rompe invece di produrre silenziosamente metadati sbagliati.
 
@@ -67,12 +85,19 @@ Il dominio è dietro **Cloudflare** in modalità proxy. Due conseguenze operativ
 
 L'impostazione Cloudflare *"Block AI bots"* blocca i crawler AI (GPTBot, ClaudeBot, PerplexityBot) **a monte di `robots.txt`**, che invece li autorizza esplicitamente. Può inoltre bloccare i connettori MCP remoti.
 
-## Rewrite e soft 404 *(limite noto)*
+## Rewrite e gestione 404
 
-Il rewrite catch-all in `vercel.json` serve `/index.html` per ogni path non-`/api`:
+`vercel.json` contiene **solo** i due rewrite `.well-known` per la discovery OAuth:
 
 ```json
-{ "source": "/((?!api(?:/|$)).*)", "destination": "/index.html" }
+"rewrites": [
+  { "source": "/.well-known/oauth-authorization-server", "destination": "/api/oauth/metadata" },
+  { "source": "/.well-known/oauth-protected-resource",    "destination": "/api/oauth/protected-resource" }
+]
 ```
 
-I file prerenderizzati hanno la precedenza, quindi `/privacy` e `/termini` vengono serviti correttamente. Ma qualsiasi URL inesistente restituisce **HTTP 200** con la home invece di un 404: Google lo classifica come soft 404 e consuma crawl budget. Restringere il catch-all richiede prima di mappare tutte le rotte servite dalla SPA (dashboard, consenso OAuth).
+**Non deve esserci un rewrite catch-all verso `/index.html`.** Ogni path viene risolto sul filesystem: le rotte prerenderizzate hanno il proprio file, tutto il resto ricade su `dist/404.html`, che Vercel serve con status **404**. Un catch-all riporterebbe ogni URL inesistente a HTTP 200 con la landing — un soft 404 che Google penalizza e che consuma crawl budget.
+
+Il test in `src/utils/routes.test.js` fallisce se un rewrite catch-all viene reintrodotto.
+
+Conseguenza da tenere presente: **una rotta client-side non dichiarata in `routes.js` restituisce 404**, non la landing. È voluto — un errore di configurazione diventa visibile invece di degradare in silenzio.
