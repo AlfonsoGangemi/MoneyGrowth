@@ -885,15 +885,22 @@ function FAQ({ t }) {
               <div key={n} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
                 <button
                   onClick={() => setOpen(isOpen ? null : n)}
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${n}`}
                   className="w-full flex items-center justify-between px-5 py-4 text-left">
                   <span className="font-semibold text-[15px] text-slate-900 dark:text-white">{t(`lp_faq_${n}_q`)}</span>
                   <IconChevron open={isOpen} />
                 </button>
-                {isOpen && (
-                  <div className="px-5 pb-4 text-[14px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {t(`lp_faq_${n}_a`)}
+                {/* Sempre nel DOM (collassato via grid-rows) così i crawler leggono le risposte senza eseguire JS */}
+                <div
+                  id={`faq-answer-${n}`}
+                  className={`grid transition-all duration-200 ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                  <div className="overflow-hidden">
+                    <div className="px-5 pb-4 text-[14px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {t(`lp_faq_${n}_a`)}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             )
           })}
