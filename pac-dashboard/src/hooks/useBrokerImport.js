@@ -12,8 +12,8 @@ export function useBrokerImport() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const [{ data: cfg }, { data: log }, { data: brokers }] = await Promise.all([
-      supabase.from('config').select('is_pro').eq('user_id', user.id).maybeSingle(),
+    const [{ data: plan }, { data: log }, { data: brokers }] = await Promise.all([
+      supabase.from('subscription_plan').select('plan, status').eq('user_id', user.id).maybeSingle(),
       supabase
         .from('broker_sync_log')
         .select('id, synced_at, source, rows_total, rows_inserted, rows_skipped, error_message, broker_id')
@@ -24,7 +24,7 @@ export function useBrokerImport() {
       supabase.from('broker').select('id, csv_mapping').eq('user_id', user.id),
     ])
 
-    setIsPro(cfg?.is_pro ?? false)
+    setIsPro(plan?.plan === 'PRO' && plan?.status === 'active')
     setSyncLog(log ?? [])
     if (brokers) {
       setBrokerMappings(new Map(brokers.map(b => [b.id, b.csv_mapping ?? null])))

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getUserPlan } from './_lib/plan.js'
 
 function buildClients(jwt) {
   const url = process.env.VITE_SUPABASE_URL
@@ -34,25 +35,15 @@ export default async function handler(req, res) {
 
 // GET /api/import — verifica se l'utente ha il piano PRO
 async function handleCheck(adminClient, userId, res) {
-  const { data, error } = await adminClient
-    .from('config')
-    .select('is_pro')
-    .eq('user_id', userId)
-    .maybeSingle()
-
+  const { isPro, error } = await getUserPlan(adminClient, userId)
   if (error) return res.status(500).json({ error: 'Errore interno' })
-  return res.json({ allowed: data?.is_pro ?? false })
+  return res.json({ allowed: isPro })
 }
 
 // POST /api/import — merge incrementale acquisti da broker
 async function handleImport(adminClient, userId, req, res) {
-  const { data: cfg } = await adminClient
-    .from('config')
-    .select('is_pro')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (!cfg?.is_pro) return res.status(403).json({ error: 'Piano PRO richiesto' })
+  const { isPro } = await getUserPlan(adminClient, userId)
+  if (!isPro) return res.status(403).json({ error: 'Piano PRO richiesto' })
 
   const payload = req.body
   if (!Array.isArray(payload?.etf) || !payload?.broker_id) {

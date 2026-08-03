@@ -93,8 +93,31 @@ create table scenari (
 create table config (
   user_id           uuid references auth.users(id) on delete cascade primary key,
   orizzonte_anni    integer not null default 10,
-  broker_filtro     uuid[] not null default '{}',
-  is_pro            boolean not null default false  -- PAC-131: flag piano PRO
+  broker_filtro     uuid[] not null default '{}'
+);
+
+-- Piano utente (PAC-151, sostituisce config.is_pro): fonte unica di verità
+-- per lo stato dell'abbonamento, letta da api/import.js e useBrokerImport.js
+-- e da tutti i futuri gate PRO (PAC-152/153/155/156)
+create table subscription_plan (
+  user_id       uuid primary key references auth.users(id) on delete cascade,
+  plan          text not null default 'FREE' check (plan in ('FREE', 'PRO')),
+  status        text not null default 'active' check (status in ('active', 'expired', 'trial')),
+  billing_cycle text check (billing_cycle in ('monthly', 'annual')),
+  renews_at     timestamptz,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+-- Crediti AI (PAC-151): base per il sistema di crediti dell'assistente AI (PAC-154/155/156)
+create table ai_credits (
+  user_id                 uuid primary key references auth.users(id) on delete cascade,
+  credits_remaining       integer not null default 0,
+  credits_total           integer not null default 0,
+  reset_at                timestamptz,
+  purchased_topups_count  integer not null default 0,
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now()
 );
 
 -- Storico prezzi mensili ETF (condiviso tra utenti, chiave per ISIN)
@@ -196,6 +219,24 @@ create policy "utente vede i propri config"
   on config for all
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- subscription_plan / ai_credits (PAC-151): SOLO lettura per il proprietario.
+-- A differenza delle tabelle sopra (policy "for all"), qui non esiste alcuna
+-- policy INSERT/UPDATE/DELETE per authenticated/anon: sono dati che decidono
+-- un gate di pagamento/quota, le scritture avvengono solo da service role
+-- (adminClient) nelle serverless function (import.js, e i futuri endpoint
+-- PAC-152/153/155/156).
+alter table subscription_plan enable row level security;
+
+create policy "subscription_plan_select"
+  on subscription_plan for select
+  using (auth.uid() = user_id);
+
+alter table ai_credits enable row level security;
+
+create policy "ai_credits_select"
+  on ai_credits for select
+  using (auth.uid() = user_id);
 
 -- asset_class: lettura per tutti gli autenticati, scrittura bloccata
 alter table asset_class enable row level security;
@@ -437,6 +478,26 @@ $$;
 Verifica dopo migrazione:
 ```bash
 node --env-file=.env scripts/test-oauth-schema.mjs
+```
+
+---
+
+### Migrazione PAC-151 — subscription_plan, ai_credits, ritiro config.is_pro
+
+Introduce `subscription_plan` come fonte unica di verità per il piano utente (FREE/PRO, stato abbonamento, ciclo/rinnovo) e `ai_credits` per il sistema di crediti AI. Sostituisce `config.is_pro` (PAC-131): backfill dei dati esistenti, poi drop della colonna. I due consumer esistenti (`api/import.js`, `useBrokerImport.js`) sono stati migrati a leggere da `subscription_plan` tramite l'helper `api/_lib/plan.js` (`getUserPlan`).
+
+File: `pac-dashboard/supabase/migrations/20260803000000_pac151_subscription_plan_ai_credits.sql`
+
+```sql
+-- Schema: vedi subscription_plan / ai_credits sopra (+ RLS: vedi sezione sopra)
+
+-- Backfill da config.is_pro
+INSERT INTO subscription_plan (user_id, plan, status)
+SELECT user_id, CASE WHEN is_pro THEN 'PRO' ELSE 'FREE' END, 'active'
+FROM config
+ON CONFLICT (user_id) DO NOTHING;
+
+ALTER TABLE config DROP COLUMN IF EXISTS is_pro;
 ```
 
 ---

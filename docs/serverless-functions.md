@@ -332,7 +332,7 @@ POST /api/import
 Authorization: Bearer <supabase-jwt>
 ```
 
-Endpoint di merge incrementale acquisti da broker esterno. Richiede piano PRO (`config.is_pro = true`).
+Endpoint di merge incrementale acquisti da broker esterno. Richiede piano PRO (`subscription_plan.plan = 'PRO'` e `status = 'active'`, verificato via `getUserPlan()` in `api/_lib/plan.js` — PAC-151, sostituisce il precedente `config.is_pro`).
 
 **Ogni payload di import è associato a un singolo broker** — il campo `broker` descrive la sorgente del file CSV.
 
@@ -391,7 +391,7 @@ Content-Type: application/json
 
 **Logica di merge:**
 
-1. Verifica `is_pro` → 403 se false.
+1. Verifica il piano PRO via `getUserPlan()` → 403 se `isPro` è false.
 2. Upsert broker dal campo `broker` (un singolo broker per payload).
 3. Per ogni ETF: UPDATE `nome`/`emittente` se esiste, altrimenti INSERT. Non sovrascrive mai `importo_fisso`, `prezzo_corrente`, `archiviato`.
 4. ETF con `archiviato = true`: tutti i suoi acquisti vengono saltati silenziosamente.

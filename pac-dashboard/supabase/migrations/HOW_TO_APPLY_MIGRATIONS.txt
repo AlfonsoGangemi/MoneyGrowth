@@ -1,0 +1,73 @@
+Come applicare le migration da locale
+======================================
+
+Guida generale, valida per qualunque nuovo file *.sql aggiunto in questa
+cartella (non solo per una migration specifica).
+
+Il progetto e' gia' linkato al progetto Supabase remoto (verificabile con
+`npx supabase migration list`, che si connette senza bisogno di `supabase link`).
+Il CLI e' gia' una devDependency del progetto (vedi package.json), quindi si usa
+sempre con `npx supabase ...`, non serve installarlo globalmente.
+
+Eseguire tutti i comandi dalla cartella pac-dashboard/.
+
+
+0. Aggiornamento Supabase CLI
+
+  npm update supabase --save-dev
+
+1. Controllo pre-migration (facoltativo ma consigliato)
+   -----------------------------------------------------
+   Se la migration contiene operazioni distruttive/irreversibili (DROP COLUMN,
+   DROP TABLE, TRUNCATE, ALTER ... USING con perdita di precisione, ecc.),
+   annotarsi uno stato "prima" da poter confrontare dopo, ad es.:
+
+     npx supabase db execute --linked --sql "select count(*) from <tabella> where <condizione>;"
+
+   (se il comando `db execute` non e' disponibile nella versione di CLI
+   installata, eseguire la stessa query da Supabase Studio -> SQL Editor)
+
+2. Vedere quali migration sono pendenti
+   -------------------------------------
+     npx supabase migration list
+
+   Le righe con Local valorizzato e Remote vuoto sono le migration ancora da
+   applicare, in ordine di timestamp.
+
+3. Applicare le migration pendenti al progetto remoto
+   ---------------------------------------------------
+     npx supabase db push
+
+   Il comando applica in ordine tutte le migration locali non ancora presenti
+   sul remoto. Chiede conferma prima di eseguire — rispondere "y".
+
+4. Verifica post-migration
+   ------------------------
+   a) Le migration risultano allineate:
+
+        npx supabase migration list
+
+      Local e Remote devono combaciare su tutte le righe.
+
+   b) Verificare a mano l'effetto della migration (nuove tabelle/colonne
+      popolate correttamente, RLS abilitata, dati di backfill coerenti con
+      il conteggio del punto 1), tramite query mirate con lo stesso comando
+      `npx supabase db execute --linked --sql "..."` oppure da SQL Editor.
+
+5. Smoke test applicativo
+   -----------------------
+   Verificare a mano (o coi test automatici, se presenti) che gli endpoint/hook
+   che dipendono dallo schema modificato si comportino come previsto sia nel
+   caso "positivo" che nel caso "negativo" (es. permesso vs negato, presente vs
+   assente).
+
+Rollback
+--------
+Non esiste una migration di rollback automatica: le operazioni distruttive
+(DROP COLUMN, DROP TABLE, ecc.) non sono reversibili col solo CLI.
+In caso di problemi:
+  - ripristinare da un backup del progetto Supabase preso prima del punto 3
+    (Supabase Dashboard -> Database -> Backups), oppure
+  - scrivere e applicare una nuova migration "di correzione" che riporti lo
+    schema/i dati allo stato precedente (mai modificare a mano una migration
+    gia' applicata sul remoto: se ne crea una nuova).
