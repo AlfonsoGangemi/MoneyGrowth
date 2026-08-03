@@ -20,6 +20,8 @@ const defaultState = {
   prezziStorici: [],
   storicoPerBroker: [],
   assetClasses: [],
+  isPro: false,
+  limiti: { maxBroker: 3, maxEtf: 9, maxWatchlist: 6 },
 }
 
 // ── Mapping DB (snake_case) → JS (camelCase) ──────────────────────
@@ -110,7 +112,7 @@ export function usePortafoglio(user) {
     if (!user) return
       setLoading(true)
       try {
-        const [etfRes, scenariRes, configRes, brokerRes, storicoRes, assetClassRes] = await Promise.all([
+        const [etfRes, scenariRes, configRes, brokerRes, storicoRes, assetClassRes, planRes, limitsRes] = await Promise.all([
           supabase
             .from('etf')
             .select('*, acquisti(*)')
@@ -141,6 +143,16 @@ export function usePortafoglio(user) {
             .select('*')
             .eq('visibile', true)
             .order('nome'),
+          supabase
+            .from('subscription_plan')
+            .select('plan, status')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('plan_limits')
+            .select('max_broker, max_etf, max_watchlist')
+            .eq('plan', 'FREE')
+            .maybeSingle(),
         ])
 
         if (etfRes.error) throw etfRes.error
@@ -225,6 +237,9 @@ export function usePortafoglio(user) {
         }
 
         const config = configRes.data
+        const planRow = planRes.data
+        const isPro = planRow?.plan === 'PRO' && planRow?.status === 'active'
+        const limitsRow = limitsRes.data
         setStato({
           etf: etfMappati,
           scenari,
@@ -234,6 +249,12 @@ export function usePortafoglio(user) {
           prezziStorici,
           storicoPerBroker: storicoTutti,
           assetClasses,
+          isPro,
+          limiti: {
+            maxBroker: limitsRow?.max_broker ?? 3,
+            maxEtf: limitsRow?.max_etf ?? 9,
+            maxWatchlist: limitsRow?.max_watchlist ?? 6,
+          },
         })
       } catch (e) {
         console.error(e)
@@ -279,8 +300,6 @@ export function usePortafoglio(user) {
 
   // ── ETF ──────────────────────────────────────────────────────────
   const aggiungiETF = useCallback(async (nome, isin, emittente, importoFisso, assetClassId) => {
-    if (stato.etf.filter(e => !e.archiviato).length >= 9) return
-
     const { data, error } = await supabase
       .from('etf')
       .insert({
@@ -299,6 +318,7 @@ export function usePortafoglio(user) {
     if (error) {
       Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_etf' } })
       if (error.code === '23505') return 'ETF già presente nel portafoglio (ISIN duplicato).'
+      if (error.code === 'PLN01') return 'Limite di 9 ETF attivi raggiunto sul piano FREE — passa a PRO per ETF illimitati.'
       return 'Errore nell\'aggiunta dell\'ETF.'
     }
 
@@ -311,7 +331,7 @@ export function usePortafoglio(user) {
       }],
     }))
     return true
-  }, [stato.etf.length, user])
+  }, [user])
 
   const eliminaETF = useCallback(async (etfId) => {
     const etf = stato.etf.find(e => e.id === etfId)
@@ -573,7 +593,12 @@ export function usePortafoglio(user) {
       .select()
       .single()
 
-    if (error) { Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_broker' } }); setErrore('Errore nell\'aggiunta del broker.'); return }
+    if (error) {
+      Sentry.captureException(new Error(error.message), { tags: { operation: 'aggiungi_broker' } })
+      if (error.code === 'PLN01') { setErrore('Limite di 3 broker raggiunto sul piano FREE — passa a PRO per broker illimitati.'); return }
+      setErrore('Errore nell\'aggiunta del broker.')
+      return
+    }
 
     setStato(s => ({ ...s, broker: [...s.broker, mapBroker(data)] }))
   }, [user])
@@ -643,6 +668,8 @@ export function usePortafoglio(user) {
   const importJSON = useCallback((file) => {
     // Errore atteso (input utente) — marcato con _handled per il catch
     function errAtteso(msg) { const e = new Error(msg); e._handled = true; return e }
+    const isPro = stato.isPro
+    const limiti = stato.limiti
 
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -682,19 +709,25 @@ export function usePortafoglio(user) {
               throw errAtteso('Broker con nome mancante o non valido')
           }
 
-          // Carica broker esistenti nel DB e inserisce quelli mancanti dal JSON
+          // Carica broker esistenti nel DB e inserisce quelli mancanti dal JSON.
+          // Oltre il limite del piano FREE, i broker in eccesso vengono comunque
+          // inseriti ma archiviati (mai persi, coerente con la strategia usata per gli ETF)
           const { data: brokerEsistenti, error: brkLoadErr } = await supabase
-            .from('broker').select('id, nome').eq('user_id', user.id)
+            .from('broker').select('id, nome, archiviato').eq('user_id', user.id)
           if (brkLoadErr) throw brkLoadErr
           const brokerNomi = new Map((brokerEsistenti || []).map(b => [b.nome, b.id]))
+          let brokerAttiviCount = (brokerEsistenti || []).filter(b => !b.archiviato).length
           for (const b of (data.broker || [])) {
             if (!brokerNomi.has(b.nome)) {
-              const { data: row } = await supabase
+              const archiviato = !isPro && brokerAttiviCount >= limiti.maxBroker
+              const { data: row, error: brkInsErr } = await supabase
                 .from('broker')
-                .insert({ user_id: user.id, nome: b.nome, colore: b.colore })
+                .insert({ user_id: user.id, nome: b.nome, colore: b.colore, archiviato })
                 .select('id, nome')
                 .single()
-              if (row) brokerNomi.set(row.nome, row.id)
+              if (brkInsErr) throw brkInsErr
+              if (!archiviato) brokerAttiviCount++
+              brokerNomi.set(row.nome, row.id)
             }
           }
 
@@ -712,7 +745,7 @@ export function usePortafoglio(user) {
           if ((data.etf || []).length > 0) {
             let attiviCount = 0
             for (const etf of data.etf) {
-              const archiviato = etf.archiviato || attiviCount >= 9
+              const archiviato = etf.archiviato || (!isPro && attiviCount >= limiti.maxEtf)
               if (!archiviato) attiviCount++
               const assetClassId = etf.assetClassNome ? (acNomeMap.get(etf.assetClassNome) ?? null) : null
               const { data: row, error } = await supabase
@@ -777,7 +810,7 @@ export function usePortafoglio(user) {
       }
       reader.readAsText(file)
     })
-  }, [user, caricaDati])
+  }, [user, caricaDati, stato.isPro, stato.limiti])
 
   const storicoAnnuale = stato.storicoPerBroker.length === 0
     ? []

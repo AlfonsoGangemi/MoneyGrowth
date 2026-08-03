@@ -598,7 +598,7 @@ export default function Dashboard({ user, onSignOut }) {
   const etfAttivi = etfFiltrate.filter(e => !e.archiviato)
   const etfArchiviati = etfFiltrate.filter(e => e.archiviato)
   const etfAttiviReali = port.etf.filter(e => !e.archiviato).length
-  const limitRaggiunto = etfAttiviReali >= 9
+  const limitRaggiunto = !port.isPro && etfAttiviReali >= port.limiti.maxEtf
 
   // Per ogni ETF, lista dei broker su cui la quota netta è ancora detenuta (dati non filtrati)
   const brokerPerETF = Object.fromEntries(

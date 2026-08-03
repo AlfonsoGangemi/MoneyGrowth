@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../utils/supabase'
 
 const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{10}$/
-const MAX_ITEMS = 12
 
 export function useWatchlist() {
   const [items, setItems] = useState([])
@@ -41,7 +40,6 @@ export function useWatchlist() {
     setError(null)
     const upper = isin.trim().toUpperCase()
     if (!ISIN_RE.test(upper)) throw new Error('isin_invalid')
-    if (items.length >= MAX_ITEMS) throw new Error('limit')
 
     const res = await fetch(`/api/extraetf-detail?isin=${upper}`)
     if (!res.ok) throw new Error('not_found')
@@ -54,6 +52,7 @@ export function useWatchlist() {
       .insert({ isin: upper, nome: detail.nome, emittente: detail.emittente ?? null, user_id: user.id })
     if (dbErr) {
       if (dbErr.code === '23505') throw new Error('duplicate')
+      if (dbErr.code === 'PLN01') throw new Error('limit')
       throw new Error('db')
     }
     await carica()

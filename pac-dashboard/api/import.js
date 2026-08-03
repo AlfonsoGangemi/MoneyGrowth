@@ -51,7 +51,7 @@ async function handleImport(adminClient, userId, req, res) {
   }
 
   const syncSource = payload.sync_source ?? 'ui_upload'
-  let rowsTotal = 0, rowsInserted = 0, rowsSkipped = 0, errorMessage = null
+  let rowsTotal = 0, rowsInserted = 0, rowsSkipped = 0, errorMessage = null, limitReached = false
 
   try {
     // Verifica ownership del broker
@@ -72,6 +72,7 @@ async function handleImport(adminClient, userId, req, res) {
 
     for (const etfPayload of payload.etf) {
       if (!etfPayload.isin) continue
+      const acquisti = etfPayload.acquisti ?? []
 
       // SELECT ETF esistente per non sovrascrivere importo_fisso, prezzo_corrente, archiviato
       const { data: existingEtf } = await adminClient
@@ -107,12 +108,19 @@ async function handleImport(adminClient, userId, req, res) {
           .select('id')
           .single()
 
-        if (etfErr || !newEtf) continue
+        if (etfErr) {
+          if (etfErr.code === 'PLN01') {
+            limitReached = true
+            rowsTotal += acquisti.length
+            rowsSkipped += acquisti.length
+          }
+          continue
+        }
+        if (!newEtf) continue
         etfId = newEtf.id
         archiviato = false
       }
 
-      const acquisti = etfPayload.acquisti ?? []
       rowsTotal += acquisti.length
 
       // ETF archiviato → salta tutti i suoi acquisti silenziosamente
@@ -194,8 +202,14 @@ async function handleImport(adminClient, userId, req, res) {
       inserted: rowsInserted,
       skipped: rowsSkipped,
       total: rowsTotal,
+      ...(limitReached ? { limitReached: true } : {}),
     })
   }
 
-  return res.json({ inserted: rowsInserted, skipped: rowsSkipped, total: rowsTotal })
+  return res.json({
+    inserted: rowsInserted,
+    skipped: rowsSkipped,
+    total: rowsTotal,
+    ...(limitReached ? { limitReached: true } : {}),
+  })
 }

@@ -538,6 +538,7 @@ export default {
   broker_import_btn: 'Import CSV',
   broker_import_uploading: 'Importing…',
   broker_import_successo: '{total} rows processed — {inserted} inserted, {skipped} skipped',
+  broker_import_limite_raggiunto: 'Some ETFs were not imported: you reached the FREE plan limit. Upgrade to PRO to import them all.',
   broker_import_errore_csv: 'File not recognized: make sure you use the CSV exported from Trade Republic (Settings → Documents → Export data)',
   broker_import_errore_server: 'Import failed',
   broker_import_log_titolo: 'Import history',

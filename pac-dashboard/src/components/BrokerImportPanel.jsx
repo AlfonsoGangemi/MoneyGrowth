@@ -158,6 +158,12 @@ export default function BrokerImportPanel({ broker, inModal = false, initialBrok
         </div>
       )}
 
+      {result?.limitReached && (
+        <div className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-4 py-3">
+          {t('broker_import_limite_raggiunto')}
+        </div>
+      )}
+
       {error && (
         <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-4 py-3">
           {error}

@@ -393,7 +393,7 @@ Content-Type: application/json
 
 1. Verifica il piano PRO via `getUserPlan()` → 403 se `isPro` è false.
 2. Upsert broker dal campo `broker` (un singolo broker per payload).
-3. Per ogni ETF: UPDATE `nome`/`emittente` se esiste, altrimenti INSERT. Non sovrascrive mai `importo_fisso`, `prezzo_corrente`, `archiviato`.
+3. Per ogni ETF: UPDATE `nome`/`emittente` se esiste, altrimenti INSERT. Non sovrascrive mai `importo_fisso`, `prezzo_corrente`, `archiviato`. INSERT bloccato dal trigger `enforce_plan_limit()` (PAC-152, SQLSTATE `PLN01`) se l'utente FREE ha già raggiunto il limite ETF attivi → i suoi acquisti vengono contati in `skipped`/`total` e la risposta include `limitReached: true`.
 4. ETF con `archiviato = true`: tutti i suoi acquisti vengono saltati silenziosamente.
 5. Per ogni acquisto:
    - **Enrichment**: se `tr_transaction_id` è presente, cerca una riga manuale con stessa `(etf_id, data, importo_investito)` e `tr_transaction_id IS NULL` → aggancia l'ID alla riga esistente invece di inserire un duplicato.
@@ -403,6 +403,11 @@ Content-Type: application/json
 Risposta:
 ```json
 { "inserted": 12, "skipped": 3, "total": 15 }
+```
+
+Con `limitReached` (piano FREE, limite ETF raggiunto durante l'import — PAC-152), il campo è presente solo se `true`:
+```json
+{ "inserted": 5, "skipped": 10, "total": 15, "limitReached": true }
 ```
 
 In caso di errore parziale (HTTP 500):

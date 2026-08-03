@@ -120,6 +120,16 @@ create table ai_credits (
   updated_at              timestamptz not null default now()
 );
 
+-- Limiti piano FREE (PAC-152), configurabili senza deploy di codice.
+-- NULL = illimitato. Letta dal trigger enforce_plan_limit() (vedi sotto) e
+-- dal client (usePortafoglio.js) per il gate proattivo UI.
+create table plan_limits (
+  plan          text primary key,
+  max_broker    integer,
+  max_etf       integer,
+  max_watchlist integer
+);
+
 -- Storico prezzi mensili ETF (condiviso tra utenti, chiave per ISIN)
 create table etf_prezzi_storici (
   id        uuid primary key default gen_random_uuid(),
@@ -237,6 +247,15 @@ alter table ai_credits enable row level security;
 create policy "ai_credits_select"
   on ai_credits for select
   using (auth.uid() = user_id);
+
+-- plan_limits (PAC-152): tabella di riferimento condivisa, lettura per tutti
+-- gli autenticati, scrittura bloccata (si modifica solo da SQL Editor/service role)
+alter table plan_limits enable row level security;
+
+create policy "plan_limits_select_authenticated"
+  on plan_limits for select
+  to authenticated
+  using (true);
 
 -- asset_class: lettura per tutti gli autenticati, scrittura bloccata
 alter table asset_class enable row level security;
@@ -499,6 +518,66 @@ ON CONFLICT (user_id) DO NOTHING;
 
 ALTER TABLE config DROP COLUMN IF EXISTS is_pro;
 ```
+
+---
+
+### Migrazione PAC-152 — enforcement limiti piano FREE (broker, ETF, watchlist)
+
+Introduce `plan_limits` (limiti per piano, configurabili senza deploy di codice) e un trigger Postgres unico `enforce_plan_limit()` che blocca gli `INSERT` oltre soglia su `broker`/`etf`/`watchlist`. Il trigger scatta sia per insert diretti client (RLS) sia per insert via `adminClient` service-role (`api/import.js`), quindi copre sia la creazione singola sia l'import massivo con un'unica logica. Gli utenti PRO attivi (`plan = 'PRO' AND status = 'active'`, stessa definizione di `getUserPlan()` in `api/_lib/plan.js`) non sono soggetti a limiti.
+
+L'errore viene sollevato con SQLSTATE custom `PLN01` e `DETAIL` = nome tabella, distinguibile lato client come già si fa oggi con `23505` (unique_violation) — vedi `usePortafoglio.js` (`aggiungiETF`, `aggiungiBroker`), `useWatchlist.js` (`aggiungiETF`) e `api/import.js` (`handleImport`).
+
+File: `pac-dashboard/supabase/migrations/20260803010000_pac152_plan_limits_enforcement.sql`
+
+```sql
+-- Schema: vedi plan_limits sopra (+ RLS: vedi sezione sopra)
+
+INSERT INTO plan_limits (plan, max_broker, max_etf, max_watchlist)
+VALUES ('FREE', 3, 9, 6)
+ON CONFLICT (plan) DO NOTHING;
+
+CREATE OR REPLACE FUNCTION enforce_plan_limit()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_is_pro boolean;
+  v_limit  integer;
+  v_count  integer;
+BEGIN
+  SELECT (plan = 'PRO' AND status = 'active') INTO v_is_pro
+  FROM subscription_plan WHERE user_id = NEW.user_id;
+
+  IF COALESCE(v_is_pro, false) THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_TABLE_NAME = 'broker' THEN
+    SELECT max_broker INTO v_limit FROM plan_limits WHERE plan = 'FREE';
+    SELECT count(*) INTO v_count FROM broker WHERE user_id = NEW.user_id AND archiviato = false;
+  ELSIF TG_TABLE_NAME = 'etf' THEN
+    SELECT max_etf INTO v_limit FROM plan_limits WHERE plan = 'FREE';
+    SELECT count(*) INTO v_count FROM etf WHERE user_id = NEW.user_id AND archiviato = false;
+  ELSIF TG_TABLE_NAME = 'watchlist' THEN
+    SELECT max_watchlist INTO v_limit FROM plan_limits WHERE plan = 'FREE';
+    SELECT count(*) INTO v_count FROM watchlist WHERE user_id = NEW.user_id;
+  END IF;
+
+  IF v_limit IS NOT NULL AND v_count >= v_limit THEN
+    RAISE EXCEPTION 'plan_limit_reached: %', TG_TABLE_NAME
+      USING ERRCODE = 'PLN01', DETAIL = TG_TABLE_NAME;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER broker_plan_limit    BEFORE INSERT ON broker    FOR EACH ROW EXECUTE FUNCTION enforce_plan_limit();
+CREATE TRIGGER etf_plan_limit       BEFORE INSERT ON etf       FOR EACH ROW EXECUTE FUNCTION enforce_plan_limit();
+CREATE TRIGGER watchlist_plan_limit BEFORE INSERT ON watchlist FOR EACH ROW EXECUTE FUNCTION enforce_plan_limit();
+```
+
+Nota: il restore da backup JSON (`usePortafoglio.js` `importJSON`) pre-calcola lato client se un broker/ETF supera la soglia e lo inserisce con `archiviato: true` invece di lasciarlo fallire — il trigger quindi non scatta mai in un restore normale, resta come rete di sicurezza.
 
 ---
 
