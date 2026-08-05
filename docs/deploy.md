@@ -85,6 +85,25 @@ Il dominio è dietro **Cloudflare** in modalità proxy. Due conseguenze operativ
 
 L'impostazione Cloudflare *"Block AI bots"* blocca i crawler AI (GPTBot, ClaudeBot, PerplexityBot) **a monte di `robots.txt`**, che invece li autorizza esplicitamente. Può inoltre bloccare i connettori MCP remoti.
 
+### Configurazione Cloudflare richiesta
+
+Questa configurazione vive nella dashboard Cloudflare, **non nel repo**: se la zona viene ricostruita o il managed ruleset aggiornato, va riapplicata. Senza di essa alcune funzionalità si rompono in modo silenzioso e con errori fuorvianti.
+
+| Configurazione | Perché è necessaria | Se manca |
+|---|---|---|
+| **WAF Custom rule — Skip su `/api/mcp`** | Espressione `starts_with(http.request.uri.path, "/api/mcp")`, action *Skip* sul ruleset managed che include "Block AI bots"; da posizionare **sopra** le managed rules | Le `POST /api/mcp` del gateway claude.ai (User-Agent `Claude-User`, IP Google Cloud) vengono bloccate **prima di Vercel**: nessun log lato server e il client riporta un `McpAuthorizationError` che punta erroneamente alle credenziali (PAC-127) |
+| **Redirect Rule `www` → apex** | 301 dall'edge; il blocco `redirects` in `vercel.json` è solo un fallback | Vedi sopra: senza proxy o senza dominio su Vercel, `www.etflens.app` risponde HTTP 526 |
+
+**Verifica automatica** della prima riga:
+
+```bash
+npm run check:mcp-reachable
+```
+
+Invia la stessa probe non autenticata di claude.ai (UA `Claude-User`) e verifica di ricevere il 401 applicativo con `WWW-Authenticate` invece di un blocco edge; un secondo controllo con UA neutro isola la causa. Exit code 1 se l'endpoint non è raggiungibile. Non richiede segreti.
+
+Il controllo gira **ogni giorno alle 06:00 UTC** tramite GitHub Actions (`.github/workflows/check-mcp-reachable.yml`) — vedi [Monitoraggio automatico](#monitoraggio-automatico-github-actions).
+
 ## Rewrite e gestione 404
 
 `vercel.json` contiene **solo** i due rewrite `.well-known` per la discovery OAuth:
@@ -101,3 +120,25 @@ L'impostazione Cloudflare *"Block AI bots"* blocca i crawler AI (GPTBot, ClaudeB
 Il test in `src/utils/routes.test.js` fallisce se un rewrite catch-all viene reintrodotto.
 
 Conseguenza da tenere presente: **una rotta client-side non dichiarata in `routes.js` restituisce 404**, non la landing. È voluto — un errore di configurazione diventa visibile invece di degradare in silenzio.
+
+---
+
+## Monitoraggio automatico (GitHub Actions)
+
+I workflow vivono in `.github/workflows/` e sono versionati come il resto del codice: a differenza della configurazione Cloudflare, sono revisionabili e ripristinabili dal repo.
+
+| Workflow | Quando | Cosa fa |
+|---|---|---|
+| `check-mcp-reachable.yml` | Ogni giorno alle **06:00 UTC** + esecuzione manuale (`workflow_dispatch`) | Esegue `npm run check:mcp-reachable` per verificare che la WAF Skip rule su `/api/mcp` sia ancora attiva (vedi [Configurazione Cloudflare richiesta](#configurazione-cloudflare-richiesta)) |
+
+Il job non richiede segreti (la probe è volutamente non autenticata) né `npm ci` (lo script usa solo il `fetch` nativo di Node), quindi resta veloce e senza dipendenze da mantenere. Ha `permissions: contents: read`, cioè nessun accesso in scrittura al repository.
+
+**Come si viene avvisati:** se lo script esce con codice diverso da zero il job risulta fallito, GitHub invia un'email al proprietario del repo (comportamento predefinito) e il fallimento compare nel tab *Actions*. Non esiste alcun altro alert se non lo si aggiunge esplicitamente.
+
+Tre limiti dello scheduler da conoscere:
+
+- **Il cron non è puntuale.** I job schedulati vengono accodati e nei momenti di carico partono in ritardo, occasionalmente saltano un'esecuzione. Accettabile per un check di raggiungibilità, inadatto a compiti che richiedono precisione oraria.
+- **Disattivazione per inattività.** GitHub disabilita i workflow schedulati dopo **60 giorni senza commit** sul repository, avvisando via email. Se il progetto va in pausa, il monitoraggio si spegne da solo — proprio nella finestra in cui una regressione Cloudflare passerebbe inosservata più a lungo. Alla ripresa dei lavori va riabilitato dal tab *Actions*.
+- **Minuti di esecuzione.** Gratuiti e illimitati sui repository pubblici; sui privati consumano la quota mensile del piano (il job dura circa 30 secondi, ~15 minuti al mese con cadenza giornaliera).
+
+Nota sulla scelta dello strumento: Vercel Cron avrebbe richiesto un endpoint HTTP dedicato, cioè una nuova Serverless Function — non disponibile essendo già al limite di 12 del piano Hobby (vedi `CLAUDE.md`). GitHub Actions gira fuori da Vercel e non incide su quel conteggio.

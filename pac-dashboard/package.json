@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "generate-og": "node scripts/generate-og.mjs"
+    "generate-og": "node scripts/generate-og.mjs",
+    "check:mcp-reachable": "node scripts/check-mcp-reachable.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

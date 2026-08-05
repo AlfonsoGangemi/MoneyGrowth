@@ -116,8 +116,10 @@ Convenzioni: namespace per sezione (`auth_*`, `mcp_*`, `etf_*`), nomi tecnici in
 |---|---|
 | `prerender.mjs` | Prerendering SSR delle pagine pubbliche (LandingPage, Privacy, Termini) per SEO + iniezione di `title`, `description` e `canonical` per rotta (vedi [deploy.md](deploy.md)) |
 | `check-secrets.mjs` | Lint pre-commit: rileva variabili d'ambiente esposte nel bundle client |
+| `check-mcp-reachable.mjs` | Check periodico (`npm run check:mcp-reachable`): verifica che `/api/mcp` risponda con il 401 applicativo anche con User-Agent `Claude-User`, cioè che la WAF Skip rule Cloudflare sia attiva (regressione PAC-127). Nessun segreto richiesto |
 | `generate-og.mjs` | Generazione immagine Open Graph per social sharing |
 | `png-to-svg.mjs` | Conversione asset PNG → SVG |
+| `test-oauth-schema.mjs` | Test di integrazione delle funzioni SECURITY DEFINER dello schema `oauth` (richiede `.env` con service key) |
 
 ---
 
@@ -130,3 +132,13 @@ Convenzioni: namespace per sezione (`auth_*`, `mcp_*`, `etf_*`), nomi tecnici in
 | `eslint.config.js` | Regole ESLint per il progetto |
 | `package.json` | Dipendenze e script npm |
 | `index.html` | Shell HTML entry point |
+
+---
+
+## `.github/workflows/` — Automazioni GitHub Actions
+
+Percorso alla **radice del repository**, non dentro `pac-dashboard/`.
+
+| File | Responsabilità |
+|---|---|
+| `check-mcp-reachable.yml` | Cron giornaliero (06:00 UTC) + trigger manuale: esegue `npm run check:mcp-reachable` per rilevare regressioni della WAF Skip rule Cloudflare su `/api/mcp` (vedi [deploy.md](deploy.md)) |

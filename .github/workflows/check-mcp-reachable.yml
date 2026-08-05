@@ -1,0 +1,41 @@
+name: Check MCP reachability
+
+# Verifica che /api/mcp resti raggiungibile dai client AI attraverso Cloudflare.
+#
+# Contesto (PAC-127): la regola managed Cloudflare "Block AI bots" blocca le richieste
+# con User-Agent `Claude-User` (il gateway di claude.ai) prima che raggiungano Vercel.
+# Il fix è una WAF Skip rule su /api/mcp che vive nella dashboard Cloudflare, fuori dal
+# repo: può regredire in silenzio se la zona viene ricostruita o il ruleset aggiornato.
+# Lato server il guasto non lascia alcun log — è proprio l'assenza di log la sua firma —
+# quindi senza questo check periodico nessuno se ne accorgerebbe fino a una segnalazione.
+
+on:
+  schedule:
+    # Ogni giorno alle 06:00 UTC. Il cron di Actions non è puntuale: i job schedulati
+    # vengono accodati e possono partire con ritardo. Per un check di raggiungibilità
+    # è irrilevante.
+    - cron: '0 6 * * *'
+  # Consente l'esecuzione manuale dal tab Actions (utile subito dopo modifiche alle
+  # regole Cloudflare, senza aspettare lo slot schedulato).
+  workflow_dispatch:
+
+# Nessun accesso in scrittura: il workflow legge soltanto il codice.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Nessun `npm ci`: lo script usa solo il fetch nativo di Node, zero dipendenze.
+      # Nessun secret: la probe è volutamente non autenticata, la stessa che claude.ai
+      # invia per prima e a cui ci si aspetta un 401 con WWW-Authenticate.
+      - name: Probe /api/mcp con User-Agent dei client AI
+        working-directory: pac-dashboard
+        run: npm run check:mcp-reachable
