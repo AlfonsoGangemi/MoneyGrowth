@@ -129,7 +129,14 @@ I workflow vivono in `.github/workflows/` e sono versionati come il resto del co
 
 | Workflow | Quando | Cosa fa |
 |---|---|---|
+| `ci.yml` | Push su `main` e ogni pull request | `npm ci` + `npm run lint` + `npm test`. Entrambi bloccanti: un lint con errori o un test rosso fanno fallire il job |
 | `check-mcp-reachable.yml` | Ogni giorno alle **06:00 UTC** + esecuzione manuale (`workflow_dispatch`) | Esegue `npm run check:mcp-reachable` per verificare che la WAF Skip rule su `/api/mcp` sia ancora attiva (vedi [Configurazione Cloudflare richiesta](#configurazione-cloudflare-richiesta)) |
+
+**`ci.yml` non ripete la build**: Vercel la esegue già a ogni push (`npm run build`, che include prerendering e `check-secrets --bundle`) e un suo fallimento blocca il deploy. Duplicarla in Actions creerebbe due pipeline che possono divergere.
+
+Lo step di test gira anche se il lint fallisce (`if: '!cancelled()'`), così un singolo run riporta tutti i problemi invece di scoprirli uno alla volta. Il workflow usa `concurrency` con `cancel-in-progress`: su push ravvicinati sullo stesso ref resta viva solo l'ultima esecuzione.
+
+> Il lint è bloccante perché gli errori ESLint sono stati azzerati (da 84 a 0). Restano 16 warning non bloccanti, di cui 6 `react-hooks/set-state-in-effect` tracciati in PAC-164.
 
 Il job non richiede segreti (la probe è volutamente non autenticata) né `npm ci` (lo script usa solo il `fetch` nativo di Node), quindi resta veloce e senza dipendenze da mantenere. Ha `permissions: contents: read`, cioè nessun accesso in scrittura al repository.
 

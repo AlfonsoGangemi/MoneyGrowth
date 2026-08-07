@@ -141,4 +141,5 @@ Percorso alla **radice del repository**, non dentro `pac-dashboard/`.
 
 | File | Responsabilità |
 |---|---|
+| `ci.yml` | Gate su push a `main` e pull request: `npm ci`, `npm run lint` e `npm test`, entrambi bloccanti. Non ripete la build, già eseguita da Vercel |
 | `check-mcp-reachable.yml` | Cron giornaliero (06:00 UTC) + trigger manuale: esegue `npm run check:mcp-reachable` per rilevare regressioni della WAF Skip rule Cloudflare su `/api/mcp` (vedi [deploy.md](deploy.md)) |

@@ -1,0 +1,55 @@
+name: CI
+
+# Esegue lint e test a ogni push su main e a ogni pull request.
+#
+# Prima di questo workflow nulla eseguiva automaticamente i test: il Build Command
+# di Vercel lancia `vite build`, il prerendering e `check-secrets --bundle`, ma non
+# `npm test` né `npm run lint`. Un test rotto poteva quindi arrivare in produzione
+# senza che nessun controllo lo segnalasse.
+#
+# La build non viene ripetuta qui: Vercel la esegue già a ogni push e un suo
+# fallimento blocca il deploy. Duplicarla creerebbe due pipeline divergenti.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Nessun accesso in scrittura: il workflow legge soltanto il codice.
+permissions:
+  contents: read
+
+# Annulla le esecuzioni obsolete sullo stesso ref: su push ravvicinati resta viva
+# solo l'ultima, senza sprecare minuti di runner.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pac-dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          # Il lockfile non è alla radice del repository.
+          cache-dependency-path: pac-dashboard/package-lock.json
+
+      - name: Installa dipendenze
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Eseguito anche se il lint fallisce: un solo run riporta tutti i problemi,
+      # invece di scoprirli uno alla volta a ogni push.
+      - name: Test
+        if: '!cancelled()'
+        run: npm test
