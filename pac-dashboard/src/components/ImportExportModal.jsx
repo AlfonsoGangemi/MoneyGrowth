@@ -28,7 +28,7 @@ export default function ImportExportModal({ isOpen, defaultTab = 'export', onClo
     if (!isOpen) return
     const focusable = getFocusable()
     if (focusable.length) focusable[0].focus()
-  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) return

@@ -30,7 +30,7 @@ function Modal({ titolo, onChiudi, children, wide }) {
   useEffect(() => {
     const focusable = getFocusable()
     if (focusable.length) focusable[0].focus()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   // Keydown: Escape + Tab trap
   useEffect(() => {

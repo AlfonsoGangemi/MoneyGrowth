@@ -419,7 +419,6 @@ export function usePortafoglio(user) {
     }
 
     setStato(s => {
-      // eslint-disable-next-line no-unused-vars
       const { assetClassId: _acId, ...campiStato } = campi
       const assetClassNome = 'assetClassId' in campi
         ? (campi.assetClassId ? (s.assetClasses.find(ac => ac.id === campi.assetClassId)?.nome ?? null) : null)

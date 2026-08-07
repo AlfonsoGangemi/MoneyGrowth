@@ -113,7 +113,7 @@ export default function ApiKeyPanel({ onChiudi }) {
   useEffect(() => {
     const focusable = getFocusable()
     if (focusable.length) focusable[0].focus()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     function handleKeyDown(e) {

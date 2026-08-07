@@ -1,11 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   totaleInvestito,
-  totaleQuote,
   valoreAttuale,
   calcolaROI,
   calcolaRendimentoNetto,
-  calcolaDurataM,
   calcolaCAGR,
   calcolaTWRR,
   calcolaATWRR,

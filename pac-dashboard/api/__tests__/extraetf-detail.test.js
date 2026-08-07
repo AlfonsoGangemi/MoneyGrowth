@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import handler from '../extraetf-detail.js'
 
 function makeReqRes(query = {}, ip = '1.2.3.4') {
-  const body = {}
   const res = {
     statusCode: 200,
     headers: {},

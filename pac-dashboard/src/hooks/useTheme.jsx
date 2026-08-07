@@ -1,3 +1,8 @@
+// Provider e hook convivono deliberatamente nello stesso file: separarli
+// costringerebbe a riscrivere gli import in tutti i consumer senza alcun beneficio
+// a runtime. L'unico effetto è che in sviluppo il Fast Refresh ricarica la pagina
+// invece di aggiornare il solo componente.
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react'
 
 const ThemeContext = createContext(null)

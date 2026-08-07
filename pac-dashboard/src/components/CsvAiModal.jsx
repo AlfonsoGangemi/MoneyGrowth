@@ -126,7 +126,7 @@ export default function CsvAiModal({ isOpen, onClose, onImport }) {
     if (!isOpen) return
     const focusable = getFocusable()
     if (focusable.length) focusable[0].focus()
-  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) return

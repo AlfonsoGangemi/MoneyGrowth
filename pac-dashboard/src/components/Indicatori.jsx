@@ -21,6 +21,49 @@ function fmt(n, dec = 2) {
   return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec })
 }
 
+const TOOLTIP_STYLE = {
+  fontSize: '12px',
+  backgroundColor: 'var(--tooltip-bg, #1e293b)',
+  border: '1px solid #334155',
+  borderRadius: '8px',
+  color: '#f1f5f9',
+}
+
+// Definito a livello di modulo: dichiararlo dentro il render creerebbe un tipo di
+// componente nuovo a ogni render, con smontaggio e rimontaggio del sottoalbero
+// (stato dei grafici perso e animazioni Recharts rieseguite).
+function Donut({ data, colorFn }) {
+  return (
+    <div className="w-36 h-36 shrink-0">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="percentuale"
+            nameKey="nome"
+            cx="50%"
+            cy="50%"
+            innerRadius={40}
+            outerRadius={64}
+            paddingAngle={2}
+            startAngle={90}
+            endAngle={-270}
+          >
+            {data.map((entry, i) => (
+              <Cell key={entry.nome} fill={colorFn(entry.nome, i)} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value, name) => [`${fmt(value, 1)}%`, name]}
+            contentStyle={TOOLTIP_STYLE}
+            itemStyle={{ color: '#f1f5f9' }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
 function KpiPortafoglio({ totInvestito, totValore, netto, pv, t }) {
   const positivo = netto >= 0
   const pctPrincipale = positivo
@@ -185,46 +228,6 @@ export default function Indicatori({ etfList, prezziStorici = [], privacyMode = 
           : []
 
         if (distAC.length === 0 && distETF.length === 0) return null
-
-        const tooltipStyle = {
-          fontSize: '12px',
-          backgroundColor: 'var(--tooltip-bg, #1e293b)',
-          border: '1px solid #334155',
-          borderRadius: '8px',
-          color: '#f1f5f9',
-        }
-
-        function Donut({ data, colorFn }) {
-          return (
-            <div className="w-36 h-36 shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data}
-                    dataKey="percentuale"
-                    nameKey="nome"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={64}
-                    paddingAngle={2}
-                    startAngle={90}
-                    endAngle={-270}
-                  >
-                    {data.map((entry, i) => (
-                      <Cell key={entry.nome} fill={colorFn(entry.nome, i)} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value, name) => [`${fmt(value, 1)}%`, name]}
-                    contentStyle={tooltipStyle}
-                    itemStyle={{ color: '#f1f5f9' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )
-        }
 
         return (
           <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-700">
