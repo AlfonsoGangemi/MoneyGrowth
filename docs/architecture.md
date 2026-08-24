@@ -9,13 +9,14 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | File | Responsabilità |
 |---|---|
 | `api/extraetf-quotes.js` | Proxy per le quotazioni ExtraETF: bypassa CORS del browser, restituisce i prezzi correnti degli ETF |
-| `api/extraetf-detail.js` | Proxy per i dettagli ETF da ExtraETF (ISIN, nome, asset class) |
+| `api/extraetf-detail.js` | Proxy per i dettagli ETF da ExtraETF (ISIN, nome, asset class). Delega il fetch a `api/_lib/extraetf.js` |
 | `api/mcp.js` | MCP Streamable HTTP server (Vercel serverless). Espone tool e resource MCP per accesso LLM ai dati di portafoglio. Dual-auth: Bearer `pac_` API key + JWT OAuth 2.1 |
 | `api/keys/generate.js` | `POST /api/keys/generate` — genera una Bearer API key `pac_<64hex>`, max 2 attive per utente, TTL 90gg |
 | `api/keys/[keyId].js` | `DELETE /api/keys/:id` — revoca una API key per ID |
 | `api/stats.js` | `GET /api/stats` — endpoint pubblico (no auth): statistiche aggregate anonime (acquisti, utenti, portafogli attivi, capitale gestito, stelle GitHub). Cache `public, max-age=3600, stale-while-revalidate=86400`. Graceful degradation per singola fonte. |
-| `api/import.js` | `GET/POST /api/import` — merge incrementale acquisti da broker esterno (piano PRO, gate via `api/_lib/plan.js`) |
+| `api/import.js` | `GET/POST /api/import` — merge incrementale acquisti da broker esterno (piano PRO, gate via `api/_lib/plan.js`). Arricchisce `emittente`/`asset_class` mancanti via `api/_lib/extraetf.js`, senza mai sovrascrivere valori già presenti (PAC-165) |
 | `api/_lib/plan.js` | Utility condivisa: `getUserPlan(adminClient, userId)` — legge `subscription_plan`, ritorna `{ plan, status, isPro, error }` (PAC-151, fonte unica del piano utente) |
+| `api/_lib/extraetf.js` | Utility condivisa: `fetchExtraEtfDetail(isin)` — interroga `extraetf.com/api-v2/detail`, ritorna `{ ok: true, data: { nome, emittente, assetClassNome } }` o `{ ok: false, reason, status? }`, mai un'eccezione. Usata da `api/extraetf-detail.js` e `api/import.js` (PAC-165) |
 
 ### `api/oauth/` — Authorization Server OAuth 2.1 + PKCE
 

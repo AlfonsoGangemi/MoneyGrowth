@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { getUserPlan } from './_lib/plan.js'
+import { fetchExtraEtfDetail } from './_lib/extraetf.js'
 
 function buildClients(jwt) {
   const url = process.env.VITE_SUPABASE_URL
@@ -77,29 +78,48 @@ async function handleImport(adminClient, userId, req, res) {
       // SELECT ETF esistente per non sovrascrivere importo_fisso, prezzo_corrente, archiviato
       const { data: existingEtf } = await adminClient
         .from('etf')
-        .select('id, archiviato')
+        .select('id, archiviato, emittente, asset_class_id')
         .eq('user_id', userId)
         .eq('isin', etfPayload.isin)
         .maybeSingle()
 
+      // Enrichment best-effort da ExtraETF: il CSV da broker non fornisce mai
+      // emittente/asset class, quindi li recuperiamo solo se mancanti, senza
+      // mai sovrascrivere un valore già presente (PAC-165).
+      const needsEmittente = !existingEtf?.emittente && !etfPayload.emittente
+      const needsAssetClass = existingEtf ? !existingEtf.asset_class_id : !etfPayload.assetClassNome
+      let enrichment = null
+      if (needsEmittente || needsAssetClass) {
+        const result = await fetchExtraEtfDetail(etfPayload.isin)
+        if (result.ok) enrichment = result.data
+      }
+
       let etfId, archiviato
 
       if (existingEtf) {
+        const update = { nome: etfPayload.nome }
+        const newEmittente = etfPayload.emittente || enrichment?.emittente
+        if (!existingEtf.emittente && newEmittente) update.emittente = newEmittente
+        const newAssetClassNome = etfPayload.assetClassNome || enrichment?.assetClassNome
+        if (!existingEtf.asset_class_id && newAssetClassNome && acMap[newAssetClassNome]) {
+          update.asset_class_id = acMap[newAssetClassNome]
+        }
+
         await adminClient
           .from('etf')
-          .update({ nome: etfPayload.nome, emittente: etfPayload.emittente ?? null })
+          .update(update)
           .eq('id', existingEtf.id)
         etfId = existingEtf.id
         archiviato = existingEtf.archiviato
       } else {
-        const assetClassId = acMap[etfPayload.assetClassNome] ?? defaultAcId
+        const assetClassId = acMap[etfPayload.assetClassNome] ?? acMap[enrichment?.assetClassNome] ?? defaultAcId
         const { data: newEtf, error: etfErr } = await adminClient
           .from('etf')
           .insert({
             user_id: userId,
             isin: etfPayload.isin,
             nome: etfPayload.nome,
-            emittente: etfPayload.emittente ?? null,
+            emittente: etfPayload.emittente || enrichment?.emittente || null,
             importo_fisso: 0,
             prezzo_corrente: 0,
             archiviato: false,

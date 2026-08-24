@@ -108,14 +108,14 @@ Risposta:
 GET /api/extraetf-detail?isin=IE00B4L5Y983
 ```
 
-Chiama `https://extraetf.com/api-v2/detail/?isin=...` e normalizza la risposta.
+Chiama `https://extraetf.com/api-v2/detail/?isin=...` e normalizza la risposta tramite `fetchExtraEtfDetail()` in `api/_lib/extraetf.js` — la stessa utility usata dall'enrichment automatico di `api/import.js` (PAC-165).
 
 Risposta:
 ```json
 { "nome": "Core MSCI World", "emittente": "iShares", "assetClassNome": "Azioni" }
 ```
 
-`assetClassNome` è mappato da un ID numerico interno ExtraETF (vedi `ASSET_CLASS_MAP` nel file). Default: `"Azioni"` se non riconosciuto.
+`assetClassNome` è mappato da un ID numerico interno ExtraETF (vedi `ASSET_CLASS_MAP` in `api/_lib/extraetf.js`). Default: `"Azioni"` se non riconosciuto.
 
 **Rate limit:** 60 req/min per IP.
 
@@ -386,14 +386,14 @@ Content-Type: application/json
 | `sync_source` | string? | Default `'ui_upload'`. Il bot Telegram passa `'telegram_bot'`. |
 | `broker` | object | Broker unico del file CSV. Upsertato con `ignoreDuplicates: true` (preserva il colore dell'utente). |
 | `etf[].isin` | string | Obbligatorio. ETF senza ISIN vengono saltati. |
-| `etf[].assetClassNome` | string? | Usato solo alla prima creazione dell'ETF. Default: `'Azioni'`. |
+| `etf[].assetClassNome` | string? | Usato per creazione/aggiornamento se `asset_class_id` è mancante. Default: `'Azioni'`. |
 | `acquisti[].tr_transaction_id` | string? | UUID v7 di Trade Republic. Usato per dedup primario e per l'enrichment di righe manuali. |
 
 **Logica di merge:**
 
 1. Verifica il piano PRO via `getUserPlan()` → 403 se `isPro` è false.
 2. Upsert broker dal campo `broker` (un singolo broker per payload).
-3. Per ogni ETF: UPDATE `nome`/`emittente` se esiste, altrimenti INSERT. Non sovrascrive mai `importo_fisso`, `prezzo_corrente`, `archiviato`. INSERT bloccato dal trigger `enforce_plan_limit()` (PAC-152, SQLSTATE `PLN01`) se l'utente FREE ha già raggiunto il limite ETF attivi → i suoi acquisti vengono contati in `skipped`/`total` e la risposta include `limitReached: true`.
+3. Per ogni ETF: UPDATE `nome` se esiste, altrimenti INSERT. Non sovrascrive mai `importo_fisso`, `prezzo_corrente`, `archiviato`, né un `emittente`/`asset_class_id` già valorizzato (PAC-165). Se `emittente` o `asset_class_id` sono mancanti (tipico: il CSV da broker non li fornisce mai), vengono recuperati best-effort da ExtraETF via `fetchExtraEtfDetail()` (`api/_lib/extraetf.js`) — un fallimento della chiamata non blocca l'import. INSERT bloccato dal trigger `enforce_plan_limit()` (PAC-152, SQLSTATE `PLN01`) se l'utente FREE ha già raggiunto il limite ETF attivi → i suoi acquisti vengono contati in `skipped`/`total` e la risposta include `limitReached: true`.
 4. ETF con `archiviato = true`: tutti i suoi acquisti vengono saltati silenziosamente.
 5. Per ogni acquisto:
    - **Enrichment**: se `tr_transaction_id` è presente, cerca una riga manuale con stessa `(etf_id, data, importo_investito)` e `tr_transaction_id IS NULL` → aggancia l'ID alla riga esistente invece di inserire un duplicato.
