@@ -53,6 +53,31 @@ describe('totaleInvestito', () => {
     ]
     expect(totaleInvestito(acquisti)).toBe(453)
   })
+
+  it('vendita totale in profitto → capitale investito residuo 0 (non negativo)', () => {
+    const acquisti = [
+      acq('2024-01-01', 100, 10), // 10 quote @10
+      acq('2024-06-01', -150, 15), // vendita 10 quote @15
+    ]
+    expect(totaleInvestito(acquisti)).toBe(0)
+  })
+
+  it('vendita totale in perdita → capitale investito residuo 0 (non positivo)', () => {
+    const acquisti = [
+      acq('2024-01-01', 100, 10), // 10 quote @10
+      acq('2024-06-01', -50, 5), // vendita 10 quote @5
+    ]
+    expect(totaleInvestito(acquisti)).toBe(0)
+  })
+
+  it('vendita parziale → sottrae il costo storico (medio ponderato) delle quote vendute, non il ricavato', () => {
+    const acquisti = [
+      acq('2024-01-01', 100, 10), // 10 quote @10, costo medio 10/quota
+      acq('2024-06-01', -75, 15), // vendita 5 quote @15 (ricavato 75, costo storico 50)
+    ]
+    // costo base residuo: 100 - (5 * 10) = 50, non 100 - 75 = 25
+    expect(totaleInvestito(acquisti)).toBe(50)
+  })
 })
 
 describe('valoreAttuale', () => {

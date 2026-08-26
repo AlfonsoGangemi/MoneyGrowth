@@ -19,7 +19,7 @@ const adminClient = createClient(
 
 // Lista statica delle funzioni esportate da calcoli.js
 const INDICI = [
-  { nome: 'totaleInvestito',            descrizione: 'Total invested capital (importoInvestito + fees)',                                            funzione: 'totaleInvestito(acquisti)' },
+  { nome: 'totaleInvestito',            descrizione: 'Remaining cost basis of currently held units, weighted-average method (0 once fully sold)',   funzione: 'totaleInvestito(acquisti)' },
   { nome: 'totaleQuote',                descrizione: 'Total accumulated units/shares',                                                             funzione: 'totaleQuote(acquisti)' },
   { nome: 'valoreAttuale',              descrizione: 'Current portfolio value at the current price',                                               funzione: 'valoreAttuale(acquisti, prezzoCorrente)' },
   { nome: 'calcolaROI',                 descrizione: 'ROI percentage: (currentValue - invested) / invested * 100',                                funzione: 'calcolaROI(acquisti, prezzoCorrente)' },

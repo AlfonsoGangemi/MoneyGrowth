@@ -6,8 +6,31 @@ export const QUOTE_EPSILON = 0.01
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
+/**
+ * Capitale investito residuo (costo base delle quote attualmente possedute),
+ * calcolato a costo medio ponderato. Alle vendite sottrae il costo storico
+ * delle quote vendute (quote * costo medio al momento della vendita), non il
+ * ricavato di vendita — evita che una vendita in profitto/perdita alteri
+ * artificialmente il capitale investito residuo (es. negativo a quote nette 0).
+ * Le plusvalenze/minusvalenze realizzate non sono incluse: qui si misura solo
+ * il costo base della posizione ancora aperta.
+ */
 export function totaleInvestito(acquisti) {
-  return acquisti.reduce((s, a) => s + a.importoInvestito + a.fee, 0)
+  const sorted = [...acquisti].sort((a, b) => a.data.localeCompare(b.data))
+  let quote = 0
+  let costoBase = 0
+  for (const a of sorted) {
+    if (a.quoteFrazionate >= 0) {
+      costoBase += a.importoInvestito + a.fee
+      quote += a.quoteFrazionate
+    } else {
+      const quoteVendute = -a.quoteFrazionate
+      const costoMedio = quote > 0 ? costoBase / quote : 0
+      costoBase -= quoteVendute * costoMedio
+      quote += a.quoteFrazionate
+    }
+  }
+  return Math.abs(quote) < QUOTE_EPSILON ? 0 : costoBase
 }
 
 export function totaleQuote(acquisti) {
