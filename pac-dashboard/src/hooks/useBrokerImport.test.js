@@ -1,4 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// useBrokerImport.js importa src/utils/supabase.js, che chiama createClient()
+// a livello di modulo: senza VITE_SUPABASE_URL/ANON_KEY (assenti in CI) l'import
+// fallisce subito. Questi test coprono solo le funzioni pure di parsing CSV,
+// quindi il client reale non serve — stesso pattern di api/__tests__/import.test.js.
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => ({})),
+}))
+
 import { parseCsvRow, parseTrCsv } from './useBrokerImport'
 
 // ── CSV di esempio Trade Republic ────────────────────────────────────────────
