@@ -110,8 +110,8 @@ Il controllo gira **ogni giorno alle 06:00 UTC** tramite GitHub Actions (`.githu
 
 ```json
 "rewrites": [
-  { "source": "/.well-known/oauth-authorization-server", "destination": "/api/oauth/metadata" },
-  { "source": "/.well-known/oauth-protected-resource",    "destination": "/api/oauth/protected-resource" }
+  { "source": "/.well-known/oauth-authorization-server", "destination": "/api/oauth/discovery?type=as" },
+  { "source": "/.well-known/oauth-protected-resource",    "destination": "/api/oauth/discovery?type=pr" }
 ]
 ```
 

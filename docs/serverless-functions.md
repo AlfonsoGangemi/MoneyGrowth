@@ -18,7 +18,7 @@ Ogni funzione è un modulo ESM con un export default `(req, res) => {}` compatib
 
 Tutte le funzioni vivono in `pac-dashboard/api/` e vengono eseguite come Vercel Serverless Functions (Node.js).
 
-**Limite piano Hobby:** 12 handler file. Il progetto ne usa 12 — **limite raggiunto**.
+**Limite piano Hobby:** 12 handler file. Il progetto ne usa 10 (PAC-161 ha accorpato `extraetf-quotes.js`+`extraetf-detail.js` → `extraetf.js` e `oauth/metadata.js`+`oauth/protected-resource.js` → `oauth/discovery.js`, liberando 2 slot rispetto ai 12 precedenti).
 
 **CORS globale** (da `vercel.json`): ogni rotta `/api/*` riceve automaticamente `Access-Control-Allow-Origin: https://claude.ai`. Le funzioni che lo leggono da `ALLOWED_ORIGIN` lo impostano anche per altri client.
 
@@ -28,66 +28,51 @@ Tutte le funzioni vivono in `pac-dashboard/api/` e vengono eseguite come Vercel 
 
 | File | Metodo | Endpoint pubblico | Auth |
 |---|---|---|---|
-| `extraetf-quotes.js` | GET | `/api/extraetf-quotes` | nessuna |
-| `extraetf-detail.js` | GET | `/api/extraetf-detail` | nessuna |
+| `extraetf.js` | GET | `/api/extraetf` (storico/real-time/dettaglio, dispatch su query param — vedi sotto) | nessuna |
 | `stats.js` | GET | `/api/stats` | nessuna |
 | `keys/generate.js` | POST | `/api/keys/generate` | Supabase JWT |
 | `keys/[keyId].js` | DELETE | `/api/keys/:id` | Supabase JWT |
-| `oauth/metadata.js` | GET | `/.well-known/oauth-authorization-server` | nessuna |
-| `oauth/protected-resource.js` | GET | `/.well-known/oauth-protected-resource` | nessuna |
+| `oauth/discovery.js` | GET | `/.well-known/oauth-authorization-server` (`?type=as`), `/.well-known/oauth-protected-resource` (`?type=pr`) | nessuna |
 | `oauth/authorize.js` | POST | `/api/oauth/authorize` | Supabase access\_token nel body |
 | `oauth/token.js` | POST | `/api/oauth/token` | nessuna (PKCE) |
 | `oauth/register.js` | POST | `/api/oauth/register` | nessuna |
 | `mcp.js` | GET / POST / DELETE | `/api/mcp` | Bearer `pac_…` o JWT OAuth |
 | `import.js` | GET / POST | `/api/import` | Supabase JWT |
 
-`oauth/_lib.js` non è un handler — è una libreria condivisa (non conta nel limite).
+`oauth/_lib.js` e `_lib/extraetf.js` non sono handler — sono librerie condivise (non contano nel limite).
 
 ---
 
 ## Proxy ETF (senza autenticazione)
 
-### `extraetf-quotes.js` — Quotazioni ExtraETF
+### `extraetf.js` — Quotazioni e dettagli ETF
 
-Proxy duale: il comportamento dipende dai query parameter.
+Proxy unico (PAC-161, accorpa i precedenti `extraetf-quotes.js` + `extraetf-detail.js` per liberare uno slot Serverless Function): tre modalità, dispatchate sui query parameter senza ambiguità tra loro.
 
-**Modalità history** (`date_from` presente)
+**Modalità history** (`date_from` presente — solo `isins=` plurale, anche per un singolo ISIN; PAC-162 ha rimosso il vecchio ramo dead-code `isin=` singolare, mai usato da nessun chiamante reale)
 
 ```
-GET /api/extraetf-quotes?isin=IE00B4L5Y983&date_from=2024-01-01&date_to=2024-12-31
+GET /api/extraetf?isins=IE00B4L5Y983&date_from=2024-01-01&date_to=2024-12-31
+GET /api/extraetf?isins=IE00B4L5Y983,LU1681043599&date_from=2024-01-01&date_to=2024-12-31
 ```
 
-Chiama la REST chart API di ExtraETF:
+Un solo round-trip dal client: il server esegue in parallelo (`Promise.all`) N fetch verso la REST chart API di ExtraETF, uno per ISIN sullo stesso range (anche con un solo ISIN in `isins`). Evita l'N+1 lato client quando più ETF vengono backfillati insieme (init pagina, acquisti multipli).
+
 ```
 https://quotes.extraetf.com/v1/chart?isin=...&currency=EUR&ordering=date&interval=1d
 ```
-
-Risposta (passata tal quale dal proxy):
-```json
-{ "count": 250, "results": [{ "date": "2024-01-02", "closing_price": 95.42, ... }] }
-```
-
-Usato da `backfillETFPrices` in `src/utils/backfillPrezzi.js` per storicizzare i prezzi mensili.
-
-**Modalità history batch** (`date_from` + `isins` plurale)
-
-```
-GET /api/extraetf-quotes?isins=IE00B4L5Y983,LU1681043599&date_from=2024-01-01&date_to=2024-12-31
-```
-
-Un solo round-trip dal client: il server esegue in parallelo (`Promise.all`) N fetch verso la chart API, uno per ISIN sullo stesso range. Evita l'N+1 lato client quando più ETF vengono backfillati insieme (init pagina, acquisti multipli).
 
 Risposta — chart json per ISIN (ISIN falliti omessi):
 ```json
 { "results": { "IE00B4L5Y983": { "count": 250, "results": [...] }, "LU1681043599": { ... } } }
 ```
 
-Usato da `backfillETFPricesBatch` in `src/utils/backfillPrezzi.js`.
+Usato da `backfillETFPricesBatch` (e dal wrapper single-ISIN `backfillETFPrices`) in `src/utils/backfillPrezzi.js` per storicizzare i prezzi mensili.
 
 **Modalità real-time** (`isins` presente, nessun `date_from`)
 
 ```
-GET /api/extraetf-quotes?isins=IE00B4L5Y983,LU1681043599
+GET /api/extraetf?isins=IE00B4L5Y983,LU1681043599
 ```
 
 Apre una connessione WebSocket verso `wss://quotes.extraetf.com/v1/ws`, raccoglie i prezzi correnti e chiude dopo timeout (8 s) o ricezione completa.
@@ -97,15 +82,10 @@ Risposta:
 { "prices": { "IE00B4L5Y983": 95.42 }, "missing": [] }
 ```
 
-**Rate limit:** 60 richieste/minuto per IP (in-memory). Risponde 429 se superato.  
-**Validazione:** ISIN con regex `^[A-Z]{2}[A-Z0-9]{10}$`, massimo 20 ISIN per richiesta, date in formato `YYYY-MM-DD`.
-
----
-
-### `extraetf-detail.js` — Metadati ETF
+**Modalità dettaglio** (nessun `date_from`, `isin` singolare senza `isins`)
 
 ```
-GET /api/extraetf-detail?isin=IE00B4L5Y983
+GET /api/extraetf?isin=IE00B4L5Y983
 ```
 
 Chiama `https://extraetf.com/api-v2/detail/?isin=...` e normalizza la risposta tramite `fetchExtraEtfDetail()` in `api/_lib/extraetf.js` — la stessa utility usata dall'enrichment automatico di `api/import.js` (PAC-165).
@@ -117,7 +97,8 @@ Risposta:
 
 `assetClassNome` è mappato da un ID numerico interno ExtraETF (vedi `ASSET_CLASS_MAP` in `api/_lib/extraetf.js`). Default: `"Azioni"` se non riconosciuto.
 
-**Rate limit:** 60 req/min per IP.
+**Rate limit:** 60 richieste/minuto per IP (in-memory, condiviso da tutte e tre le modalità). Risponde 429 se superato.  
+**Validazione:** ISIN con regex `^[A-Z]{2}[A-Z0-9]{10}$`, massimo 20 ISIN per richiesta (modalità batch/real-time), date in formato `YYYY-MM-DD`.
 
 ---
 
@@ -190,29 +171,31 @@ Esporta: `adminClient` (Supabase service key), `sha256hex()`, `sha256raw()`, `ba
 
 ---
 
-### `oauth/metadata.js` — Discovery endpoint
+### `oauth/discovery.js` — Discovery endpoint
+
+Endpoint unico (PAC-161, accorpa i precedenti `oauth/metadata.js` + `oauth/protected-resource.js`): dispatch via query param `type`, iniettato dal rewrite Vercel — nessuna delle due URL esterne cambia.
+
+**Authorization Server Metadata** (`?type=as`)
 
 ```
 GET /.well-known/oauth-authorization-server
 ```
 
-(Rewrite Vercel → `/api/oauth/metadata`)
+(Rewrite Vercel → `/api/oauth/discovery?type=as`)
 
 Risponde con il documento RFC 8414. Informa il client di token endpoint, authorization endpoint, metodi PKCE supportati, grant type, ecc.
 
-**Cache:** `no-store`.
-
----
-
-### `oauth/protected-resource.js` — Protected Resource Metadata
+**Protected Resource Metadata** (`?type=pr`)
 
 ```
 GET /.well-known/oauth-protected-resource
 ```
 
-(Rewrite Vercel → `/api/oauth/protected-resource`)
+(Rewrite Vercel → `/api/oauth/discovery?type=pr`)
 
 RFC 9728: indica al client quale risorsa protegge (`/api/mcp`) e quali Authorization Server usare (etflens.app stesso).
+
+**Cache:** `no-store` (entrambe le modalità).
 
 ---
 

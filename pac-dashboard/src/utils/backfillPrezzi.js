@@ -66,7 +66,7 @@ function estraiPrezziMensili(isin, rows, mancantiSet) {
 
 // Backfilla i prezzi mensili mancanti per più ISIN in un solo giro:
 //  - una query batch per i mesi già presenti (via fetchExistingMonths, salvo prefetch)
-//  - una sola chiamata a /api/extraetf-quotes (modalità batch, N fetch upstream lato server)
+//  - una sola chiamata a /api/extraetf (modalità batch storico, N fetch upstream lato server)
 //  - un solo upsert su etf_prezzi_storici
 // items: [{ isin, dateFrom }]. Restituisce i record inseriti: [{ isin, anno, mese, prezzo }].
 // forceRefresh bypassa la dedup giornaliera; existingByIsin è un prefetch opzionale.
@@ -121,7 +121,7 @@ export async function backfillETFPricesBatch(items, { forceRefresh = false, exis
 
   let resultsByIsin
   try {
-    const res = await fetch(`/api/extraetf-quotes?${params}`)
+    const res = await fetch(`/api/extraetf?${params}`)
     if (!res.ok) return []
     const json = await res.json()
     resultsByIsin = json.results ?? {}

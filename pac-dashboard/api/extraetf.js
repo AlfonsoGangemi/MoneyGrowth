@@ -1,4 +1,12 @@
 import WebSocket from 'ws'
+import { fetchExtraEtfDetail } from './_lib/extraetf.js'
+
+// PAC-161: accorpamento di extraetf-quotes.js + extraetf-detail.js in un unico
+// endpoint dispatchato sui query param, per liberare uno slot Serverless Function
+// (limite piano Hobby Vercel). Tre rami, nessuna ambiguità tra loro:
+//   1. date_from presente               → storico REST (batch via isins, PAC-162: unico percorso)
+//   2. date_from assente + isins plurale → real-time via WebSocket
+//   3. date_from assente + isin singolare (no isins) → dettaglio fondo
 
 const RATE_LIMIT = 60
 const RATE_WINDOW = 60 * 1000
@@ -38,24 +46,10 @@ async function fetchChart(isin, dateFrom, dateTo) {
   return upstream.json()
 }
 
-async function handleHistory(req, res) {
-  const { isin, date_from, date_to } = req.query
-  if (!isin || !ISIN_RE.test(isin)) return res.status(400).json({ error: 'ISIN non valido' })
-  if (!DATE_RE.test(date_from)) return res.status(400).json({ error: 'date_from non valido' })
-  if (date_to && !DATE_RE.test(date_to)) return res.status(400).json({ error: 'date_to non valido' })
-
-  const to = date_to || new Date().toISOString().slice(0, 10)
-  try {
-    const data = await fetchChart(isin, date_from, to)
-    if (!data) return res.status(502).json({ error: 'Errore upstream ExtraETF' })
-    return res.status(200).json(data)
-  } catch {
-    return res.status(502).json({ error: 'Errore di rete' })
-  }
-}
-
-// History batch: più ISIN, stesso range. Un solo round-trip client → N fetch upstream in
-// parallelo. Risposta: { results: { [isin]: <chart json> } } (ISIN falliti omessi).
+// History: unico percorso per lo storico (PAC-162 — il ramo single-ISIN via `isin=`
+// era dead code, nessun chiamante reale lo usava). Un solo round-trip client → N fetch
+// upstream in parallelo, anche per un solo ISIN. Risposta: { results: { [isin]: <chart json> } }
+// (ISIN falliti omessi).
 async function handleHistoryBatch(req, res, isins) {
   const { date_from, date_to } = req.query
   if (!DATE_RE.test(date_from)) return res.status(400).json({ error: 'date_from non valido' })
@@ -79,46 +73,7 @@ async function handleHistoryBatch(req, res, isins) {
   return res.status(200).json({ results })
 }
 
-export default async function handler(req, res) {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || 'unknown'
-
-  if (isRateLimited(ip)) {
-    return res.status(429).json({ error: 'Troppe richieste. Riprova tra un minuto.' })
-  }
-
-  const allowedOrigin = process.env.ALLOWED_ORIGIN
-  if (allowedOrigin) res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
-
-  // History mode: date_from presente → REST chart API
-  if (req.query.date_from) {
-    // Batch (isins plurale) → un round-trip, N fetch upstream; altrimenti singolo ISIN
-    if (req.query.isins) {
-      const isins = req.query.isins.split(',').map(s => s.trim()).filter(Boolean)
-      if (isins.length === 0) return res.status(400).json({ error: 'Nessun ISIN valido' })
-      return handleHistoryBatch(req, res, isins)
-    }
-    return handleHistory(req, res)
-  }
-
-  // Real-time mode: WebSocket (più ISIN, prezzo corrente)
-  const rawIsins = req.query.isins
-  if (!rawIsins) {
-    return res.status(400).json({ error: 'Parametro isins mancante' })
-  }
-
-  const isins = rawIsins.split(',').map(s => s.trim()).filter(Boolean)
-  if (isins.length === 0) {
-    return res.status(400).json({ error: 'Nessun ISIN valido' })
-  }
-  if (isins.length > MAX_ISINS) {
-    return res.status(400).json({ error: `Massimo ${MAX_ISINS} ISIN per richiesta` })
-  }
-  for (const isin of isins) {
-    if (!ISIN_RE.test(isin)) {
-      return res.status(400).json({ error: `ISIN non valido: ${isin}` })
-    }
-  }
-
+function handleRealtime(res, isins) {
   return new Promise((resolve) => {
     const pending = new Set(isins)
     const received = {}
@@ -169,4 +124,69 @@ export default async function handler(req, res) {
       finish()
     })
   })
+}
+
+async function handleDetail(req, res) {
+  const { isin } = req.query
+  if (!isin) {
+    return res.status(400).json({ error: 'Parametro isin mancante' })
+  }
+  if (!ISIN_RE.test(isin.trim())) {
+    return res.status(400).json({ error: `ISIN non valido: ${isin}` })
+  }
+
+  const result = await fetchExtraEtfDetail(isin.trim())
+
+  if (!result.ok) {
+    if (result.reason === 'network') {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[extraetf] errore di rete (detail)')
+      }
+      return res.status(502).json({ error: 'errore di rete' })
+    }
+    if (result.reason === 'invalid_json') {
+      return res.status(502).json({ error: 'Risposta non valida da ExtraETF' })
+    }
+    return res.status(result.status ?? 404).json({ error: 'ISIN non trovato su ExtraETF' })
+  }
+
+  return res.status(200).json(result.data)
+}
+
+export default async function handler(req, res) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || 'unknown'
+
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: 'Troppe richieste. Riprova tra un minuto.' })
+  }
+
+  const allowedOrigin = process.env.ALLOWED_ORIGIN
+  if (allowedOrigin) res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
+
+  // 1. Storico: date_from presente (solo isins plurale — PAC-162, gestisce anche 1 solo ISIN)
+  if (req.query.date_from) {
+    const isins = (req.query.isins || '').split(',').map(s => s.trim()).filter(Boolean)
+    if (isins.length === 0) return res.status(400).json({ error: 'Nessun ISIN valido' })
+    return handleHistoryBatch(req, res, isins)
+  }
+
+  // 2. Real-time: isins plurale, senza date_from
+  if (req.query.isins) {
+    const isins = req.query.isins.split(',').map(s => s.trim()).filter(Boolean)
+    if (isins.length === 0) {
+      return res.status(400).json({ error: 'Nessun ISIN valido' })
+    }
+    if (isins.length > MAX_ISINS) {
+      return res.status(400).json({ error: `Massimo ${MAX_ISINS} ISIN per richiesta` })
+    }
+    for (const isin of isins) {
+      if (!ISIN_RE.test(isin)) {
+        return res.status(400).json({ error: `ISIN non valido: ${isin}` })
+      }
+    }
+    return handleRealtime(res, isins)
+  }
+
+  // 3. Dettaglio fondo: isin singolare, senza date_from né isins
+  return handleDetail(req, res)
 }

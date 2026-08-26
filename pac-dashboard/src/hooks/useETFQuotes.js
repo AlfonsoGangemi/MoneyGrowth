@@ -26,7 +26,7 @@ export function useETFQuotes(etfList, userId, aggiornaETF) {
     if (!isins || isins.length === 0) return
     setFetchingLive(true)
     try {
-      const res = await fetch(`/api/extraetf-quotes?isins=${isins.join(',')}`)
+      const res = await fetch(`/api/extraetf?isins=${isins.join(',')}`)
       if (!res.ok) return
       const data = await res.json()
       if (!data?.prices) return

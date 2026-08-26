@@ -41,7 +41,7 @@ export default function ETFCard({ etf, onModifica, onArchivia, onElimina, onAggi
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10_000)
     try {
-      const res = await fetch(`/api/extraetf-quotes?isins=${etf.isin}`, { signal: controller.signal })
+      const res = await fetch(`/api/extraetf?isins=${etf.isin}`, { signal: controller.signal })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const prezzo = data?.prices?.[etf.isin]

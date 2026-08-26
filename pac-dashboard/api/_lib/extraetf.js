@@ -1,5 +1,5 @@
 // PAC-165: fonte unica per il fetch dei dettagli ETF da extraetf.com
-// (usata sia dall'endpoint api/extraetf-detail.js sia dall'enrichment in api/import.js)
+// (usata sia dall'endpoint api/extraetf.js sia dall'enrichment in api/import.js)
 
 const ASSET_CLASS_MAP = {
   2:    'Azioni',

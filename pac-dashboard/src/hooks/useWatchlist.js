@@ -25,7 +25,7 @@ export function useWatchlist() {
     const isins = lista.map(i => i.isin)
     if (!isins.length) return
     try {
-      const res = await fetch(`/api/extraetf-quotes?isins=${isins.join(',')}`)
+      const res = await fetch(`/api/extraetf?isins=${isins.join(',')}`)
       if (!res.ok) return
       const { prices } = await res.json()
       setPrezzi(prices ?? {})
@@ -41,7 +41,7 @@ export function useWatchlist() {
     const upper = isin.trim().toUpperCase()
     if (!ISIN_RE.test(upper)) throw new Error('isin_invalid')
 
-    const res = await fetch(`/api/extraetf-detail?isin=${upper}`)
+    const res = await fetch(`/api/extraetf?isin=${upper}`)
     if (!res.ok) throw new Error('not_found')
     const detail = await res.json()
     if (!detail.nome) throw new Error('not_found')

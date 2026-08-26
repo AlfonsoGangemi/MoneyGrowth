@@ -104,7 +104,7 @@ function ModificaETFModal({ etf, assetClasses = [], onSalva, onChiudi }) {
     setFetchStato('loading')
     setFetchErrorMsg('')
     try {
-      const res = await fetch(`/api/extraetf-detail?isin=${etf.isin}`)
+      const res = await fetch(`/api/extraetf?isin=${etf.isin}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       if (data.nome) setNome(data.nome)
@@ -456,7 +456,7 @@ function AggiornaPrezziButton({ etfConIsin, onApplicaPrezzi, onErrori }) {
     onErrori([])
     try {
       const isins = etfConIsin.map(e => e.isin).join(',')
-      const res = await fetch(`/api/extraetf-quotes?isins=${isins}`)
+      const res = await fetch(`/api/extraetf?isins=${isins}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const errori = await onApplicaPrezzi(etfConIsin, data?.prices ?? {})
@@ -625,7 +625,7 @@ export default function Dashboard({ user, onSignOut }) {
     setNuovoETFErrore('')
     let nome = '', emittente = '', assetClassId = null
     try {
-      const res = await fetch(`/api/extraetf-detail?isin=${isin}`)
+      const res = await fetch(`/api/extraetf?isin=${isin}`)
       if (!res.ok) throw new Error('not_found')
       const data = await res.json()
       if (!data.nome) throw new Error('not_found')

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import handler from '../extraetf-detail.js'
+import handler from '../extraetf.js'
 
 function makeReqRes(query = {}, ip = '1.2.3.4') {
   const res = {
@@ -27,7 +27,7 @@ beforeEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('extraetf-detail handler', () => {
+describe('extraetf handler — ramo dettaglio fondo (isin singolare, no date_from/isins)', () => {
   it('restituisce 400 se manca isin', async () => {
     const { req, res } = makeReqRes({})
     await handler(req, res)
@@ -112,5 +112,58 @@ describe('extraetf-detail handler', () => {
       await handler(req, res)
       expect(res._body.assetClassNome, `asset_class ${id}`).toBe(atteso)
     }
+  })
+})
+
+describe('extraetf handler — dispatch tra i rami (PAC-161)', () => {
+  it('date_from presente → ramo storico, non dettaglio (chiama la chart API, non extraetf.com/detail)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ count: 1, results: [{ date: '2024-01-02', closing_price: 95.42 }] }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { req, res } = makeReqRes({ isins: 'IE00BYX2JD69', date_from: '2024-01-01' })
+    await handler(req, res)
+    expect(res.statusCode).toBe(200)
+    expect(res._body.results?.IE00BYX2JD69?.results?.[0]?.closing_price).toBe(95.42)
+    expect(fetchMock.mock.calls[0][0]).toMatch(/quotes\.extraetf\.com\/v1\/chart/)
+  })
+
+  it('date_from presente ma senza isins → 400 Nessun ISIN valido (PAC-162: isin= singolare non più supportato per lo storico)', async () => {
+    const { req, res } = makeReqRes({ isin: 'IE00BYX2JD69', date_from: '2024-01-01' })
+    await handler(req, res)
+    expect(res.statusCode).toBe(400)
+    expect(res._body.error).toMatch(/ISIN valido/i)
+  })
+
+  it('date_from + isins plurale → ramo storico batch', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ count: 0, results: [] }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { req, res } = makeReqRes({ isins: 'IE00BYX2JD69,LU1681043599', date_from: '2024-01-01' })
+    await handler(req, res)
+    expect(res.statusCode).toBe(200)
+    expect(res._body.results).toHaveProperty('IE00BYX2JD69')
+    expect(res._body.results).toHaveProperty('LU1681043599')
+  })
+
+  it('nessun parametro → ramo dettaglio di default, 400 isin mancante (non più "isins mancante")', async () => {
+    const { req, res } = makeReqRes({})
+    await handler(req, res)
+    expect(res.statusCode).toBe(400)
+    expect(res._body.error).toMatch(/isin mancante/i)
+  })
+
+  it('rate limit condiviso: oltre 60 richieste/min dallo stesso IP → 429 su qualunque ramo', async () => {
+    const { req, res } = makeReqRes({ isin: 'IE00BYX2JD69' }, '9.9.9.9')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ISHARES_FIXTURE }))
+    for (let i = 0; i < 60; i++) {
+      const { req: r, res: s } = makeReqRes({ isin: 'IE00BYX2JD69' }, '9.9.9.9')
+      await handler(r, s)
+    }
+    await handler(req, res)
+    expect(res.statusCode).toBe(429)
   })
 })

@@ -15,14 +15,13 @@ function apiDevPlugin() {
         const url = new URL(req.url, 'http://localhost')
         const pathname = url.pathname
         const API_ROUTES = [
-          '/api/extraetf-quotes',
-          '/api/extraetf-detail',
+          '/api/extraetf',
           '/api/mcp',
           '/api/import',
         ]
         const isKeysRoute = pathname.startsWith('/api/keys/')
         const isOAuthRoute = pathname.startsWith('/api/oauth/')
-        const isWellKnown = pathname === '/.well-known/oauth-authorization-server'
+        const isWellKnown = pathname === '/.well-known/oauth-authorization-server' || pathname === '/.well-known/oauth-protected-resource'
         if (!API_ROUTES.includes(pathname) && !isKeysRoute && !isOAuthRoute && !isWellKnown) return next()
 
         // Helpers Express-like
@@ -52,11 +51,8 @@ function apiDevPlugin() {
         }
 
         try {
-          if (pathname === '/api/extraetf-quotes') {
-            const { default: handler } = await import('./api/extraetf-quotes.js')
-            await handler(req, res)
-          } else if (pathname === '/api/extraetf-detail') {
-            const { default: handler } = await import('./api/extraetf-detail.js')
+          if (pathname === '/api/extraetf') {
+            const { default: handler } = await import('./api/extraetf.js')
             await handler(req, res)
           } else if (pathname === '/api/mcp') {
             const { default: handler } = await import('./api/mcp.js')
@@ -75,14 +71,12 @@ function apiDevPlugin() {
             const { default: handler } = await import('./api/import.js')
             await handler(req, res)
           } else if (isWellKnown) {
-            const { default: handler } = await import('./api/oauth/metadata.js')
+            req.query = { ...req.query, type: pathname.endsWith('protected-resource') ? 'pr' : 'as' }
+            const { default: handler } = await import('./api/oauth/discovery.js')
             await handler(req, res)
           } else if (isOAuthRoute) {
             const segment = pathname.slice('/api/oauth/'.length)
-            if (segment === 'metadata') {
-              const { default: handler } = await import('./api/oauth/metadata.js')
-              await handler(req, res)
-            } else if (segment === 'authorize') {
+            if (segment === 'authorize') {
               const { default: handler } = await import('./api/oauth/authorize.js')
               await handler(req, res)
             } else if (segment === 'token') {

@@ -8,23 +8,21 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 
 | File | Responsabilità |
 |---|---|
-| `api/extraetf-quotes.js` | Proxy per le quotazioni ExtraETF: bypassa CORS del browser, restituisce i prezzi correnti degli ETF |
-| `api/extraetf-detail.js` | Proxy per i dettagli ETF da ExtraETF (ISIN, nome, asset class). Delega il fetch a `api/_lib/extraetf.js` |
+| `api/extraetf.js` | Proxy ExtraETF unico (PAC-161, accorpa i precedenti `extraetf-quotes.js` + `extraetf-detail.js`): dispatch su query param — `date_from` → storico REST (singolo/batch), `isins` senza `date_from` → real-time WebSocket, `isin` singolare → dettaglio fondo (delega a `api/_lib/extraetf.js`) |
 | `api/mcp.js` | MCP Streamable HTTP server (Vercel serverless). Espone tool e resource MCP per accesso LLM ai dati di portafoglio. Dual-auth: Bearer `pac_` API key + JWT OAuth 2.1 |
 | `api/keys/generate.js` | `POST /api/keys/generate` — genera una Bearer API key `pac_<64hex>`, max 2 attive per utente, TTL 90gg |
 | `api/keys/[keyId].js` | `DELETE /api/keys/:id` — revoca una API key per ID |
 | `api/stats.js` | `GET /api/stats` — endpoint pubblico (no auth): statistiche aggregate anonime (acquisti, utenti, portafogli attivi, capitale gestito, stelle GitHub). Cache `public, max-age=3600, stale-while-revalidate=86400`. Graceful degradation per singola fonte. |
 | `api/import.js` | `GET/POST /api/import` — merge incrementale acquisti da broker esterno (piano PRO, gate via `api/_lib/plan.js`). Arricchisce `emittente`/`asset_class` mancanti via `api/_lib/extraetf.js`, senza mai sovrascrivere valori già presenti (PAC-165) |
 | `api/_lib/plan.js` | Utility condivisa: `getUserPlan(adminClient, userId)` — legge `subscription_plan`, ritorna `{ plan, status, isPro, error }` (PAC-151, fonte unica del piano utente) |
-| `api/_lib/extraetf.js` | Utility condivisa: `fetchExtraEtfDetail(isin)` — interroga `extraetf.com/api-v2/detail`, ritorna `{ ok: true, data: { nome, emittente, assetClassNome } }` o `{ ok: false, reason, status? }`, mai un'eccezione. Usata da `api/extraetf-detail.js` e `api/import.js` (PAC-165) |
+| `api/_lib/extraetf.js` | Utility condivisa: `fetchExtraEtfDetail(isin)` — interroga `extraetf.com/api-v2/detail`, ritorna `{ ok: true, data: { nome, emittente, assetClassNome } }` o `{ ok: false, reason, status? }`, mai un'eccezione. Usata da `api/extraetf.js` e `api/import.js` (PAC-165) |
 
 ### `api/oauth/` — Authorization Server OAuth 2.1 + PKCE
 
 | File | Responsabilità |
 |---|---|
 | `api/oauth/_lib.js` | Utility condivisa: `adminClient` Supabase, `sha256hex()`, `sha256raw()`, `base64url()`, `redirectUriMatches()` con supporto loopback RFC 8252 |
-| `api/oauth/metadata.js` | `GET /.well-known/oauth-authorization-server` — discovery endpoint RFC 8414 |
-| `api/oauth/protected-resource.js` | `GET /.well-known/oauth-protected-resource` — Protected Resource Metadata RFC 9728; indica `resource`, `authorization_servers` e `scopes_supported` |
+| `api/oauth/discovery.js` | Endpoint discovery unico (PAC-161, accorpa i precedenti `metadata.js` + `protected-resource.js`): dispatch via `?type=as` → `GET /.well-known/oauth-authorization-server` (RFC 8414) / `?type=pr` → `GET /.well-known/oauth-protected-resource` (RFC 9728, `resource`/`authorization_servers`/`scopes_supported`). Query param iniettato dal rewrite in `vercel.json` |
 | `api/oauth/authorize.js` | `POST /api/oauth/authorize` — validazione consenso + emissione authorization code PKCE. Token Supabase nel body JSON (`access_token`), nessun `Authorization` header |
 | `api/oauth/token.js` | `POST /api/oauth/token` — scambio code→JWT access token (HMAC-SHA256, TTL 1h) + grant `refresh_token` con rotation |
 | `api/oauth/register.js` | `POST /api/oauth/register` — dynamic client registration RFC 7591 |
@@ -68,7 +66,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 | `useTheme.jsx` | Context provider tema chiaro/scuro con persistenza `localStorage` |
 | `useETFQuotes.js` | Aggiornamento prezzi da ExtraETF: polling, debounce, aggiornamento Supabase |
 | `useTrustStats.js` | Fetcha `GET /api/stats` al mount; restituisce `null` finché la risposta non è disponibile (nessun skeleton, no layout shift) |
-| `useWatchlist.js` | Stato watchlist: CRUD ISIN su tabella `watchlist` Supabase, validazione regex + ExtraETF, prezzi real-time via `/api/extraetf-quotes` |
+| `useWatchlist.js` | Stato watchlist: CRUD ISIN su tabella `watchlist` Supabase, validazione regex + ExtraETF, prezzi real-time via `/api/extraetf` |
 | `useBrokerImport.js` | Gate PRO (`subscription_plan`), storico `broker_sync_log`, parsing CSV Trade Republic, POST `/api/import` con JWT sessione |
 
 ---
@@ -79,7 +77,7 @@ Descrizione dettagliata di ogni file del progetto. **Aggiornare ad ogni modifica
 |---|---|
 | `calcoli.js` | Tutti i calcoli finanziari: ROI, CAGR, TWRR, ATWRR, IRR, Drawdown, Volatilità, proiezioni, serie storiche. Esposto anche via MCP come resource e tool |
 | `formatStat.js` | `formatStatValue(n)` — formatta un numero in notazione compatta con suffisso `+` (es. `1240 → "1K+"`, `3450000 → "3M+"`). Usato da TrustStats per visualizzare le statistiche pubbliche. |
-| `backfillPrezzi.js` | `backfillETFPricesBatch(items, opts)` — storicizzazione demand-driven prezzi mensili per più ETF senza N+1: una query batch per i mesi esistenti (`fetchExistingMonths`), una sola call a `/api/extraetf-quotes` history batch, un solo upsert su `etf_prezzi_storici`; dedup giornaliera per ISIN via localStorage. `backfillETFPrices(isin, dateFrom, opts)` è il wrapper single-ISIN che delega al batch. `fetchExistingMonths(isins, fromYear)` legge i mesi già presenti per più ISIN in un'unica query (`Map<isin, Set>`). `needsBackfillToday(isin)` espone il check di dedup giornaliera |
+| `backfillPrezzi.js` | `backfillETFPricesBatch(items, opts)` — storicizzazione demand-driven prezzi mensili per più ETF senza N+1: una query batch per i mesi esistenti (`fetchExistingMonths`), una sola call a `/api/extraetf` history batch, un solo upsert su `etf_prezzi_storici`; dedup giornaliera per ISIN via localStorage. `backfillETFPrices(isin, dateFrom, opts)` è il wrapper single-ISIN che delega al batch. `fetchExistingMonths(isins, fromYear)` legge i mesi già presenti per più ISIN in un'unica query (`Map<isin, Set>`). `needsBackfillToday(isin)` espone il check di dedup giornaliera |
 | `routes.js` | `KNOWN_ROUTES`, `NOT_FOUND_ROUTE`, `normalizePath()`, `isKnownRoute()` — unica fonte di verità delle rotte pubbliche, condivisa tra `App.jsx` e `scripts/prerender.mjs`. Ogni path non elencato riceve la pagina 404 |
 | `supabase.js` | Client Supabase singleton con anon key (lato client) |
 | `tempmail.js` | Lista domini email temporanei bloccati in registrazione |
@@ -129,7 +127,7 @@ Convenzioni: namespace per sezione (`auth_*`, `mcp_*`, `etf_*`), nomi tecnici in
 | File | Responsabilità |
 |---|---|
 | `vite.config.js` | Vite: plugin `api-dev` per routing serverless locale, proxy ExtraETF, build SSR |
-| `vercel.json` | Routing Vercel: rewrite `/.well-known/oauth-authorization-server` → `api/oauth/metadata`, `/.well-known/oauth-protected-resource` → `api/oauth/protected-resource` |
+| `vercel.json` | Routing Vercel: rewrite `/.well-known/oauth-authorization-server` → `api/oauth/discovery?type=as`, `/.well-known/oauth-protected-resource` → `api/oauth/discovery?type=pr` |
 | `eslint.config.js` | Regole ESLint per il progetto |
 | `package.json` | Dipendenze e script npm |
 | `index.html` | Shell HTML entry point |
