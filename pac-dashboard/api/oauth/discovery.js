@@ -27,5 +27,10 @@ export default function handler(req, res) {
     code_challenge_methods_supported: ['S256'],
     token_endpoint_auth_methods_supported: ['none'],
     scopes_supported: ['portfolio:read'],
+    // RFC 9207: iss è sempre incluso nella redirect URL di /oauth/authorize.
+    authorization_response_iss_parameter_supported: true,
+    // CIMD (spec MCP 2026-07-28): client_id in forma di URL https risolto a runtime
+    // in /oauth/authorize, affiancato a DCR (registration_endpoint sopra, non rimosso).
+    client_id_metadata_document_supported: true,
   })
 }

@@ -44,7 +44,7 @@ function fail(label, msg) {
   failed++
 }
 
-async function request(path, { method = 'POST', ua, body } = {}) {
+async function request(path, { method = 'POST', ua, body, headers = {} } = {}) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
   try {
@@ -54,6 +54,7 @@ async function request(path, { method = 'POST', ua, body } = {}) {
         'User-Agent': ua,
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/event-stream',
+        ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
@@ -66,7 +67,12 @@ async function request(path, { method = 'POST', ua, body } = {}) {
   }
 }
 
-// Probe identica a quella che claude.ai invia per prima: initialize senza token.
+// Probe identica a quella che claude.ai invia per prima: initialize senza token
+// (handshake della revisione legacy 2025, tuttora in uso da claude.ai durante il
+// rollout della revisione 2026-07-28 — vedi PAC-170). L'autenticazione è verificata
+// PRIMA che il body raggiunga l'SDK MCP, quindi questa probe resta valida per
+// entrambe le revisioni di protocollo: l'esito (401 applicativo vs blocco
+// Cloudflare) non dipende dalla forma del body.
 const INITIALIZE_BODY = {
   jsonrpc: '2.0',
   id: 1,
@@ -75,6 +81,20 @@ const INITIALIZE_BODY = {
     protocolVersion: '2025-06-18',
     capabilities: {},
     clientInfo: { name: 'etflens-reachability-check', version: '1.0.0' },
+  },
+}
+
+// Probe in envelope 2026-07-28 (header + _meta): conferma che la raggiungibilità
+// non dipende dalla revisione di protocollo dichiarata dal client (PAC-170, fase 5).
+const MODERN_BODY = {
+  jsonrpc: '2.0',
+  id: 1,
+  method: 'tools/list',
+  params: {
+    _meta: {
+      'io.modelcontextprotocol/protocolVersion': '2026-07-28',
+      'io.modelcontextprotocol/clientCapabilities': {},
+    },
   },
 }
 
@@ -149,8 +169,27 @@ async function run() {
   }
   console.log()
 
-  // ── 2. Controllo con UA neutro (isola la causa) ─────────────────────────────
-  console.log(`2. POST /api/mcp con User-Agent neutro "${UA_CONTROL}" (controllo)`)
+  // ── 2. Probe in envelope 2026-07-28 (PAC-170, fase 5) ───────────────────────
+  // Conferma che la raggiungibilità non dipende dalla revisione di protocollo
+  // dichiarata dal client: l'autenticazione è verificata prima che il body
+  // raggiunga l'SDK MCP, quindi l'esito atteso è identico allo step 1.
+  console.log(`2. POST /api/mcp con User-Agent "${UA_AI_CLIENT}" (envelope 2026-07-28, probe non autenticata)`)
+  try {
+    const res = await request('/api/mcp', {
+      ua: UA_AI_CLIENT,
+      body: MODERN_BODY,
+      headers: { 'MCP-Protocol-Version': '2026-07-28', 'Mcp-Method': 'tools/list' },
+    })
+    const verdict = classify(res)
+    if (verdict.healthy) ok(`endpoint raggiungibile con envelope 2026-07-28 — ${verdict.reason}`)
+    else fail('endpoint NON raggiungibile con envelope 2026-07-28', verdict.reason)
+  } catch (err) {
+    fail('richiesta fallita', err.name === 'AbortError' ? `timeout dopo ${TIMEOUT_MS}ms` : err.message)
+  }
+  console.log()
+
+  // ── 3. Controllo con UA neutro (isola la causa) ─────────────────────────────
+  console.log(`3. POST /api/mcp con User-Agent neutro "${UA_CONTROL}" (controllo)`)
   let controlHealthy = false
   try {
     const res = await request('/api/mcp', { ua: UA_CONTROL, body: INITIALIZE_BODY })
@@ -166,12 +205,12 @@ async function run() {
   }
   console.log()
 
-  // ── 3. Discovery OAuth con UA del client AI ─────────────────────────────────
+  // ── 4. Discovery OAuth con UA del client AI ─────────────────────────────────
   // claude.ai le interroga durante il flusso: se una regola più stretta le bloccasse,
   // la connessione fallirebbe prima ancora del token exchange.
   const discoveryPaths = ['/.well-known/oauth-protected-resource', '/.well-known/oauth-authorization-server']
   for (const [i, path] of discoveryPaths.entries()) {
-    console.log(`${3 + i}. GET ${path} con User-Agent "${UA_AI_CLIENT}"`)
+    console.log(`${4 + i}. GET ${path} con User-Agent "${UA_AI_CLIENT}"`)
     try {
       const res = await request(path, { method: 'GET', ua: UA_AI_CLIENT })
       if (res.status === 200) ok('discovery raggiungibile')

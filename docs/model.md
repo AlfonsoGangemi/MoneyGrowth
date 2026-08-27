@@ -581,6 +581,38 @@ Nota: il restore da backup JSON (`usePortafoglio.js` `importJSON`) pre-calcola l
 
 ---
 
+### Migrazione PAC-170 — application_type su oauth.clients (spec MCP 2026-07-28)
+
+Aggiunge `application_type` (`'web'` | `'native'`, default `'web'`) a `oauth.clients`, richiesto da OIDC Dynamic Client Registration (SEP-837) per evitare conflitti di redirect URI: client nativi (desktop/CLI, redirect loopback — es. Claude Desktop, Claude Code) dichiarano `'native'`, client web browser-based dichiarano `'web'`. Persistito da `api/oauth/register.js`, non ancora letto/validato incrociato contro i redirect_uris in `authorize.js` (nessuna richiesta esplicita in tal senso finora).
+
+File: `pac-dashboard/supabase/migrations/20260827000000_pac170_oauth_application_type.sql`
+
+```sql
+ALTER TABLE oauth.clients
+  ADD COLUMN IF NOT EXISTS application_type text NOT NULL DEFAULT 'web'
+    CHECK (application_type IN ('web', 'native'));
+
+CREATE OR REPLACE FUNCTION public.oauth_register_client(
+  p_client_id        text,
+  p_name             text,
+  p_redirect_uris    text[],
+  p_application_type text DEFAULT 'web'
+)
+RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = oauth
+AS $$
+  INSERT INTO oauth.clients (client_id, name, redirect_uris, is_active, application_type)
+  VALUES (p_client_id, p_name, p_redirect_uris, true, p_application_type);
+$$;
+```
+
+Verifica dopo migrazione:
+```bash
+node --env-file=.env scripts/test-oauth-schema.mjs
+```
+
+---
+
 ### Variabili d'ambiente
 
 ```env
