@@ -207,21 +207,31 @@ const { data } = await supabase
 
 ## Protocollo MCP: scelte implementative
 
-### Trasporto: Streamable HTTP (spec 2025)
+### Stato migrazione spec `2026-07-28`
+
+Migrazione in corso, tracciata in **PAC-170**, una fase alla volta su branch `ft_mcp-2026-07-28`:
+
+- ✅ **Fase 1 — SDK e handler.** `@modelcontextprotocol/sdk` (v1, monolitico) sostituito da `@modelcontextprotocol/server` + `@modelcontextprotocol/node` (`^2.0.0`, stabili). L'handler usa `createMcpHandler(factory)` + `toNodeHandler(...)`, **non** il pattern a basso livello `McpServer` + transport diretto (identico a v1): quel pattern non implementa affatto la revisione `2026-07-28` (risponde 400 su `MCP-Protocol-Version: 2026-07-28`). `createMcpHandler` con l'opzione di default `legacy: 'stateless'` serve automaticamente sia i client sulla revisione precedente (`2025-11-25`, nessun envelope) sia quelli su `2026-07-28` (header `MCP-Protocol-Version` + `_meta` nel body) dalla stessa factory, senza branching manuale nell'handler.
+- ⏳ Fasi 2–6 (header `Mcp-Method`/`Mcp-Name`, cache hints, auth hardening RFC 9207/CIMD, conferma formale dual-version, test di integrazione reali) ancora da fare — dettagli in PAC-170.
+
+Le sezioni seguenti descrivono lo stato **pre-migrazione** (spec legacy) tranne dove indicato.
+
+### Trasporto: Streamable HTTP
 
 Il server MCP usa il trasporto **Streamable HTTP** in modalità **stateless** (senza SSE, senza session ID). Ogni richiesta è indipendente.
 
 **Perché non SSE:** Vercel serverless non supporta connessioni long-lived. Il trasporto stateless è pienamente compatibile.
 
 ```js
-const transport = new StreamableHTTPServerTransport({
-  sessionIdGenerator: undefined  // modalità stateless
-})
+// Post-migrazione (fase 1, spec 2026-07-28)
+const mcpHandler = createMcpHandler(() => buildMcpServer(userId))
+const nodeHandler = toNodeHandler(mcpHandler)
+await nodeHandler(req, res, req.body)
 ```
 
 ### POST-only
 
-L'endpoint `/api/mcp` accetta **solo POST**. Tutte le altre method restituiscono `405 Method Not Allowed`.
+L'endpoint `/api/mcp` accetta **solo POST** (dalla fase 1: `GET`/`DELETE` rimossi esplicitamente, comunque già risposti con `405` in automatico da `createMcpHandler` in modalità stateless). Tutti gli altri metodi restituiscono `405 Method Not Allowed`.
 
 ### Nessun CORS
 
@@ -232,83 +242,11 @@ Gli altri endpoint `api/*.js` del progetto usano `ALLOWED_ORIGIN` per CORS — q
 ### Libreria
 
 ```
-@modelcontextprotocol/sdk   (Node.js only, runtime dependency)
+@modelcontextprotocol/server   ^2.0.0  (Node.js only, runtime dependency)
+@modelcontextprotocol/node     ^2.0.0  (adapter Node http per createMcpHandler)
 ```
 
-Installata in `dependencies` (non `devDependencies`) perché gira su Vercel. Non viene importata da `src/` → nessun impatto sul bundle Vite.
-
----
-
-## Resources esposte
-
-### `portfolio://data`
-
-Dati completi del portafoglio dell'utente.
-
-**Struttura risposta:**
-
-```json
-{
-  "_meta": {
-    "generated_at": "2025-01-15T10:30:00Z",
-    "avviso": "prezzoCorrente è aggiornato manualmente dall'utente, non è un prezzo di mercato in tempo reale"
-  },
-  "etf": [...],
-  "acquisti": [...],
-  "scenari": [...],
-  "config": {...},
-  "broker": [...],
-  "storici": [...],
-  "assetClasses": [...],
-  "prezziStorici": [...]
-}
-```
-
-**Tabelle Supabase interrogate:**
-
-| Tabella | Filtro |
-|---|---|
-| `etf` | `user_id = userId` |
-| `acquisti` | `user_id = userId` |
-| `scenari` | `user_id = userId` |
-| `config` | `user_id = userId` |
-| `broker` | `user_id = userId` |
-| `portafoglio_storico_annuale` | `user_id = userId` |
-| `asset_class` | nessun filtro (tabella condivisa, read-only) |
-| `etf_prezzi_storici` | join su `etf.user_id = userId` |
-
-**Importante:** tutte le query usano `SUPABASE_SERVICE_KEY` (bypassa RLS) **e** il filtro esplicito `.eq('user_id', userId)`. La doppia protezione è intenzionale.
-
-### `portfolio://formulas/calcoli`
-
-Codice sorgente di `src/utils/calcoli.js` in formato `text/javascript`.
-
-Consente all'LLM di applicare le stesse formule usate dalla web app: ROI, CAGR, TWRR, ATWRR, IRR, drawdown massimo, volatilità, proiezioni, ecc.
-
-Il file viene letto con `readFileSync` al momento della richiesta. Vedi sezione [Configurazione Vercel](#configurazione-vercel) per il requisito critico `includeFiles`.
-
----
-
-## Tools esposti
-
-### `get_etf_details`
-
-Recupera i dettagli di un singolo ETF con tutti i suoi acquisti.
-
-**Input:**
-```json
-{ "isin": "IE00B4L5Y983" }
-```
-
-**Output:**
-```json
-{
-  "etf": { ... },
-  "acquisti": [ ... ]
-}
-```
-
-Filtrato per `user_id`: l'LLM non può accedere a ETF di altri utenti anche specificando un ISIN corretto.
+Installate in `dependencies` (non `devDependencies`) perché girano su Vercel. Non vengono importate da `src/` → nessun impatto sul bundle Vite.
 
 ---
 

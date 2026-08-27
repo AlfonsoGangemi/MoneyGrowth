@@ -14,7 +14,8 @@
     "check:mcp-reachable": "node scripts/check-mcp-reachable.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/node": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@sentry/react": "^10.45.0",
     "@supabase/supabase-js": "^2.97.0",
     "date-fns": "^4.1.0",
@@ -23,7 +24,8 @@
     "react-dom": "^19.2.0",
     "recharts": "^3.7.0",
     "uuid": "^13.0.0",
-    "ws": "^8.20.0"
+    "ws": "^8.20.0",
+    "zod": "^4.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

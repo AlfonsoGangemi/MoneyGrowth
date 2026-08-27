@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
+import { McpServer, createMcpHandler } from '@modelcontextprotocol/server'
+import { toNodeHandler } from '@modelcontextprotocol/node'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'crypto'
 import { jwtVerify } from 'jose'
@@ -126,9 +126,9 @@ function buildMcpServer(userId) {
 
   // ── Resources ──────────────────────────────────────────────────────────────
 
-  server.resource(
-    'portfolio://broker',
+  server.registerResource(
     'broker',
+    'portfolio://broker',
     { mimeType: 'application/json', description: 'Array of the user\'s brokers (including archived ones). Prices are not real-time.' },
     async () => {
       if (!userId) throw new Error('userId null')
@@ -137,18 +137,18 @@ function buildMcpServer(userId) {
     }
   )
 
-  server.resource(
-    'portfolio://indici',
+  server.registerResource(
     'indici',
+    'portfolio://indici',
     { mimeType: 'application/json', description: 'List of financial indicators computable via calcoli.js, with function signature and description.' },
     async () => {
       return { contents: [{ uri: 'portfolio://indici', text: JSON.stringify(INDICI) }] }
     }
   )
 
-  server.resource(
-    'portfolio://formulas/calcoli',
+  server.registerResource(
     'calcoli',
+    'portfolio://formulas/calcoli',
     { mimeType: 'text/javascript', description: 'Full source of calcoli.js. Prices in the data are not real-time.' },
     async () => {
       return { contents: [{ uri: 'portfolio://formulas/calcoli', text: calcoliSource }] }
@@ -157,9 +157,9 @@ function buildMcpServer(userId) {
 
   // ── Tools ──────────────────────────────────────────────────────────────────
 
-  server.tool(
+  server.registerTool(
     'get_portafoglio',
-    'Returns all portfolio data in a single payload (ETFs with purchases, historical prices, scenarios, brokers, annual history). Prices are not real-time.',
+    { description: 'Returns all portfolio data in a single payload (ETFs with purchases, historical prices, scenarios, brokers, annual history). Prices are not real-time.' },
     async () => {
       if (!userId) throw new Error('userId null')
       const { data: etfs } = await adminClient
@@ -188,10 +188,12 @@ function buildMcpServer(userId) {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_etf',
-    'Returns the user\'s ETFs (including archived ones). Prices are not real-time. Optional: filter by broker_id.',
-    { brokers: z.array(z.string()).optional().describe('Array of broker IDs to filter by') },
+    {
+      description: 'Returns the user\'s ETFs (including archived ones). Prices are not real-time. Optional: filter by broker_id.',
+      inputSchema: z.object({ brokers: z.array(z.string()).optional().describe('Array of broker IDs to filter by') }),
+    },
     async ({ brokers }) => {
       if (!userId) throw new Error('userId null')
       let query = adminClient.from('etf').select('*, acquisti(*)').eq('user_id', userId)
@@ -201,10 +203,12 @@ function buildMcpServer(userId) {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_prezzi_storici',
-    'Returns monthly historical prices for an ETF. Verifies that the ISIN belongs to the user. Prices are not real-time.',
-    { isin: z.string().describe('ETF ISIN') },
+    {
+      description: 'Returns monthly historical prices for an ETF. Verifies that the ISIN belongs to the user. Prices are not real-time.',
+      inputSchema: z.object({ isin: z.string().describe('ETF ISIN') }),
+    },
     async ({ isin }) => {
       if (!userId) throw new Error('userId null')
       const { data } = await adminClient
@@ -218,13 +222,15 @@ function buildMcpServer(userId) {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_acquisti',
-    'Returns the user\'s purchases. All parameters are optional: etf_ids filters by ETF, from/to filter by ISO date (inclusive).',
     {
-      etf_ids: z.array(z.string()).optional().describe('Array of ETF IDs'),
-      from:    z.string().optional().describe('Inclusive ISO date (e.g. 2024-01-01)'),
-      to:      z.string().optional().describe('Inclusive ISO date (e.g. 2024-12-31)'),
+      description: 'Returns the user\'s purchases. All parameters are optional: etf_ids filters by ETF, from/to filter by ISO date (inclusive).',
+      inputSchema: z.object({
+        etf_ids: z.array(z.string()).optional().describe('Array of ETF IDs'),
+        from:    z.string().optional().describe('Inclusive ISO date (e.g. 2024-01-01)'),
+        to:      z.string().optional().describe('Inclusive ISO date (e.g. 2024-12-31)'),
+      }),
     },
     async ({ etf_ids, from, to }) => {
       if (!userId) throw new Error('userId null')
@@ -241,10 +247,12 @@ function buildMcpServer(userId) {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_storico',
-    'Returns the user\'s portafoglio_storico_annuale data. Optional: filter by year.',
-    { anno: z.number().int().optional().describe('Year (e.g. 2024)') },
+    {
+      description: 'Returns the user\'s portafoglio_storico_annuale data. Optional: filter by year.',
+      inputSchema: z.object({ anno: z.number().int().optional().describe('Year (e.g. 2024)') }),
+    },
     async ({ anno }) => {
       if (!userId) throw new Error('userId null')
       let query = adminClient
@@ -257,10 +265,12 @@ function buildMcpServer(userId) {
     }
   )
 
-  server.tool(
+  server.registerTool(
     'get_calcoli',
-    'Returns JS functions from calcoli.js ready to be applied by the LLM. Does not execute calculations server-side. Optional: specify a function name (e.g. "calcolaCAGR").',
-    { indice: z.string().optional().describe('Function name (e.g. "calcolaCAGR", "calcolaTWRR")') },
+    {
+      description: 'Returns JS functions from calcoli.js ready to be applied by the LLM. Does not execute calculations server-side. Optional: specify a function name (e.g. "calcolaCAGR").',
+      inputSchema: z.object({ indice: z.string().optional().describe('Function name (e.g. "calcolaCAGR", "calcolaTWRR")') }),
+    },
     async ({ indice }) => {
       if (indice) {
         const fn = extractFunction(calcoliSource, indice)
@@ -276,7 +286,7 @@ function buildMcpServer(userId) {
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end()
-  if (!['GET', 'POST', 'DELETE'].includes(req.method)) return res.status(405).end()
+  if (req.method !== 'POST') return res.status(405).end()
 
   const authHeader = req.headers['authorization']
   const userId = await resolveUserId(authHeader)
@@ -290,13 +300,10 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  // StreamableHTTPServerTransport requires Accept to include both types.
-  // Force it so any client (curl, Claude Code, Claude Desktop) works without
-  // needing to set the header explicitly.
-  req.headers['accept'] = 'application/json, text/event-stream'
-
-  const server = buildMcpServer(userId)
-  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
-  await server.connect(transport)
-  await transport.handleRequest(req, res, req.body)
+  // createMcpHandler serve entrambe le protocol era (2025-11-25 legacy e 2026-07-28
+  // stateless) dalla stessa factory. userId è già risolto e vincolato alla richiesta
+  // corrente tramite closure: nessuna condivisione tra richieste concorrenti.
+  const mcpHandler = createMcpHandler(() => buildMcpServer(userId))
+  const nodeHandler = toNodeHandler(mcpHandler)
+  await nodeHandler(req, res, req.body)
 }
