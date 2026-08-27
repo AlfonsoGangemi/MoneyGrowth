@@ -118,11 +118,23 @@ async function resolveUserId(authHeader) {
   }
 }
 
+// Il set di tool/resource esposti è statico per deploy: sicuro cachearne la lista
+// per alcune ore lato client/intermediari condivisi (cacheScope 'public').
+const STATIC_CACHE_HINT = { ttlMs: 6 * 60 * 60 * 1000, cacheScope: 'public' }
+
 function buildMcpServer(userId) {
-  const server = new McpServer({
-    name: 'etflens-portfolio',
-    version: '1.0.0',
-  })
+  const server = new McpServer(
+    {
+      name: 'etflens-portfolio',
+      version: '1.0.0',
+    },
+    {
+      cacheHints: {
+        'tools/list': STATIC_CACHE_HINT,
+        'resources/list': STATIC_CACHE_HINT,
+      },
+    }
+  )
 
   // ── Resources ──────────────────────────────────────────────────────────────
 
@@ -140,7 +152,7 @@ function buildMcpServer(userId) {
   server.registerResource(
     'indici',
     'portfolio://indici',
-    { mimeType: 'application/json', description: 'List of financial indicators computable via calcoli.js, with function signature and description.' },
+    { mimeType: 'application/json', description: 'List of financial indicators computable via calcoli.js, with function signature and description.', cacheHint: STATIC_CACHE_HINT },
     async () => {
       return { contents: [{ uri: 'portfolio://indici', text: JSON.stringify(INDICI) }] }
     }
@@ -149,7 +161,7 @@ function buildMcpServer(userId) {
   server.registerResource(
     'calcoli',
     'portfolio://formulas/calcoli',
-    { mimeType: 'text/javascript', description: 'Full source of calcoli.js. Prices in the data are not real-time.' },
+    { mimeType: 'text/javascript', description: 'Full source of calcoli.js. Prices in the data are not real-time.', cacheHint: STATIC_CACHE_HINT },
     async () => {
       return { contents: [{ uri: 'portfolio://formulas/calcoli', text: calcoliSource }] }
     }

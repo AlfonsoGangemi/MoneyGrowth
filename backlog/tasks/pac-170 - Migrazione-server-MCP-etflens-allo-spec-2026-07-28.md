@@ -4,7 +4,7 @@ title: Migrazione server MCP etflens allo spec 2026-07-28
 status: In Progress
 assignee: []
 created_date: '2026-08-27 09:31'
-updated_date: '2026-08-27 09:32'
+updated_date: '2026-08-27 11:05'
 labels:
   - mcp
   - migration
@@ -21,6 +21,8 @@ modified_files:
   - pac-dashboard/package.json
   - pac-dashboard/package-lock.json
   - pac-dashboard/vercel.json
+  - docs/mcp.md
+  - docs/README.md
 priority: medium
 ---
 
@@ -43,9 +45,9 @@ Riferimenti spec: https://modelcontextprotocol.io/specification/2026-07-28, chan
 - [ ] #3 Un client sulla versione precedente (2025-11-25, nessun envelope) continua a funzionare senza modifiche lato client
 - [ ] #4 Flusso OAuth completo (authorize → token → refresh) verificato su preview deploy
 - [ ] #5 API key Bearer pac_* continua a funzionare come prima
-- [ ] #6 Nessun riferimento residuo a Mcp-Session-Id nel repo
-- [ ] #7 Header Mcp-Method e Mcp-Name validati in ingresso su Streamable HTTP, risposta 400 se assenti o incoerenti col body JSON-RPC
-- [ ] #8 Cache hints (ttlMs, cacheScope) impostati esplicitamente su tools/list, resources/list e sulle resource immutabili per deploy (portfolio://indici, portfolio://formulas/calcoli); portfolio://broker resta a cacheScope private
+- [x] #6 Nessun riferimento residuo a Mcp-Session-Id nel repo
+- [x] #7 Header Mcp-Method e Mcp-Name validati in ingresso su Streamable HTTP, risposta 400 se assenti o incoerenti col body JSON-RPC
+- [x] #8 Cache hints (ttlMs, cacheScope) impostati esplicitamente su tools/list, resources/list e sulle resource immutabili per deploy (portfolio://indici, portfolio://formulas/calcoli); portfolio://broker resta a cacheScope private
 - [ ] #9 api/oauth/authorize.js aggiunge iss alla redirect URL (RFC 9207); api/oauth/register.js accetta e persiste application_type; CIMD supportato affiancato a DCR senza rimuovere DCR
 - [ ] #10 Test di integrazione con SDK reale (non mockato) e Supabase mockato al confine coprono tools/list, tools/call su get_etf e get_calcoli, resources/read, header mancanti, versione di protocollo assente o vecchia, 401 senza token
 - [ ] #11 docs/mcp.md riflette la nuova architettura (pacchetti SDK v2, createMcpHandler/toNodeHandler, dual-version)
@@ -64,10 +66,9 @@ Fase 1 — Upgrade SDK e handler: FATTO (branch ft_mcp-2026-07-28)
 - npm run test (155/155 passati) e npm run lint (0 errori, solo warning React preesistenti non correlati) verdi.
 - Non ancora committato: in attesa di review utente prima del commit di fase 1.
 
-Fase 2 — Header routing (Mcp-Method/Mcp-Name in ingresso, vercel.json Allow-Headers): DA FARE
+Fase 2 — Header routing: FATTO. Verificato empiricamente (server HTTP reale, richieste modern con/senza Mcp-Method e Mcp-Name, con valore corretto/sbagliato) che createMcpHandler valida GIA' nativamente questi header sulle richieste 2026-07-28: 400 con code -32020 (HeaderMismatch) se assenti o incoerenti col body JSON-RPC (cross-check su method e su params.name/params.uri). Nessun codice di validazione manuale aggiunto in api/mcp.js. Unico cambio reale: vercel.json Access-Control-Allow-Headers 'mcp-session-id' -> 'Mcp-Method, Mcp-Name, MCP-Protocol-Version'. Confermato nessun riferimento residuo a Mcp-Session-Id nel codice attivo (solo nei task di backlog storici, corretto lasciarli). npm run test (155/155) e npm run lint (0 errori) verdi. Non ancora committato.
 
-Fase 3 — Cache hints (ttlMs/cacheScope su tools/list, resources/list, resource immutabili): DA FARE
-- Meccanismo SDK già individuato: new McpServer(..., { cacheHints: { 'tools/list': {...}, 'resources/list': {...} } }) a livello server, e { cacheHint: {...} } nel config di registerResource per singola resource.
+Fase 3 — Cache hints: FATTO. new McpServer({name,version}, { cacheHints: { 'tools/list': {ttlMs, cacheScope}, 'resources/list': {ttlMs, cacheScope} } }) a livello server; cacheHint nel config di registerResource per portfolio://indici e portfolio://formulas/calcoli. Valore usato: 6h (21600000ms) / cacheScope 'public' per tutte e quattro. portfolio://broker lasciata senza cacheHint esplicito: default SDK ttlMs:0/cacheScope:'private' gia' soddisfa il requisito 'nessuna cache condivisa'. Verificato empiricamente con richieste reali (server HTTP vero): tools/list, resources/list, resources/read indici -> ttlMs:21600000,cacheScope:'public'; resources/read broker -> ttlMs:0,cacheScope:'private'. npm run test (155/155) e npm run lint (0 errori) verdi. Non ancora committato.
 
 Fase 4 — Auth hardening (iss RFC 9207, application_type DCR, CIMD, metadata.js): DA FARE
 
@@ -82,5 +83,15 @@ Fase 6 — Test (integrazione reali con SDK non mockato, aggiornamento scripts/c
 created: 2026-08-27 09:32
 ---
 Fase 1 completata e verificata (test/lint verdi, smoke test manuale con SDK reale su server HTTP vero). In attesa di review utente prima del commit sul branch ft_mcp-2026-07-28. Dettagli completi nel piano del task.
+---
+
+created: 2026-08-27 10:59
+---
+Fase 2 completata: nessuna modifica di codice necessaria in mcp.js (l'SDK valida gia' Mcp-Method/Mcp-Name nativamente per le richieste 2026-07-28), solo vercel.json aggiornato. Verificato con test/lint verdi. In attesa di review utente prima del commit.
+---
+
+created: 2026-08-27 11:05
+---
+Fase 3 completata: cache hints impostati e verificati empiricamente (valori corretti in tutte le risposte testate). In attesa di review utente prima del commit.
 ---
 <!-- COMMENTS:END -->
