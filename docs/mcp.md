@@ -212,7 +212,8 @@ const { data } = await supabase
 Migrazione in corso, tracciata in **PAC-170**, una fase alla volta su branch `ft_mcp-2026-07-28`:
 
 - ✅ **Fase 1 — SDK e handler.** `@modelcontextprotocol/sdk` (v1, monolitico) sostituito da `@modelcontextprotocol/server` + `@modelcontextprotocol/node` (`^2.0.0`, stabili). L'handler usa `createMcpHandler(factory)` + `toNodeHandler(...)`, **non** il pattern a basso livello `McpServer` + transport diretto (identico a v1): quel pattern non implementa affatto la revisione `2026-07-28` (risponde 400 su `MCP-Protocol-Version: 2026-07-28`). `createMcpHandler` con l'opzione di default `legacy: 'stateless'` serve automaticamente sia i client sulla revisione precedente (`2025-11-25`, nessun envelope) sia quelli su `2026-07-28` (header `MCP-Protocol-Version` + `_meta` nel body) dalla stessa factory, senza branching manuale nell'handler.
-- ⏳ Fasi 2–6 (header `Mcp-Method`/`Mcp-Name`, cache hints, auth hardening RFC 9207/CIMD, conferma formale dual-version, test di integrazione reali) ancora da fare — dettagli in PAC-170.
+- ✅ **Fase 2 — Header routing.** `createMcpHandler` valida **nativamente** `Mcp-Method`/`Mcp-Name` sulle richieste `2026-07-28`: 400 (`code: -32020`, `HeaderMismatch`) se assenti o incoerenti col body JSON-RPC; nessun codice di validazione manuale necessario in `api/mcp.js`. Lavoro effettivo della fase: `vercel.json` → `Access-Control-Allow-Headers` aggiornato da `mcp-session-id` a `Mcp-Method, Mcp-Name, MCP-Protocol-Version`.
+- ⏳ Fasi 3–6 (cache hints, auth hardening RFC 9207/CIMD, conferma formale dual-version, test di integrazione reali) ancora da fare — dettagli in PAC-170.
 
 Le sezioni seguenti descrivono lo stato **pre-migrazione** (spec legacy) tranne dove indicato.
 
@@ -233,11 +234,11 @@ await nodeHandler(req, res, req.body)
 
 L'endpoint `/api/mcp` accetta **solo POST** (dalla fase 1: `GET`/`DELETE` rimossi esplicitamente, comunque già risposti con `405` in automatico da `createMcpHandler` in modalità stateless). Tutti gli altri metodi restituiscono `405 Method Not Allowed`.
 
-### Nessun CORS
+### CORS
 
-L'endpoint MCP **non emette header CORS**. I client MCP (Claude Desktop) non sono browser; aggiungere CORS sarebbe errato e potenzialmente pericoloso (esporrebbe l'endpoint a chiamate browser non autorizzate).
+`vercel.json` espone header CORS ristretti a `https://claude.ai` per `/api/(.*)` (incluso `/api/mcp`): `Access-Control-Allow-Methods: POST, OPTIONS` e `Access-Control-Allow-Headers: Content-Type, Authorization, Mcp-Method, Mcp-Name, MCP-Protocol-Version` (dalla fase 2 della migrazione `2026-07-28`; prima elencava `mcp-session-id`, ora rimosso dal protocollo).
 
-Gli altri endpoint `api/*.js` del progetto usano `ALLOWED_ORIGIN` per CORS — questo pattern **non si applica** a `api/mcp.js`.
+Gli altri endpoint `api/*.js` del progetto usano `ALLOWED_ORIGIN` per CORS — `api/mcp.js` usa invece l'allowlist statica su `claude.ai` definita in `vercel.json`.
 
 ### Libreria
 

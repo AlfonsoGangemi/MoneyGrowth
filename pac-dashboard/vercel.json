@@ -31,7 +31,7 @@
       "headers": [
         { "key": "Access-Control-Allow-Origin",  "value": "https://claude.ai" },
         { "key": "Access-Control-Allow-Methods", "value": "POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, mcp-session-id" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, Mcp-Method, Mcp-Name, MCP-Protocol-Version" },
         { "key": "Access-Control-Max-Age",        "value": "86400" }
       ]
     },
